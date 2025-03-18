@@ -1,0 +1,18 @@
+2025-02-25 02:24:08,287 - __main__ - INFO - Generating ad for: bombay musk perfumes
+2025-02-25 02:24:21,087 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 02:24:21,093 - ad_generator.generator - INFO - Brand analysis completed
+2025-02-25 02:24:36,971 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 02:24:36,976 - ad_generator.generator - INFO - Ad copy generated
+2025-02-25 02:24:36,977 - ad_generator.image_maker - INFO - Starting Runway image generation with prompt: Create a professional Premium advertisement for Cosmetics & Fragrances:
+
+        TEXT LAYOUT:
+        Main Headline: "Bombay Musk Perfumes: Embark on an Olfactory Journey"
+        Supporting Text: "Ex...
+2025-02-25 02:24:36,987 - ad_generator.image_maker - INFO - Sending generation request to Runway API
+2025-02-25 02:24:38,072 - ad_generator.image_maker - INFO - Runway response status: 400
+2025-02-25 02:24:38,073 - ad_generator.image_maker - ERROR - Runway API error: {"error":"Invalid API Version"}
+2025-02-25 02:24:38,074 - ad_generator.image_maker - ERROR - Runway ML error: Runway API error: Status 400: {"error":"Invalid API Version"}
+2025-02-25 02:24:38,075 - ad_generator.generator - ERROR - Runway image generation failed: Runway API error: Status 400: {"error":"Invalid API Version"}
+2025-02-25 02:24:38,076 - ad_generator.generator - INFO - Falling back to DALL-E for image generation
+2025-02-25 02:24:54,728 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/images/generations "HTTP/1.1 200 OK"
+2025-02-25 02:24:58,894 - ad_generator.generator - INFO - Generated image using DALL-E

@@ -1,0 +1,42 @@
+2025-02-25 02:33:33,681 - __main__ - INFO - Generating ad for: generate an ad for bombay musk perfumes
+2025-02-25 02:33:45,666 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 02:33:45,676 - ad_generator.generator - INFO - Brand analysis completed
+2025-02-25 02:33:58,468 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 02:33:58,470 - ad_generator.generator - INFO - Ad copy generated
+2025-02-25 02:33:58,471 - ad_generator.image_maker - INFO - Starting Runway image generation for prompt: Create a professional Luxury advertisement for Fragrance and Perfumes:
+
+        TEXT LAYOUT:
+        Main Headline: "Unmask Your Mystique with Bombay Musk"
+        Supporting Text: "Indulge in an opul...
+2025-02-25 02:33:58,477 - ad_generator.image_maker - INFO - Attempting generation with URL: https://api.runwayml.com/v1/generate
+2025-02-25 02:33:59,430 - ad_generator.image_maker - INFO - Response status: 400
+2025-02-25 02:33:59,431 - ad_generator.image_maker - ERROR - Error response: {"error":"Invalid API Version"}
+2025-02-25 02:33:59,432 - ad_generator.image_maker - INFO - Attempting generation with URL: https://api.runwayml.com/v1/generate
+2025-02-25 02:34:00,350 - ad_generator.image_maker - INFO - Response status: 400
+2025-02-25 02:34:00,350 - ad_generator.image_maker - ERROR - Error response: {"error":"Invalid API Version"}
+2025-02-25 02:34:00,351 - ad_generator.image_maker - INFO - Attempting generation with URL: https://api.runwayml.com/v1/generate
+2025-02-25 02:34:01,308 - ad_generator.image_maker - INFO - Response status: 400
+2025-02-25 02:34:01,309 - ad_generator.image_maker - ERROR - Error response: {"error":"Invalid API Version"}
+2025-02-25 02:34:01,309 - ad_generator.image_maker - INFO - Attempting generation with URL: https://api.runwayml.com/v2/generate
+2025-02-25 02:34:02,271 - ad_generator.image_maker - INFO - Response status: 400
+2025-02-25 02:34:02,272 - ad_generator.image_maker - ERROR - Error response: {"error":"Invalid API Version"}
+2025-02-25 02:34:02,273 - ad_generator.image_maker - INFO - Attempting generation with URL: https://api.runwayml.com/v2/generate
+2025-02-25 02:34:03,203 - ad_generator.image_maker - INFO - Response status: 400
+2025-02-25 02:34:03,204 - ad_generator.image_maker - ERROR - Error response: {"error":"Invalid API Version"}
+2025-02-25 02:34:03,204 - ad_generator.image_maker - INFO - Attempting generation with URL: https://api.runwayml.com/v2/generate
+2025-02-25 02:34:04,167 - ad_generator.image_maker - INFO - Response status: 400
+2025-02-25 02:34:04,167 - ad_generator.image_maker - ERROR - Error response: {"error":"Invalid API Version"}
+2025-02-25 02:34:04,168 - ad_generator.image_maker - INFO - Attempting generation with URL: https://api.runwayml.com/generate
+2025-02-25 02:34:05,100 - ad_generator.image_maker - INFO - Response status: 400
+2025-02-25 02:34:05,100 - ad_generator.image_maker - ERROR - Error response: {"error":"Invalid API Version"}
+2025-02-25 02:34:05,101 - ad_generator.image_maker - INFO - Attempting generation with URL: https://api.runwayml.com/generate
+2025-02-25 02:34:06,030 - ad_generator.image_maker - INFO - Response status: 400
+2025-02-25 02:34:06,031 - ad_generator.image_maker - ERROR - Error response: {"error":"Invalid API Version"}
+2025-02-25 02:34:06,031 - ad_generator.image_maker - INFO - Attempting generation with URL: https://api.runwayml.com/generate
+2025-02-25 02:34:06,967 - ad_generator.image_maker - INFO - Response status: 400
+2025-02-25 02:34:06,967 - ad_generator.image_maker - ERROR - Error response: {"error":"Invalid API Version"}
+2025-02-25 02:34:06,967 - ad_generator.image_maker - ERROR - All Runway ML image generation attempts failed
+2025-02-25 02:34:06,968 - ad_generator.generator - ERROR - Runway image generation failed: Could not generate image with Runway ML
+2025-02-25 02:34:06,968 - ad_generator.generator - INFO - Falling back to DALL-E for image generation
+2025-02-25 02:34:26,711 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/images/generations "HTTP/1.1 200 OK"
+2025-02-25 02:34:30,610 - ad_generator.generator - INFO - Generated image using DALL-E

@@ -1,0 +1,95 @@
+2025-02-25 13:02:10,684 - __main__ - INFO - Generating ad campaign for: bombay musk perfumes in fashion and accessories
+2025-02-25 13:02:25,244 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 13:02:25,251 - ad_generator.campaign_generator - INFO - Ad campaign insights generated for fashion and accessories
+2025-02-25 13:02:39,057 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 13:02:39,084 - ad_generator.campaign_generator - INFO - Ad copy generated for bombay musk perfumes
+2025-02-25 13:02:39,092 - ad_generator.campaign_generator - INFO - Sending request to Runway ML: https://api.runwayml.com/v2/inference
+2025-02-25 13:02:39,093 - ad_generator.campaign_generator - INFO - Using prompt: Professional advertisement for bombay musk perfumes in the fashion and accessories industry.
+       ...
+2025-02-25 13:02:40,021 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 13:02:40,023 - ad_generator.campaign_generator - INFO - Runway response headers: {'Date': 'Tue, 25 Feb 2025 07:32:40 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '31', 'Connection': 'keep-alive', 'apigw-requestid': 'Gh7D3jIaoAMEb2w=', 'X-Powered-By': 'Express', 'access-control-allow-origin': '*', 'etag': 'W/"1f-ZdCOL7mW0muFK4sCmJOrnY+iCOk"', 'vary': 'Accept-Encoding', 'strict-transport-security': 'max-age=31536000'}
+2025-02-25 13:02:40,025 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 13:02:40,026 - ad_generator.campaign_generator - ERROR - Runway API returned status 400: {"error":"Invalid API Version"}
+2025-02-25 13:02:40,027 - ad_generator.campaign_generator - ERROR - Runway image generation error: Runway API returned status 400: {"error":"Invalid API Version"}
+2025-02-25 13:02:40,029 - ad_generator.campaign_generator - ERROR - Error generating ad campaign: Runway API returned status 400: {"error":"Invalid API Version"}
+2025-02-25 13:02:40,031 - __main__ - ERROR - An unexpected error occurred: Runway API returned status 400: {"error":"Invalid API Version"}
+2025-02-25 13:06:15,477 - __main__ - INFO - Generating ad campaign for: bombay musk perfumes in fashion and accessories
+2025-02-25 13:06:40,182 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 13:06:40,190 - ad_generator.campaign_generator - INFO - Ad campaign insights generated for fashion and accessories
+2025-02-25 13:06:48,160 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 13:06:48,162 - ad_generator.campaign_generator - INFO - Ad copy generated for bombay musk perfumes
+2025-02-25 13:06:48,162 - ad_generator.campaign_generator - INFO - Sending request to Runway ML: https://api.runwayml.com/v2/inference
+2025-02-25 13:06:48,163 - ad_generator.campaign_generator - INFO - Using prompt: Professional advertisement for bombay musk perfumes in the fashion and accessories industry.
+       ...
+2025-02-25 13:06:49,095 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 13:06:49,096 - ad_generator.campaign_generator - INFO - Runway response headers: {'Date': 'Tue, 25 Feb 2025 07:36:49 GMT', 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': '31', 'Connection': 'keep-alive', 'apigw-requestid': 'Gh7qyhmnoAMESZA=', 'X-Powered-By': 'Express', 'access-control-allow-origin': '*', 'etag': 'W/"1f-ZdCOL7mW0muFK4sCmJOrnY+iCOk"', 'vary': 'Accept-Encoding', 'strict-transport-security': 'max-age=31536000'}
+2025-02-25 13:06:49,096 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 13:06:49,097 - ad_generator.campaign_generator - ERROR - Runway API returned status 400: {"error":"Invalid API Version"}
+2025-02-25 13:06:49,097 - ad_generator.campaign_generator - ERROR - Runway image generation error: Runway API returned status 400: {"error":"Invalid API Version"}
+2025-02-25 13:06:49,098 - ad_generator.campaign_generator - ERROR - Error generating ad campaign: Runway API returned status 400: {"error":"Invalid API Version"}
+2025-02-25 13:06:49,098 - __main__ - ERROR - An unexpected error occurred: Runway API returned status 400: {"error":"Invalid API Version"}
+2025-02-25 13:12:36,021 - __main__ - INFO - Generating ad campaign for: bombay musk perfumes in perfume industry
+2025-02-25 13:12:53,542 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 13:12:53,549 - ad_generator.campaign_generator - INFO - Ad campaign insights generated for perfume industry
+2025-02-25 13:13:04,165 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 13:13:04,168 - ad_generator.campaign_generator - INFO - Ad copy generated for bombay musk perfumes
+2025-02-25 13:13:04,169 - ad_generator.campaign_generator - INFO - Trying Runway ML with API version: latest
+2025-02-25 13:13:05,100 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 13:13:05,101 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 13:13:05,102 - ad_generator.campaign_generator - INFO - Trying Runway ML with API version: 2023-01-01
+2025-02-25 13:13:06,009 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 13:13:06,010 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 13:13:06,011 - ad_generator.campaign_generator - INFO - Trying Runway ML with API version: 2023-11-06
+2025-02-25 13:13:06,899 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 13:13:06,900 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 13:13:06,901 - ad_generator.campaign_generator - INFO - Trying Runway ML with API version: 2024-01-01
+2025-02-25 13:13:07,771 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 13:13:07,771 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 13:13:07,772 - ad_generator.campaign_generator - INFO - Trying Runway ML with API version: 2024-02-01
+2025-02-25 13:13:08,642 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 13:13:08,643 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 13:13:08,644 - ad_generator.campaign_generator - INFO - Trying Runway ML with API version: None
+2025-02-25 13:13:09,533 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 13:13:09,534 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 13:13:09,534 - ad_generator.campaign_generator - ERROR - All Runway ML API version attempts failed
+2025-02-25 13:13:09,535 - ad_generator.campaign_generator - ERROR - Error generating ad campaign: All Runway ML API version attempts failed
+2025-02-25 13:13:09,535 - __main__ - ERROR - An unexpected error occurred: All Runway ML API version attempts failed
+2025-02-25 17:15:32,852 - __main__ - INFO - Generating ad campaign for: bombay musk perfume in fashion and accessories
+2025-02-25 17:15:52,381 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 17:15:52,392 - ad_generator.campaign_generator - INFO - Ad campaign insights generated for fashion and accessories
+2025-02-25 17:16:10,076 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 17:16:10,089 - ad_generator.campaign_generator - INFO - Ad copy generated for bombay musk perfume
+2025-02-25 17:16:10,090 - ad_generator.campaign_generator - INFO - Trying Runway ML with API version: latest
+2025-02-25 17:16:11,003 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 17:16:11,005 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 17:16:11,006 - ad_generator.campaign_generator - INFO - Trying Runway ML with API version: 2023-01-01
+2025-02-25 17:16:11,902 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 17:16:11,903 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 17:16:11,904 - ad_generator.campaign_generator - INFO - Trying Runway ML with API version: 2023-11-06
+2025-02-25 17:16:12,775 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 17:16:12,776 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 17:16:12,776 - ad_generator.campaign_generator - INFO - Trying Runway ML with API version: 2024-11-06
+2025-02-25 17:16:13,684 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 17:16:13,685 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 17:16:13,686 - ad_generator.campaign_generator - INFO - Trying Runway ML with API version: 2024-02-01
+2025-02-25 17:16:14,557 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 17:16:14,558 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 17:16:14,558 - ad_generator.campaign_generator - INFO - Trying Runway ML with API version: None
+2025-02-25 17:16:15,454 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 17:16:15,455 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 17:16:15,456 - ad_generator.campaign_generator - ERROR - All Runway ML API version attempts failed
+2025-02-25 17:16:15,457 - ad_generator.campaign_generator - ERROR - Error generating ad campaign: All Runway ML API version attempts failed
+2025-02-25 17:16:15,458 - __main__ - ERROR - An unexpected error occurred: All Runway ML API version attempts failed
+2025-02-25 17:36:20,970 - __main__ - INFO - Generating ad campaign for: luxury watch fashion and accessories in fashion and accessories
+2025-02-25 17:36:43,407 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 17:36:43,414 - ad_generator.campaign_generator - INFO - Ad campaign insights generated for fashion and accessories
+2025-02-25 17:36:55,055 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 17:36:55,060 - ad_generator.campaign_generator - INFO - Ad copy generated for luxury watch fashion and accessories
+2025-02-25 17:36:55,060 - ad_generator.campaign_generator - INFO - Sending request to Runway ML: https://api.runwayml.com/v2/inference
+2025-02-25 17:36:55,061 - ad_generator.campaign_generator - INFO - Using prompt: Professional advertisement for luxury watch fashion and accessories in the fashion and accessories i...
+2025-02-25 17:36:55,868 - ad_generator.campaign_generator - INFO - Runway response status: 400
+2025-02-25 17:36:55,869 - ad_generator.campaign_generator - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 17:36:55,871 - ad_generator.campaign_generator - ERROR - Runway API returned status 400: {"error":"Invalid API Version"}
+2025-02-25 17:36:55,872 - ad_generator.campaign_generator - ERROR - Runway image generation error: Runway API returned status 400: {"error":"Invalid API Version"}
+2025-02-25 17:36:55,874 - ad_generator.campaign_generator - ERROR - Error generating ad campaign: Runway API returned status 400: {"error":"Invalid API Version"}
+2025-02-25 17:36:55,875 - __main__ - ERROR - An unexpected error occurred: Runway API returned status 400: {"error":"Invalid API Version"}

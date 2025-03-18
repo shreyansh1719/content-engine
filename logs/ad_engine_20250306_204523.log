@@ -1,0 +1,31 @@
+2025-03-06 20:45:23,646 - __main__ - INFO - Starting ad generation mode
+2025-03-06 20:45:29,446 - __main__ - INFO - Analyzing prompt: iphone 15 pro
+2025-03-06 20:45:32,592 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-06 20:45:32,604 - ad_generator.social_media.social_media_api - INFO - Searching social media for ads related to: iphone 15 pro, Smartphones & Technology
+2025-03-06 20:45:33,432 - root - INFO - Twitter API authentication successful
+2025-03-06 20:45:34,077 - root - ERROR - Error searching Twitter with query '#Smartphones&Technology ad': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-06 20:45:34,728 - root - ERROR - Error searching Twitter with query 'iphone 15 pro ad': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-06 20:45:35,322 - root - ERROR - Error searching Twitter with query 'Smartphones & Technology advertisement': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-06 20:45:35,935 - root - ERROR - Error searching Twitter with query '#iphone15pro promotion': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-06 20:45:36,547 - root - ERROR - Error searching Twitter with query '#Smartphones&Technology marketing': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-06 20:45:36,549 - root - INFO - Reddit API initialization successful
+2025-03-06 20:45:38,801 - root - INFO - Found posts in r/technology related to iphone 15 pro
+2025-03-06 20:45:40,217 - root - INFO - Found posts in r/gadgets related to iphone 15 pro
+2025-03-06 20:45:40,624 - root - INFO - Found posts in r/tech related to iphone 15 pro
+2025-03-06 20:45:41,006 - root - INFO - Found posts in r/apple related to iphone 15 pro
+2025-03-06 20:45:41,438 - root - INFO - Found posts in r/android related to iphone 15 pro
+2025-03-06 20:45:41,875 - root - INFO - Found posts in r/iphone15pro related to iphone 15 pro
+2025-03-06 20:45:41,875 - ad_generator.social_media.social_media_api - INFO - Reddit insights collected for iphone 15 pro
+2025-03-06 20:45:41,876 - ad_generator.social_media.social_media_api - INFO - Social media insights gathered for iphone 15 pro in Smartphones & Technology
+2025-03-06 20:45:41,879 - __main__ - INFO - Generating ad campaign for APPLE iphone 15 pro in Smartphones & Technology
+2025-03-06 20:45:41,880 - __main__ - ERROR - Error generating ad campaign: cannot import name 'RunwayImageGenerator' from 'ad_generator.image_maker' (C:\Users\RAZDAN\content-engine\ad_generator\image_maker.py)
+2025-03-06 20:45:41,887 - __main__ - ERROR - Traceback (most recent call last):
+  File "C:\Users\RAZDAN\content-engine\main.py", line 209, in generate_ad_campaign
+    from ad_generator.image_maker import RunwayImageGenerator, create_placeholder_image
+ImportError: cannot import name 'RunwayImageGenerator' from 'ad_generator.image_maker' (C:\Users\RAZDAN\content-engine\ad_generator\image_maker.py). Did you mean: 'DallEImageGenerator'?
+

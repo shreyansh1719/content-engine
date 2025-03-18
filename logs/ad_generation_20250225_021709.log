@@ -1,0 +1,15 @@
+2025-02-25 02:17:17,575 - __main__ - INFO - Generating ad for: generate an ad for bombay musk
+2025-02-25 02:17:35,474 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 02:17:35,484 - ad_generator.generator - INFO - Brand analysis completed
+2025-02-25 02:17:50,974 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 02:17:50,979 - ad_generator.generator - INFO - Ad copy generated
+2025-02-25 02:17:50,980 - ad_generator.image_maker - INFO - Starting Runway image generation with prompt: Create a professional Luxury advertisement for Perfume & Fragrance:
+
+        TEXT LAYOUT:
+        Ma...
+2025-02-25 02:17:51,829 - ad_generator.image_maker - ERROR - Job creation failed: {"error":"Invalid API Version"}
+2025-02-25 02:17:51,830 - ad_generator.image_maker - ERROR - Image generation error: Failed to create job: {"error":"Invalid API Version"}
+2025-02-25 02:17:51,830 - ad_generator.generator - ERROR - Runway image generation failed: Failed to create job: {"error":"Invalid API Version"}
+2025-02-25 02:17:51,831 - ad_generator.generator - INFO - Falling back to DALL-E for image generation
+2025-02-25 02:18:16,989 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/images/generations "HTTP/1.1 200 OK"
+2025-02-25 02:18:21,963 - ad_generator.generator - INFO - Generated image using DALL-E

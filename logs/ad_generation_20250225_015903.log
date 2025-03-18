@@ -1,0 +1,13 @@
+2025-02-25 01:59:12,879 - __main__ - INFO - Generating ad for: bombay musk perfumes
+2025-02-25 01:59:29,677 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 01:59:29,690 - ad_generator.generator - INFO - Brand analysis completed
+2025-02-25 01:59:46,693 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 01:59:46,698 - ad_generator.generator - INFO - Ad copy generated
+2025-02-25 01:59:46,699 - ad_generator.image_maker - INFO - Generating image for: Create a professional Luxury advertisement for Beauty and Personal Care:
+
+        TEXT LAYOUT:
+     ...
+2025-02-25 02:00:13,950 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/images/generations "HTTP/1.1 200 OK"
+2025-02-25 02:00:13,953 - ad_generator.image_maker - INFO - Image generated successfully
+2025-02-25 02:00:17,900 - ad_generator.image_maker - INFO - Image saved to: output/images\ad_image_20250225_020017.png
+2025-02-25 02:00:17,901 - ad_generator.generator - INFO - Generated image using RunwayML

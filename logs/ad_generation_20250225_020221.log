@@ -1,0 +1,19 @@
+2025-02-25 02:02:22,714 - ad_generator.image_maker - WARNING - API key verification failed with status 400: {"error":"Invalid API Version"}
+2025-02-25 02:02:32,791 - __main__ - INFO - Generating ad for: generate an ad for bombay musk perfumes
+2025-02-25 02:02:45,448 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 02:02:45,459 - ad_generator.generator - INFO - Brand analysis completed
+2025-02-25 02:02:56,864 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 02:02:56,873 - ad_generator.generator - INFO - Ad copy generated
+2025-02-25 02:02:56,873 - ad_generator.image_maker - INFO - Starting Runway generation with prompt: Create a professional Luxury advertisement for Beauty and Personal Care:
+
+        TEXT LAYOUT:
+     ...
+2025-02-25 02:02:56,874 - ad_generator.image_maker - INFO - Sending request to Runway API with payload: {"input": {"prompt": "Create a professional Luxury advertisement for Beauty and Personal Care:\n\n        TEXT LAYOUT:\n        Main Headline: \"Unleash Your Mystique with Bombay Musk\"\n        Supporting Text: \"Experience the Scent of Luxury\"\n        CTA: \"Indulge in Bombay Musk today and let the world catch a whiff of your mystique.\"\n        \n        VISUAL STYLE:\n        Industry: Beauty and Personal Care\n        Brand Level: Luxury\n        Art Direction: The visuals should be as captivating as the scent itself, with luxurious and exotic elements. Use rich, dramatic settings and high-fashion models. The bottle should be showcased as a piece of art.\n        Color Scheme: Deep, rich colors to reflect the exotic nature of the perfume. Consider combinations of black, gold, and rich jewel tones like emerald, ruby, or sapphire.\n        \n        SCENE DETAILS:\n        A luxurious, richly-hued bottle of Bombay Musk perfume, poised against a backdrop of an opulent, dimly lit room. The bottle, sleek and elegant, glows like a precious jewel, its design reflecting the intricate architecture of Bombay's palaces. A delicate mist of the perfume hangs in the air, suggesting an air of mystery and fascination.\n        \n        REQUIREMENTS:\n        - Professional Luxury quality\n        - Industry-appropriate styling\n        - Target market appeal for High-income, fashion-forward individuals, primarily aged 25-45 who appreciate luxury and have a taste for unique, exotic fragrances. They value individuality, quality, and exclusivity.\n        - Clear text hierarchy\n        - Perfect typography\n        - High-end composition", "negative_prompt": "blurry, low quality, distorted text, poor composition, unprofessional", "width": 1024, "height": 1024, "num_outputs": 1, "scheduler": "K_EULER_ANCESTRAL", "num_inference_steps": 50, "guidance_scale": 7.5}}
+2025-02-25 02:02:57,824 - ad_generator.image_maker - INFO - Runway response status: 400
+2025-02-25 02:02:57,826 - ad_generator.image_maker - INFO - Runway response: {"error":"Invalid API Version"}...
+2025-02-25 02:02:57,827 - ad_generator.image_maker - ERROR - Runway API error: Status 400: {"error":"Invalid API Version"}
+2025-02-25 02:02:57,828 - ad_generator.image_maker - ERROR - Runway ML error: Runway API error: Status 400: {"error":"Invalid API Version"}
+2025-02-25 02:02:57,829 - ad_generator.generator - ERROR - Runway image generation failed: Runway API error: Status 400: {"error":"Invalid API Version"}
+2025-02-25 02:02:57,830 - ad_generator.generator - INFO - Falling back to DALL-E for image generation
+2025-02-25 02:03:15,729 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/images/generations "HTTP/1.1 200 OK"
+2025-02-25 02:03:23,433 - ad_generator.generator - INFO - Generated image using DALL-E

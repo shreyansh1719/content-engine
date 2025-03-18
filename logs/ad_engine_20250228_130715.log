@@ -1,0 +1,82 @@
+2025-02-28 13:07:15,670 - __main__ - INFO - Starting ad generation mode
+2025-02-28 13:07:31,568 - __main__ - INFO - Analyzing prompt: bombay musk car perfume
+2025-02-28 13:07:32,992 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 400 Bad Request"
+2025-02-28 13:07:33,001 - root - ERROR - Error analyzing prompt: Error code: 400 - {'error': {'message': "Invalid parameter: 'response_format' of type 'json_object' is not supported with this model.", 'type': 'invalid_request_error', 'param': 'response_format', 'code': None}}
+2025-02-28 13:07:33,072 - root - ERROR - Traceback (most recent call last):
+  File "C:\Users\RAZDAN\content-engine\main.py", line 118, in analyze_user_prompt
+    response = openai_client.chat.completions.create(
+        model="gpt-4",
+    ...<4 lines>...
+        response_format={"type": "json_object"}
+    )
+  File "C:\Users\RAZDAN\content-engine\venv\Lib\site-packages\openai\_utils\_utils.py", line 279, in wrapper
+    return func(*args, **kwargs)
+  File "C:\Users\RAZDAN\content-engine\venv\Lib\site-packages\openai\resources\chat\completions\completions.py", line 879, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<40 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\RAZDAN\content-engine\venv\Lib\site-packages\openai\_base_client.py", line 1290, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\RAZDAN\content-engine\venv\Lib\site-packages\openai\_base_client.py", line 967, in request
+    return self._request(
+           ~~~~~~~~~~~~~^
+        cast_to=cast_to,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        retries_taken=retries_taken,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\RAZDAN\content-engine\venv\Lib\site-packages\openai\_base_client.py", line 1071, in _request
+    raise self._make_status_error_from_response(err.response) from None
+openai.BadRequestError: Error code: 400 - {'error': {'message': "Invalid parameter: 'response_format' of type 'json_object' is not supported with this model.", 'type': 'invalid_request_error', 'param': 'response_format', 'code': None}}
+
+2025-02-28 13:07:33,077 - __main__ - INFO - Searching social media for ads related to: bombay musk car perfume, Technology
+2025-02-28 13:07:33,077 - __main__ - INFO - Social media insights gathered for bombay musk car perfume in Technology
+2025-02-28 13:07:33,078 - __main__ - INFO - Generating ad campaign for BOMBAY bombay musk car perfume in Technology
+2025-02-28 13:07:33,614 - __main__ - INFO - Generating optimized ad copy
+2025-02-28 13:07:34,092 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 400 Bad Request"
+2025-02-28 13:07:34,096 - __main__ - ERROR - Error generating ad campaign: Error code: 400 - {'error': {'message': "Invalid parameter: 'response_format' of type 'json_object' is not supported with this model.", 'type': 'invalid_request_error', 'param': 'response_format', 'code': None}}
+2025-02-28 13:07:34,103 - __main__ - ERROR - Traceback (most recent call last):
+  File "C:\Users\RAZDAN\content-engine\main.py", line 325, in generate_ad_campaign
+    ad_copy_response = openai_client.chat.completions.create(
+        model="gpt-4",
+    ...<4 lines>...
+        response_format={"type": "json_object"}
+    )
+  File "C:\Users\RAZDAN\content-engine\venv\Lib\site-packages\openai\_utils\_utils.py", line 279, in wrapper
+    return func(*args, **kwargs)
+  File "C:\Users\RAZDAN\content-engine\venv\Lib\site-packages\openai\resources\chat\completions\completions.py", line 879, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<40 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\RAZDAN\content-engine\venv\Lib\site-packages\openai\_base_client.py", line 1290, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\RAZDAN\content-engine\venv\Lib\site-packages\openai\_base_client.py", line 967, in request
+    return self._request(
+           ~~~~~~~~~~~~~^
+        cast_to=cast_to,
+        ^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        retries_taken=retries_taken,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\RAZDAN\content-engine\venv\Lib\site-packages\openai\_base_client.py", line 1071, in _request
+    raise self._make_status_error_from_response(err.response) from None
+openai.BadRequestError: Error code: 400 - {'error': {'message': "Invalid parameter: 'response_format' of type 'json_object' is not supported with this model.", 'type': 'invalid_request_error', 'param': 'response_format', 'code': None}}
+

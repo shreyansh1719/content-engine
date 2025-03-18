@@ -1,0 +1,7 @@
+2025-02-25 17:22:28,599 - __main__ - INFO - Generating ad campaign for: luxury watch
+2025-02-25 17:22:47,074 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 17:22:47,081 - ad_generator.campaign_generator - INFO - Market analysis completed for luxury watch
+2025-02-25 17:22:47,437 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 400 Bad Request"
+2025-02-25 17:22:47,440 - ad_generator.campaign_generator - ERROR - Creative strategy error for luxury watch: Error code: 400 - {'error': {'message': "'messages' must contain the word 'json' in some form, to use 'response_format' of type 'json_object'.", 'type': 'invalid_request_error', 'param': 'messages', 'code': None}}
+2025-02-25 17:22:47,450 - ad_generator.campaign_generator - ERROR - Comprehensive ad campaign generation error: Error code: 400 - {'error': {'message': "'messages' must contain the word 'json' in some form, to use 'response_format' of type 'json_object'.", 'type': 'invalid_request_error', 'param': 'messages', 'code': None}}
+2025-02-25 17:22:47,452 - __main__ - ERROR - An unexpected error occurred: Error code: 400 - {'error': {'message': "'messages' must contain the word 'json' in some form, to use 'response_format' of type 'json_object'.", 'type': 'invalid_request_error', 'param': 'messages', 'code': None}}
