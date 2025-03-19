@@ -17,6 +17,17 @@ import traceback
 import numpy as np
 import random
 
+# Import typography modules - these should be imported but not referenced directly in the top level
+# to avoid circular imports
+from .typography import (
+    TypographyStyleManager, 
+    TextEffectsEngine, 
+    ColorSchemeGenerator, 
+    ImageAnalyzer, 
+    TextPlacementEngine,
+    FontManager
+)
+
 class StudioImageGenerator:
     """Generate studio-quality ad images with professional typography."""
     
@@ -24,24 +35,24 @@ class StudioImageGenerator:
         """Initialize with OpenAI API key."""
         # Setup API key
         self.openai_api_key = openai_api_key or os.getenv('OPENAI_API_KEY')
-        
+    
         # Setup logging
         self.setup_logging()
-        
-        # Default font directories to search in different operating systems
-        self.font_directories = [
-            '',  # Current directory
-            '/usr/share/fonts/truetype/',
-            '/usr/share/fonts/',
-            '/Library/Fonts/',
-            'C:\\Windows\\Fonts\\',
-            os.path.join(os.path.expanduser('~'), 'Library/Fonts'),
-            os.path.join(os.path.expanduser('~'), '.fonts')
-        ]
-        
-        # Premium font mappings by style
-        self.premium_fonts = self._setup_premium_fonts()
     
+        # Initialize typography components
+        self.typography_manager = TypographyStyleManager()
+        self.text_effects = TextEffectsEngine()
+        self.color_scheme_generator = ColorSchemeGenerator()
+        self.image_analyzer = ImageAnalyzer()
+        self.text_placement = TextPlacementEngine()
+        self.font_manager = FontManager()
+    
+        # Setup default font directories for backward compatibility
+        self.font_directories = self.typography_manager.font_directories
+    
+        # Premium font mappings by style with fallbacks (for backward compatibility)
+        self.premium_fonts = self.typography_manager.font_styles
+
     def setup_logging(self):
         """Set up logging configuration."""
         logging.basicConfig(level=logging.INFO)
@@ -402,12 +413,12 @@ class StudioImageGenerator:
             return image_path  # Return original if enhancement fails
     
     def apply_professional_typography(self, image_path: str, headline: str, subheadline: str = None,
-                                   call_to_action: str = None, brand_name: str = None,
-                                   typography_style: str = "modern", text_placement: str = "centered",
-                                   color_scheme: str = None) -> str:
+                                    call_to_action: str = None, brand_name: str = None,
+                                    typography_style: str = "modern", text_placement: str = "centered",
+                                    color_scheme: str = None, industry: str = None) -> str:
         """
         Apply professional typography with industry-standard design principles.
-        
+    
         Args:
             image_path: Path to base image
             headline: Main headline text
@@ -417,7 +428,8 @@ class StudioImageGenerator:
             typography_style: Typography style
             text_placement: Text placement style
             color_scheme: Color scheme to use
-            
+            industry: Industry category
+        
         Returns:
             Path to final image with typography
         """
@@ -425,41 +437,41 @@ class StudioImageGenerator:
             # Check if image exists
             if not os.path.exists(image_path):
                 raise FileNotFoundError(f"Image not found: {image_path}")
-            
+        
             # Open and prepare image
             original_image = Image.open(image_path).convert('RGBA')
             width, height = original_image.size
-            
+        
             # Create transparent overlay for text
             text_overlay = Image.new('RGBA', original_image.size, (0, 0, 0, 0))
             draw = ImageDraw.Draw(text_overlay)
-            
+        
             # Analyze image to determine optimal text treatment
             brightness_map = self._analyze_image_brightness_map(original_image)
             dominant_colors = self._extract_dominant_colors(original_image)
-            
+        
             # Calculate optimal font sizes based on image dimensions
             headline_size = int(height * 0.075)  # Professional ads use smaller, more elegant type
             subheadline_size = int(height * 0.035)
             cta_size = int(height * 0.045)
             brand_size = int(height * 0.055)
-            
+        
             # Load professional fonts based on typography style
             headline_font = self._get_font(typography_style, "headline", headline_size)
             subheadline_font = self._get_font(typography_style, "subheadline", subheadline_size)
             cta_font = self._get_font(typography_style, "cta", cta_size)
             brand_font = self._get_font(typography_style, "headline", brand_size)
-            
+        
             # Use rule of thirds for text positioning based on text_placement
             positions = self._calculate_professional_text_positions(
                 width, height, text_placement, brightness_map
             )
-            
+        
             # Get color scheme for text and accents
             text_color, accent_color, overlay_bg = self._determine_professional_colors(
                 dominant_colors, brightness_map, color_scheme
             )
-            
+        
             # Add brand name
             if brand_name:
                 brand_text = brand_name.upper()
@@ -1020,7 +1032,8 @@ class StudioImageGenerator:
                 brand_name=brand_name,
                 typography_style=typography_style,
                 text_placement=text_placement,
-                color_scheme=color_scheme
+                color_scheme=color_scheme,
+                industry=industry
             )
             
             return {
