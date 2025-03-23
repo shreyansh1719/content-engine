@@ -1,0 +1,60 @@
+2025-03-24 03:12:25,723 - StudioImageGenerator - INFO - Creating studio ad for Bombay Sapphire gin with brand BOMBAY SAPPHIRE
+2025-03-24 03:12:26,213 - StudioImageGenerator - INFO - Selected ad style: dramatic for Bombay Sapphire gin
+2025-03-24 03:12:26,214 - StudioImageGenerator - INFO - Generating studio-quality ad image for Bombay Sapphire gin
+2025-03-24 03:13:04,523 - StudioImageGenerator - INFO - Raw image saved to: output/images/base/studio_base_20250324_031304.png
+2025-03-24 03:13:04,829 - StudioImageGenerator - INFO - Enhanced image saved to: output/images/enhanced/enhanced_20250324_031304.png
+2025-03-24 03:13:04,924 - StudioImageGenerator - WARNING - Image composition analysis failed: '<' not supported between instances of 'float' and 'dict_values'
+2025-03-24 03:13:04,925 - StudioImageGenerator - ERROR - Typography application error: 'NoneType' object has no attribute 'get'
+2025-03-24 03:13:04,929 - StudioImageGenerator - ERROR - Traceback (most recent call last):
+  File "C:\Users\RAZDAN\content-engine-backup\ad_generator\image_maker.py", line 1106, in apply_integrated_typography
+    text_positions = self._determine_optimal_text_positions(
+        width, height,
+    ...<4 lines>...
+        text_placement
+    )
+  File "C:\Users\RAZDAN\content-engine-backup\ad_generator\image_maker.py", line 1396, in _determine_optimal_text_positions
+    left_brightness = brightness_map.get('middle_left', 0.5)
+                      ^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+
+2025-03-24 03:13:04,930 - StudioImageGenerator - INFO - Successfully created studio ad: output/images/enhanced/enhanced_20250324_031304.png
+2025-03-24 03:54:46,448 - StudioImageGenerator - INFO - Creating studio ad for Nike Air Max running shoes with brand NIKE
+2025-03-24 03:54:47,225 - StudioImageGenerator - INFO - Selected ad style: dramatic for Nike Air Max running shoes
+2025-03-24 03:54:47,225 - StudioImageGenerator - INFO - Generating studio-quality ad image for Nike Air Max running shoes
+2025-03-24 03:55:19,270 - StudioImageGenerator - INFO - Raw image saved to: output/images/base/studio_base_20250324_035519.png
+2025-03-24 03:55:19,618 - StudioImageGenerator - INFO - Enhanced image saved to: output/images/enhanced/enhanced_20250324_035519.png
+2025-03-24 03:55:19,734 - StudioImageGenerator - WARNING - Image composition analysis failed: '<' not supported between instances of 'float' and 'dict_values'
+2025-03-24 03:55:19,736 - StudioImageGenerator - ERROR - Typography application error: 'NoneType' object has no attribute 'get'
+2025-03-24 03:55:19,740 - StudioImageGenerator - ERROR - Traceback (most recent call last):
+  File "C:\Users\RAZDAN\content-engine-backup\ad_generator\image_maker.py", line 1106, in apply_integrated_typography
+    text_positions = self._determine_optimal_text_positions(
+        width, height,
+    ...<4 lines>...
+        text_placement
+    )
+  File "C:\Users\RAZDAN\content-engine-backup\ad_generator\image_maker.py", line 1396, in _determine_optimal_text_positions
+    left_brightness = brightness_map.get('middle_left', 0.5)
+                      ^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+
+2025-03-24 03:55:19,742 - StudioImageGenerator - INFO - Successfully created studio ad: output/images/enhanced/enhanced_20250324_035519.png
+2025-03-24 04:13:45,489 - StudioImageGenerator - INFO - Creating studio ad for Bombay Sapphire gin with brand BOMBAY SAPPHIRE
+2025-03-24 04:13:46,158 - StudioImageGenerator - INFO - Selected ad style: dramatic for Bombay Sapphire gin (product type: spirits.gin)
+2025-03-24 04:13:46,159 - StudioImageGenerator - INFO - Generating studio-quality ad image for Bombay Sapphire gin
+2025-03-24 04:14:08,302 - StudioImageGenerator - INFO - Raw image saved to: output/images/base/studio_base_20250324_041408.png
+2025-03-24 04:14:08,921 - StudioImageGenerator - INFO - Enhanced image saved to: output/images/enhanced/enhanced_20250324_041408.png
+2025-03-24 04:14:09,030 - StudioImageGenerator - WARNING - Image composition analysis failed: '<' not supported between instances of 'float' and 'dict_values'
+2025-03-24 04:14:09,032 - StudioImageGenerator - ERROR - Typography application error: 'NoneType' object has no attribute 'get'
+2025-03-24 04:14:09,036 - StudioImageGenerator - ERROR - Traceback (most recent call last):
+  File "C:\Users\RAZDAN\content-engine-backup\ad_generator\image_maker.py", line 1479, in apply_integrated_typography
+    text_positions = self._determine_optimal_text_positions(
+        width, height,
+    ...<4 lines>...
+        text_placement
+    )
+  File "C:\Users\RAZDAN\content-engine-backup\ad_generator\image_maker.py", line 1769, in _determine_optimal_text_positions
+    left_brightness = brightness_map.get('middle_left', 0.5)
+                      ^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+
+2025-03-24 04:14:09,037 - StudioImageGenerator - INFO - Successfully created studio ad: output/images/enhanced/enhanced_20250324_041408.png

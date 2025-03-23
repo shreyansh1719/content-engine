@@ -1,0 +1,42 @@
+2025-02-28 13:16:31,375 - __main__ - INFO - Starting ad generation mode
+2025-02-28 13:16:39,796 - __main__ - INFO - Analyzing prompt: bombay musk car perfume
+2025-02-28 13:16:41,757 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-28 13:16:41,772 - __main__ - INFO - Searching social media for ads related to: car perfume, Fragrance & Automotive Accessories
+2025-02-28 13:16:41,772 - __main__ - INFO - Social media insights gathered for car perfume in Fragrance & Automotive Accessories
+2025-02-28 13:16:41,774 - __main__ - INFO - Generating ad campaign for BOMBAY MUSK car perfume in Fragrance & Automotive Accessories
+2025-02-28 13:16:42,199 - __main__ - INFO - Generating optimized ad copy
+2025-02-28 13:16:52,069 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-28 13:16:52,074 - __main__ - INFO - Ad copy generated successfully
+2025-02-28 13:16:52,075 - __main__ - INFO - Generating ad image with text overlay
+2025-02-28 13:16:52,077 - ad_generator.image_maker - INFO - Enhanced prompt: Professional advertisement: 
+        Professional advertisement photograph of BOMBAY MUSK car perfum...
+2025-02-28 13:16:52,079 - ad_generator.image_maker - INFO - Sending request to Runway ML
+2025-02-28 13:16:52,926 - ad_generator.image_maker - INFO - Runway response status: 400
+2025-02-28 13:16:52,927 - ad_generator.image_maker - ERROR - Runway API error: Status 400: Invalid API Version
+2025-02-28 13:16:52,927 - ad_generator.image_maker - ERROR - Full Response: {"error":"Invalid API Version"}
+2025-02-28 13:16:52,928 - ad_generator.image_maker - ERROR - Runway ML error: Runway API error: Status 400: Invalid API Version
+2025-02-28 13:17:06,907 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/images/generations "HTTP/1.1 200 OK"
+2025-02-28 13:17:10,093 - __main__ - INFO - Base image generated at: output/images/dalle_ad_20250228_131710.png
+2025-02-28 13:17:17,358 - ad_generator.image_maker - ERROR - Error adding text overlay: color must be int or tuple
+2025-02-28 13:17:17,377 - ad_generator.image_maker - ERROR - Traceback (most recent call last):
+  File "C:\Users\RAZDAN\content-engine\ad_generator\image_maker.py", line 443, in add_text_overlay
+    self._draw_rounded_rectangle(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        draw,
+        ^^^^^
+    ...<2 lines>...
+        radius=15
+        ^^^^^^^^^
+    )
+    ^
+  File "C:\Users\RAZDAN\content-engine\ad_generator\image_maker.py", line 959, in _draw_rounded_rectangle
+    draw.rectangle([(x1+radius, y1), (x2-radius, y2)], fill=color)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\RAZDAN\content-engine\venv\Lib\site-packages\PIL\ImageDraw.py", line 409, in rectangle
+    ink, fill_ink = self._getink(outline, fill)
+                    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\RAZDAN\content-engine\venv\Lib\site-packages\PIL\ImageDraw.py", line 170, in _getink
+    result_fill = self.draw.draw_ink(fill)
+TypeError: color must be int or tuple
+
+2025-02-28 13:17:17,572 - __main__ - INFO - Image with text overlay generated at: output/images\emergency_ad_20250228_131717.png

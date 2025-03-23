@@ -1,0 +1,12 @@
+2025-02-25 18:29:06,784 - __main__ - INFO - Starting ad generation mode
+2025-02-25 18:29:17,858 - __main__ - INFO - Generating ad campaign for: luxury watch in fashion and accessories
+2025-02-25 18:29:43,550 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 18:29:43,557 - ad_generator.campaign_generator - INFO - Enhanced product analysis for luxury watch
+2025-02-25 18:29:52,070 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 18:29:52,084 - ad_generator.campaign_generator - INFO - Winning ad copy generated for luxury watch
+2025-02-25 18:29:52,085 - ad_generator.campaign_generator - INFO - Sending request to Runway ML
+2025-02-25 18:29:53,005 - ad_generator.campaign_generator - ERROR - Runway image generation error: Runway API returned status 400: {"error":"Invalid API Version"}
+2025-02-25 18:29:53,007 - ad_generator.campaign_generator - INFO - Falling back to DALL-E for image generation
+2025-02-25 18:30:09,122 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/images/generations "HTTP/1.1 200 OK"
+2025-02-25 18:30:12,414 - ad_generator.campaign_generator - INFO - DALL-E fallback image generated: output/images/dalle_ad_20250225_183012.png
+2025-02-25 18:30:12,417 - ad_generator.campaign_generator - INFO - Winning ad campaign generated for luxury watch

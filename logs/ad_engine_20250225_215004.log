@@ -1,0 +1,21 @@
+2025-02-25 21:50:04,295 - __main__ - INFO - Starting ad generation mode
+2025-02-25 21:50:21,115 - __main__ - INFO - Analyzing prompt: bombay musk car perfume brand
+2025-02-25 21:50:23,512 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 21:50:23,531 - __main__ - INFO - Generating ad campaign for: car perfume in Fragrance & Automotive Accessories with brand: BOMBAY MUSK
+2025-02-25 21:50:50,820 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 21:50:50,825 - ad_generator.campaign_generator - INFO - Enhanced product analysis for car perfume
+2025-02-25 21:52:53,197 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 21:52:53,199 - ad_generator.campaign_generator - INFO - Winning ad copy generated for car perfume
+2025-02-25 21:52:53,199 - ad_generator.campaign_generator - INFO - Generating base image with description: . This is for BOMBAY MUSK car perfume in the Fragrance & Automotive Accessories industry....
+2025-02-25 21:52:53,200 - ad_generator.image_maker - INFO - Enhanced prompt: Professional advertisement: 
+        . This is for BOMBAY MUSK car perfume in the Fragrance & Automo...
+2025-02-25 21:52:53,200 - ad_generator.image_maker - INFO - Sending request to Runway ML
+2025-02-25 21:52:53,964 - ad_generator.image_maker - INFO - Runway response status: 400
+2025-02-25 21:52:53,967 - ad_generator.image_maker - ERROR - Runway API error: Status 400: Invalid API Version
+2025-02-25 21:52:53,968 - ad_generator.image_maker - ERROR - Full Response: {"error":"Invalid API Version"}
+2025-02-25 21:52:53,969 - ad_generator.image_maker - ERROR - Runway ML error: Runway API error: Status 400: Invalid API Version
+2025-02-25 21:52:53,970 - ad_generator.campaign_generator - ERROR - Error creating ad image with text: Runway API error: Status 400: Invalid API Version
+2025-02-25 21:52:53,971 - ad_generator.campaign_generator - INFO - Falling back to DALL-E for image generation
+2025-02-25 21:53:08,872 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/images/generations "HTTP/1.1 200 OK"
+2025-02-25 21:53:11,749 - ad_generator.campaign_generator - INFO - DALL-E fallback image generated: output/images/dalle_ad_20250225_215311.png
+2025-02-25 21:53:11,753 - ad_generator.campaign_generator - INFO - Winning ad campaign generated for BOMBAY MUSK car perfume

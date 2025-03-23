@@ -1,0 +1,39 @@
+2025-03-04 00:57:59,328 - __main__ - INFO - Starting ad generation mode
+2025-03-04 00:58:05,943 - __main__ - INFO - Analyzing prompt: iphone 15 pro
+2025-03-04 00:58:08,971 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-04 00:58:08,978 - ad_generator.social_media.social_media_api - INFO - Searching social media for ads related to: iPhone 15 Pro, Smartphones & Technology
+2025-03-04 00:58:09,663 - root - INFO - Twitter API authentication successful
+2025-03-04 00:58:10,261 - root - ERROR - Error searching Twitter with query '#Smartphones&Technology ad': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-04 00:58:10,873 - root - ERROR - Error searching Twitter with query 'iPhone 15 Pro ad': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-04 00:58:11,496 - root - ERROR - Error searching Twitter with query 'Smartphones & Technology advertisement': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-04 00:58:12,124 - root - ERROR - Error searching Twitter with query '#iPhone15Pro promotion': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-04 00:58:12,737 - root - ERROR - Error searching Twitter with query '#Smartphones&Technology marketing': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-04 00:58:12,744 - root - INFO - Reddit API initialization successful
+2025-03-04 00:58:13,542 - root - INFO - Found posts in r/technology related to iPhone 15 Pro
+2025-03-04 00:58:13,876 - root - INFO - Found posts in r/gadgets related to iPhone 15 Pro
+2025-03-04 00:58:14,207 - root - INFO - Found posts in r/tech related to iPhone 15 Pro
+2025-03-04 00:58:14,538 - root - INFO - Found posts in r/apple related to iPhone 15 Pro
+2025-03-04 00:58:14,872 - root - INFO - Found posts in r/android related to iPhone 15 Pro
+2025-03-04 00:58:15,211 - root - INFO - Found posts in r/iphone15pro related to iPhone 15 Pro
+2025-03-04 00:58:15,213 - ad_generator.social_media.social_media_api - INFO - Social media insights gathered for iPhone 15 Pro in Smartphones & Technology
+2025-03-04 00:58:15,217 - __main__ - INFO - Generating ad campaign for APPLE iPhone 15 Pro in Smartphones & Technology
+2025-03-04 00:58:15,614 - __main__ - INFO - Generating optimized ad copy
+2025-03-04 00:58:20,467 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-04 00:58:20,470 - __main__ - INFO - Ad copy generated successfully
+2025-03-04 00:58:20,470 - __main__ - INFO - Generating ad image with text overlay
+2025-03-04 00:58:20,471 - ad_generator.image_maker - INFO - Enhanced prompt: Professional advertisement: 
+        Professional advertisement photograph of APPLE iPhone 15 Pro fo...
+2025-03-04 00:58:20,471 - ad_generator.image_maker - INFO - Sending request to Runway ML
+2025-03-04 00:58:21,368 - ad_generator.image_maker - INFO - Runway response status: 400
+2025-03-04 00:58:21,369 - ad_generator.image_maker - ERROR - Runway API error: Status 400: Invalid API Version
+2025-03-04 00:58:21,369 - ad_generator.image_maker - ERROR - Full Response: {"error":"Invalid API Version"}
+2025-03-04 00:58:21,370 - ad_generator.image_maker - ERROR - Runway ML error: Runway API error: Status 400: Invalid API Version
+2025-03-04 00:58:33,808 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/images/generations "HTTP/1.1 200 OK"
+2025-03-04 00:58:37,089 - __main__ - INFO - Base image generated at: output/images/dalle_ad_20250304_005837.png
+2025-03-04 00:58:38,625 - ad_generator.image_maker - INFO - Image with text overlay saved: output/images\ad_with_text_20250304_005838.png
+2025-03-04 00:58:38,628 - __main__ - INFO - Image with text overlay generated at: output/images\ad_with_text_20250304_005838.png
