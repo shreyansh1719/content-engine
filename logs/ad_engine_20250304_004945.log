@@ -1,0 +1,38 @@
+2025-03-04 00:49:45,216 - __main__ - INFO - Starting ad generation mode
+2025-03-04 00:49:57,147 - __main__ - INFO - Analyzing prompt: bombay musk car perfume
+2025-03-04 00:50:01,266 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-04 00:50:01,286 - ad_generator.social_media.social_media_api - INFO - Searching social media for ads related to: car perfume, Fragrance & Automotive Accessories
+2025-03-04 00:50:01,979 - root - INFO - Twitter API authentication successful
+2025-03-04 00:50:02,608 - root - ERROR - Error searching Twitter with query '#Fragrance&AutomotiveAccessories ad': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-04 00:50:03,248 - root - ERROR - Error searching Twitter with query 'car perfume ad': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-04 00:50:03,882 - root - ERROR - Error searching Twitter with query 'Fragrance & Automotive Accessories advertisement': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-04 00:50:04,481 - root - ERROR - Error searching Twitter with query '#carperfume promotion': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-04 00:50:05,102 - root - ERROR - Error searching Twitter with query '#Fragrance&AutomotiveAccessories marketing': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-04 00:50:05,467 - root - INFO - Reddit API initialization successful
+2025-03-04 00:50:06,505 - root - INFO - Found posts in r/cars related to car perfume
+2025-03-04 00:50:06,911 - root - INFO - Found posts in r/autos related to car perfume
+2025-03-04 00:50:07,322 - root - INFO - Found posts in r/carporn related to car perfume
+2025-03-04 00:50:07,836 - root - INFO - Found posts in r/teslamotors related to car perfume
+2025-03-04 00:50:08,180 - root - ERROR - Error searching subreddit r/carperfume: received 404 HTTP response
+2025-03-04 00:50:08,181 - ad_generator.social_media.social_media_api - INFO - Social media insights gathered for car perfume in Fragrance & Automotive Accessories
+2025-03-04 00:50:08,184 - __main__ - INFO - Generating ad campaign for BOMBAY MUSK car perfume in Fragrance & Automotive Accessories
+2025-03-04 00:50:08,578 - __main__ - INFO - Generating optimized ad copy
+2025-03-04 00:50:16,847 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-04 00:50:16,852 - __main__ - INFO - Ad copy generated successfully
+2025-03-04 00:50:16,853 - __main__ - INFO - Generating ad image with text overlay
+2025-03-04 00:50:16,854 - ad_generator.image_maker - INFO - Enhanced prompt: Professional advertisement: 
+        Professional advertisement photograph of BOMBAY MUSK car perfum...
+2025-03-04 00:50:16,857 - ad_generator.image_maker - INFO - Sending request to Runway ML
+2025-03-04 00:50:17,756 - ad_generator.image_maker - INFO - Runway response status: 400
+2025-03-04 00:50:17,758 - ad_generator.image_maker - ERROR - Runway API error: Status 400: Invalid API Version
+2025-03-04 00:50:17,759 - ad_generator.image_maker - ERROR - Full Response: {"error":"Invalid API Version"}
+2025-03-04 00:50:17,759 - ad_generator.image_maker - ERROR - Runway ML error: Runway API error: Status 400: Invalid API Version
+2025-03-04 00:50:33,027 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/images/generations "HTTP/1.1 200 OK"
+2025-03-04 00:50:36,220 - __main__ - INFO - Base image generated at: output/images/dalle_ad_20250304_005036.png
+2025-03-04 00:50:45,291 - ad_generator.image_maker - INFO - Image with text overlay saved: output/images\ad_with_text_20250304_005045.png
+2025-03-04 00:50:45,294 - __main__ - INFO - Image with text overlay generated at: output/images\ad_with_text_20250304_005045.png

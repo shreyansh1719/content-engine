@@ -1,0 +1,29 @@
+2025-03-16 19:14:53,085 - __main__ - INFO - Starting ad generation mode
+2025-03-16 19:15:07,528 - __main__ - INFO - Analyzing prompt: Nike Air Max running shoes
+2025-03-16 19:15:09,990 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-03-16 19:15:10,006 - ad_generator.social_media.social_media_api - INFO - Searching social media for ads related to: Air Max running shoes, Athletic Footwear
+2025-03-16 19:15:10,505 - root - INFO - Twitter API authentication successful
+2025-03-16 19:15:10,940 - root - ERROR - Error searching Twitter with query '#AthleticFootwear ad': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-16 19:15:11,374 - root - ERROR - Error searching Twitter with query 'Air Max running shoes ad': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-16 19:15:11,803 - root - ERROR - Error searching Twitter with query 'Athletic Footwear advertisement': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-16 19:15:12,221 - root - ERROR - Error searching Twitter with query '#AirMaxrunningshoes promotion': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-16 19:15:12,664 - root - ERROR - Error searching Twitter with query '#AthleticFootwear marketing': 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-03-16 19:15:12,727 - root - INFO - Reddit API initialization successful
+2025-03-16 19:15:14,059 - root - INFO - Found posts in r/marketing related to Air Max running shoes
+2025-03-16 19:15:14,435 - root - INFO - Found posts in r/advertising related to Air Max running shoes
+2025-03-16 19:15:14,822 - root - INFO - Found posts in r/socialmedia related to Air Max running shoes
+2025-03-16 19:15:15,236 - root - INFO - Found posts in r/digital_marketing related to Air Max running shoes
+2025-03-16 19:15:15,547 - root - ERROR - Error searching subreddit r/airmaxrunningshoes: Redirect to /subreddits/search
+2025-03-16 19:15:15,548 - ad_generator.social_media.social_media_api - INFO - Social media insights gathered for Air Max running shoes in Athletic Footwear
+2025-03-16 19:15:15,550 - __main__ - INFO - Generating ad campaign for NIKE Air Max running shoes in Athletic Footwear
+2025-03-16 19:15:15,550 - __main__ - ERROR - Error generating ad campaign: cannot import name 'RunwayImageGenerator' from 'ad_generator.image_maker' (C:\Users\RAZDAN\content-engine\ad_generator\image_maker.py)
+2025-03-16 19:15:15,552 - __main__ - ERROR - Traceback (most recent call last):
+  File "C:\Users\RAZDAN\content-engine\main.py", line 209, in generate_ad_campaign
+    from ad_generator.image_maker import RunwayImageGenerator, create_placeholder_image
+ImportError: cannot import name 'RunwayImageGenerator' from 'ad_generator.image_maker' (C:\Users\RAZDAN\content-engine\ad_generator\image_maker.py). Did you mean: 'DallEImageGenerator'?
+

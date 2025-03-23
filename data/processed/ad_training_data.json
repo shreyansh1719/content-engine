@@ -1,0 +1,70 @@
+[
+  {
+    "input": "Create an ad with trending product insights",
+    "output": {
+      "headline": "Product showcase with key features highlighted",
+      "description": "Key elements: feature feature, design feature, performance feature",
+      "trending_keywords": [
+        "feature",
+        "design",
+        "performance",
+        "price",
+        "quality"
+      ],
+      "visual_focus": "product design and styling",
+      "text_placement": "centered",
+      "text_style": "bold"
+    }
+  },
+  {
+    "input": "Create an ad with trending product insights",
+    "output": {
+      "headline": "Product showcase with key features highlighted",
+      "description": "Key elements: feature feature, design feature, performance feature",
+      "trending_keywords": [
+        "feature",
+        "design",
+        "performance",
+        "price",
+        "quality"
+      ],
+      "visual_focus": "product design and styling",
+      "text_placement": "centered",
+      "text_style": "bold"
+    }
+  },
+  {
+    "input": "Create an ad with trending product insights",
+    "output": {
+      "headline": "Product showcase with key features highlighted",
+      "description": "Key elements: feature feature, design feature, performance feature",
+      "trending_keywords": [
+        "feature",
+        "design",
+        "performance",
+        "price",
+        "quality"
+      ],
+      "visual_focus": "product design and styling",
+      "text_placement": "centered",
+      "text_style": "bold"
+    }
+  },
+  {
+    "input": "Create an ad with trending product insights",
+    "output": {
+      "headline": "Product showcase with key features highlighted",
+      "description": "Key elements: feature feature, design feature, performance feature",
+      "trending_keywords": [
+        "feature",
+        "design",
+        "performance",
+        "price",
+        "quality"
+      ],
+      "visual_focus": "product design and styling",
+      "text_placement": "centered",
+      "text_style": "bold"
+    }
+  }
+]

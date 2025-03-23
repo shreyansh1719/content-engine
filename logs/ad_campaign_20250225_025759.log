@@ -1,0 +1,11 @@
+2025-02-25 02:58:20,996 - __main__ - INFO - Generating ad campaign for: bombay musk perfumes in luxury car perfumes
+2025-02-25 02:58:47,389 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 02:58:47,419 - ad_generator.campaign_generator - INFO - Ad campaign insights generated for luxury car perfumes
+2025-02-25 02:58:58,117 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 02:58:58,135 - ad_generator.campaign_generator - INFO - Ad copy generated for bombay musk perfumes
+2025-02-25 02:58:59,176 - ad_generator.campaign_generator - INFO - Response from https://api.runwayml.com/v1/generate: 400
+2025-02-25 02:59:00,111 - ad_generator.campaign_generator - INFO - Response from https://api.runwayml.com/v2/generate: 400
+2025-02-25 02:59:01,162 - ad_generator.campaign_generator - INFO - Response from https://api.dev.runwayml.com/v1/generate: 404
+2025-02-25 02:59:21,586 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/images/generations "HTTP/1.1 200 OK"
+2025-02-25 02:59:25,199 - ad_generator.campaign_generator - INFO - Fallback image generated: output/images/fallback_ad_20250225_025925.png
+2025-02-25 02:59:25,202 - ad_generator.campaign_generator - INFO - Winning ad campaign generated for bombay musk perfumes

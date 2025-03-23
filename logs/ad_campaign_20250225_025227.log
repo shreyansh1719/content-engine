@@ -1,0 +1,9 @@
+2025-02-25 02:52:54,433 - __main__ - INFO - Generating ad campaign for: bombay musk perfumes in car perfume brand
+2025-02-25 02:53:19,001 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 02:53:19,009 - ad_generator.campaign_generator - INFO - Ad campaign insights generated for car perfume brand
+2025-02-25 02:53:31,443 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 02:53:31,448 - ad_generator.campaign_generator - INFO - Ad copy generated for bombay musk perfumes
+2025-02-25 02:53:32,524 - ad_generator.campaign_generator - ERROR - Image generation failed: {"error":"promptImage: Invalid input"}
+2025-02-25 02:53:32,524 - ad_generator.campaign_generator - ERROR - Runway image generation error: Could not generate image
+2025-02-25 02:53:32,525 - ad_generator.campaign_generator - ERROR - Error generating ad campaign: Could not generate image
+2025-02-25 02:53:32,525 - __main__ - ERROR - An unexpected error occurred: Could not generate image

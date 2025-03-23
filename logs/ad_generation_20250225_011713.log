@@ -1,0 +1,9 @@
+2025-02-25 01:17:25,487 - __main__ - INFO - Generating ad for: create an ad for bombay musk perfumes
+2025-02-25 01:17:40,793 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 01:17:40,799 - ad_generator.generator - INFO - Brand analysis completed
+2025-02-25 01:17:56,954 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 01:17:56,959 - ad_generator.generator - INFO - Ad copy generated
+2025-02-25 01:17:57,835 - ad_generator.image_maker - ERROR - Runway ML error: 400 Client Error: Bad Request for url: https://api.runwayml.com/v1/generate
+2025-02-25 01:17:57,843 - ad_generator.generator - ERROR - Runway image generation failed: 400 Client Error: Bad Request for url: https://api.runwayml.com/v1/generate
+2025-02-25 01:17:57,844 - ad_generator.generator - ERROR - Error creating ad: 400 Client Error: Bad Request for url: https://api.runwayml.com/v1/generate
+2025-02-25 01:17:57,845 - __main__ - ERROR - An unexpected error occurred: 400 Client Error: Bad Request for url: https://api.runwayml.com/v1/generate

@@ -1,0 +1,21 @@
+2025-02-25 21:53:28,557 - __main__ - INFO - Starting ad generation mode
+2025-02-25 21:54:20,358 - __main__ - INFO - Analyzing prompt: appli iphone 15 pro smartphone
+2025-02-25 21:54:24,296 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 21:54:24,314 - __main__ - INFO - Generating ad campaign for: iPhone 15 Pro in Consumer Electronics with brand: APPLE
+2025-02-25 21:54:54,457 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 21:54:54,467 - ad_generator.campaign_generator - INFO - Enhanced product analysis for iPhone 15 Pro
+2025-02-25 21:55:13,083 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 21:55:13,092 - ad_generator.campaign_generator - INFO - Winning ad copy generated for iPhone 15 Pro
+2025-02-25 21:55:13,093 - ad_generator.campaign_generator - INFO - Generating base image with description: . This is for APPLE iPhone 15 Pro in the Consumer Electronics industry....
+2025-02-25 21:55:13,094 - ad_generator.image_maker - INFO - Enhanced prompt: Professional advertisement: 
+        . This is for APPLE iPhone 15 Pro in the Consumer Electronics i...
+2025-02-25 21:55:13,095 - ad_generator.image_maker - INFO - Sending request to Runway ML
+2025-02-25 21:55:13,918 - ad_generator.image_maker - INFO - Runway response status: 400
+2025-02-25 21:55:13,919 - ad_generator.image_maker - ERROR - Runway API error: Status 400: Invalid API Version
+2025-02-25 21:55:13,920 - ad_generator.image_maker - ERROR - Full Response: {"error":"Invalid API Version"}
+2025-02-25 21:55:13,920 - ad_generator.image_maker - ERROR - Runway ML error: Runway API error: Status 400: Invalid API Version
+2025-02-25 21:55:13,921 - ad_generator.campaign_generator - ERROR - Error creating ad image with text: Runway API error: Status 400: Invalid API Version
+2025-02-25 21:55:13,922 - ad_generator.campaign_generator - INFO - Falling back to DALL-E for image generation
+2025-02-25 21:55:28,457 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/images/generations "HTTP/1.1 200 OK"
+2025-02-25 21:55:31,376 - ad_generator.campaign_generator - INFO - DALL-E fallback image generated: output/images/dalle_ad_20250225_215531.png
+2025-02-25 21:55:31,378 - ad_generator.campaign_generator - INFO - Winning ad campaign generated for APPLE iPhone 15 Pro

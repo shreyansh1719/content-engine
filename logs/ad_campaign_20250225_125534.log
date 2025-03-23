@@ -1,0 +1,12 @@
+2025-02-25 12:55:53,245 - __main__ - INFO - Generating ad campaign for: bombay musk perfumes in car perfume brand
+2025-02-25 12:56:10,307 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 12:56:10,314 - ad_generator.campaign_generator - INFO - Ad campaign insights generated for car perfume brand
+2025-02-25 12:56:28,773 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-02-25 12:56:28,785 - ad_generator.campaign_generator - INFO - Ad copy generated for bombay musk perfumes
+2025-02-25 12:56:29,735 - ad_generator.campaign_generator - INFO - Response from https://api.runwayml.com/v1/generate: 400
+2025-02-25 12:56:30,663 - ad_generator.campaign_generator - INFO - Response from https://api.runwayml.com/v2/generate: 400
+2025-02-25 12:56:31,685 - ad_generator.campaign_generator - INFO - Response from https://api.dev.runwayml.com/v1/generate: 404
+2025-02-25 12:56:43,278 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/images/generations "HTTP/1.1 200 OK"
+2025-02-25 12:56:46,699 - ad_generator.campaign_generator - INFO - Fallback image generated: output/images/fallback_ad_20250225_125646.png
+2025-02-25 12:56:46,700 - ad_generator.campaign_generator - INFO - Winning ad campaign generated for bombay musk perfumes
+2025-02-25 12:56:46,703 - __main__ - ERROR - An unexpected error occurred: sequence item 0: expected str instance, dict found

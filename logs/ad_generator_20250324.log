@@ -1,0 +1,51 @@
+2025-03-24 02:59:14,734 - AdGenerator - INFO - OpenAI client initialized successfully
+2025-03-24 02:59:14,744 - AdGenerator - INFO - Starting ad generation for:  Bombay Sapphire gin
+2025-03-24 02:59:14,745 - AdGenerator - INFO - Extracting brand and product from:  Bombay Sapphire gin
+2025-03-24 02:59:16,901 - AdGenerator - INFO - Extracted brand: BOMBAY SAPPHIRE, product: Bombay Sapphire gin
+2025-03-24 02:59:16,902 - AdGenerator - INFO - Analyzing brand: BOMBAY SAPPHIRE
+2025-03-24 02:59:30,917 - AdGenerator - INFO - Brand analysis completed for industry: Food and Beverages, specifically the Spirits and Liquor category, level: Premium
+2025-03-24 02:59:30,925 - AdGenerator - INFO - Getting social media insights for: Bombay Sapphire gin
+2025-03-24 02:59:56,079 - AdGenerator - INFO - Generating ad copy
+2025-03-24 03:00:03,169 - AdGenerator - INFO - Ad copy generation completed with headline: Savour Life's Rarest Essence
+2025-03-24 03:00:03,169 - AdGenerator - INFO - Generating ad image with integrated typography
+2025-03-24 03:00:03,170 - AdGenerator - ERROR - Error creating ad: 'StudioImageGenerator' object has no attribute 'create_studio_ad'
+2025-03-24 03:00:03,174 - AdGenerator - ERROR - Traceback (most recent call last):
+  File "C:\Users\RAZDAN\content-engine-backup\ad_generator\generator.py", line 578, in create_ad
+    image_result = self.image_generator.create_studio_ad(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'StudioImageGenerator' object has no attribute 'create_studio_ad'
+
+2025-03-24 03:00:03,175 - AdGenerator - ERROR - Fallback ad creation error: 'StudioImageGenerator' object has no attribute '_create_fallback_image'
+2025-03-24 03:09:50,270 - AdGenerator - INFO - OpenAI client initialized successfully
+2025-03-24 03:09:50,274 - AdGenerator - INFO - Starting ad generation for: Bombay Sapphire gin
+2025-03-24 03:09:50,274 - AdGenerator - INFO - Extracting brand and product from: Bombay Sapphire gin
+2025-03-24 03:09:51,955 - AdGenerator - INFO - Extracted brand: BOMBAY SAPPHIRE, product: Bombay Sapphire gin
+2025-03-24 03:09:51,955 - AdGenerator - INFO - Analyzing brand: BOMBAY SAPPHIRE
+2025-03-24 03:10:03,904 - AdGenerator - INFO - Brand analysis completed for industry: Alcohol Beverage Industry, Gin Specific Category, level: Premium
+2025-03-24 03:10:03,905 - AdGenerator - INFO - Getting social media insights for: Bombay Sapphire gin
+2025-03-24 03:12:20,336 - AdGenerator - INFO - Generating ad copy
+2025-03-24 03:12:25,723 - AdGenerator - INFO - Ad copy generation completed with headline: Savour The Sapphire Symphony
+2025-03-24 03:12:25,723 - AdGenerator - INFO - Generating ad image with integrated typography
+2025-03-24 03:13:04,932 - AdGenerator - INFO - Ad generation completed successfully: output/images/enhanced/enhanced_20250324_031304.png
+2025-03-24 03:53:55,134 - AdGenerator - INFO - OpenAI client initialized successfully
+2025-03-24 03:53:55,137 - AdGenerator - INFO - Starting ad generation for: Nike Air Max running shoes
+2025-03-24 03:53:55,138 - AdGenerator - INFO - Extracting brand and product from: Nike Air Max running shoes
+2025-03-24 03:53:57,223 - AdGenerator - INFO - Extracted brand: NIKE, product: Nike Air Max running shoes
+2025-03-24 03:53:57,223 - AdGenerator - INFO - Analyzing brand: NIKE
+2025-03-24 03:54:09,235 - AdGenerator - INFO - Brand analysis completed for industry: Sporting Goods and Apparel, specifically Performance Footwear, level: Premium
+2025-03-24 03:54:09,235 - AdGenerator - INFO - Getting social media insights for: Nike Air Max running shoes
+2025-03-24 03:54:40,571 - AdGenerator - INFO - Generating ad copy
+2025-03-24 03:54:46,447 - AdGenerator - INFO - Ad copy generation completed with headline: Unlock Infinite Strides With Air Max
+2025-03-24 03:54:46,448 - AdGenerator - INFO - Generating ad image with integrated typography
+2025-03-24 03:55:19,762 - AdGenerator - INFO - Ad generation completed successfully: output/images/enhanced/enhanced_20250324_035519.png
+2025-03-24 04:11:06,767 - AdGenerator - INFO - OpenAI client initialized successfully
+2025-03-24 04:11:06,771 - AdGenerator - INFO - Starting ad generation for: Bombay Sapphire gin
+2025-03-24 04:11:06,771 - AdGenerator - INFO - Extracting brand and product from: Bombay Sapphire gin
+2025-03-24 04:11:08,691 - AdGenerator - INFO - Extracted brand: BOMBAY SAPPHIRE, product: Bombay Sapphire gin
+2025-03-24 04:11:08,692 - AdGenerator - INFO - Analyzing brand: BOMBAY SAPPHIRE
+2025-03-24 04:11:22,369 - AdGenerator - INFO - Brand analysis completed for industry: Alcoholic Beverage Industry, specifically the Gin Category, level: Premium
+2025-03-24 04:11:22,369 - AdGenerator - INFO - Getting social media insights for: Bombay Sapphire gin
+2025-03-24 04:13:35,781 - AdGenerator - INFO - Generating ad copy
+2025-03-24 04:13:45,488 - AdGenerator - INFO - Ad copy generation completed with headline: Elevate The Ordinary With Bombay Sapphire
+2025-03-24 04:13:45,488 - AdGenerator - INFO - Generating ad image with integrated typography
+2025-03-24 04:14:09,049 - AdGenerator - INFO - Ad generation completed successfully: output/images/enhanced/enhanced_20250324_041408.png

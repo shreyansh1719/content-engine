@@ -1,0 +1,24 @@
+undetected-chromedriver>=3.5.3  # Handles bot detection for Chrome
+selenium>=4.17.0                # Web automation framework
+requests>=2.31.0                # HTTP requests library
+beautifulsoup4>=4.12.3          # Web scraping and parsing
+lxml>=4.9.3                     # XML and HTML parsing
+pandas>=2.2.1                   # Data manipulation and analysis
+numpy>=1.26.4                   # Numerical computing
+nltk>=3.8.1                     # Natural language processing
+praw>=7.7.1                     # Reddit API wrapper
+python-dotenv>=1.0.1            # Manage environment variables
+tqdm>=4.66.1                    # Progress bar for loops
+pytz>=2024.1                    # Timezone handling
+jsonlines>=3.1.0                # JSON streaming
+scikit-learn>=1.4.2             # Machine learning library
+transformers>=4.38.1            # Hugging Face transformers
+tensorboard>=2.15.1             # TensorFlow visualization
+Pillow>=10.2.0                  # Image processing library
+pytest>=8.1.0                   # Testing framework
+black>=23.12.1                  # Code formatter
+isort>=5.13.2                   # Sorts imports
+pylint>=3.1.0                   # Static code analysis
+mypy>=0.910                     # Static type checker
+flake8>=4.0.1                   # Code linter
+
