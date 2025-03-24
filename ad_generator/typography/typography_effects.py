@@ -354,6 +354,7 @@ class TypographyEffectsEngine:
                 x = x - text_width // 2
             elif alignment == "right":
                 x = x - text_width
+        
             
             # For text background
             if effect_params.get("background_enabled", False):
@@ -1634,5 +1635,5 @@ class TypographyEffectsEngine:
         text_x = left + (width - text_width) // 2
         text_y = top + (height - text_height) // 2
         
-        # Draw text
+        # Draw text 
         draw.text((text_x, text_y), text, font=font, fill=text_color) 
