@@ -1467,6 +1467,11 @@ class StudioImageGenerator:
                 cta_font = ImageFont.truetype("arial.ttf", cta_size) if os.path.exists("arial.ttf") else ImageFont.load_default()
                 brand_font = ImageFont.truetype("arial.ttf", brand_size) if os.path.exists("arial.ttf") else ImageFont.load_default()
             
+            self.logger.info(f"Headline font loaded: {headline_font is not None}")
+            self.logger.info(f"Font type: {type(headline_font).__name__}")
+
+
+            
             # Set up text elements
             text_elements = {
                 'headline': headline or "",
@@ -1651,7 +1656,7 @@ class StudioImageGenerator:
                 "subject_position": {"x": subject_x_norm, "y": subject_y_norm},
                 "subject_third": {"row": subject_third_row, "col": subject_third_col},
                 "strongest_third": strongest_third[0],
-                "has_clear_subject": np.max(thirds.values()) > np.mean(list(thirds.values())) * 2
+                "has_clear_subject": np.max(list(thirds.values())) > np.mean(list(thirds.values())) * 2
             }
             
         except Exception as e:
@@ -1798,7 +1803,11 @@ class StudioImageGenerator:
         default_accent = (41, 128, 185, 255)       # Blue accent
         
         # Determine base text color based on image brightness
-        overall_brightness = brightness_map.get('overall', 0.5)
+        if brightness_map is None:
+
+            overall_brightness = 0.5  # Default to medium brightness
+        else:
+            overall_brightness = brightness_map.get('overall', 0.5)
         base_text_color = default_dark_text if overall_brightness > 0.6 else default_light_text
         
         # Process color scheme if specified
@@ -2268,6 +2277,12 @@ class StudioImageGenerator:
             self.logger.warning(f"Standard alpha composite failed: {str(e)}")
             # Manual composite as fallback
             result.paste(text_overlay, (0, 0), text_overlay)
+        
+        overlay_array = np.array(text_overlay)
+        if np.any(overlay_array[:, :, 3] > 0):
+            self.logger.info("Text overlay contains visible elements")
+        else:
+            self.logger.warning("Text overlay is completely transparent")
         
         return result
     

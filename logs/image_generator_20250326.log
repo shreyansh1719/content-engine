@@ -1,0 +1,59 @@
+2025-03-26 00:41:08,311 - StudioImageGenerator - INFO - Creating studio ad for Perfect Skin face cream with brand L'OREAL
+2025-03-26 00:41:08,977 - StudioImageGenerator - INFO - Selected ad style: minimal for Perfect Skin face cream (product type: generic)
+2025-03-26 00:41:08,978 - StudioImageGenerator - INFO - Generating studio-quality ad image for Perfect Skin face cream
+2025-03-26 00:41:35,901 - StudioImageGenerator - INFO - Raw image saved to: output/images/base/studio_base_20250326_004135.png
+2025-03-26 00:41:36,307 - StudioImageGenerator - INFO - Enhanced image saved to: output/images/enhanced/enhanced_20250326_004136.png
+2025-03-26 00:41:36,413 - StudioImageGenerator - WARNING - Image composition analysis failed: '<' not supported between instances of 'float' and 'dict_values'
+2025-03-26 00:41:36,415 - StudioImageGenerator - ERROR - Typography application error: 'NoneType' object has no attribute 'get'
+2025-03-26 00:41:36,419 - StudioImageGenerator - ERROR - Traceback (most recent call last):
+  File "C:\Users\RAZDAN\content-engine-backup\ad_generator\image_maker.py", line 1489, in apply_integrated_typography
+    text_colors = self._determine_optimal_text_colors(
+        dominant_colors,
+        brightness_map,
+        color_scheme
+    )
+  File "C:\Users\RAZDAN\content-engine-backup\ad_generator\image_maker.py", line 1801, in _determine_optimal_text_colors
+    overall_brightness = brightness_map.get('overall', 0.5)
+                         ^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+
+2025-03-26 00:41:36,420 - StudioImageGenerator - INFO - Successfully created studio ad: output/images/enhanced/enhanced_20250326_004136.png
+2025-03-26 00:59:52,142 - StudioImageGenerator - INFO - Creating studio ad for Perfect Skin face cream with brand L'OREAL
+2025-03-26 00:59:53,706 - StudioImageGenerator - INFO - Selected ad style: minimal for Perfect Skin face cream (product type: generic)
+2025-03-26 00:59:53,707 - StudioImageGenerator - INFO - Generating studio-quality ad image for Perfect Skin face cream
+2025-03-26 01:00:41,982 - StudioImageGenerator - INFO - Raw image saved to: output/images/base/studio_base_20250326_010041.png
+2025-03-26 01:00:42,874 - StudioImageGenerator - INFO - Enhanced image saved to: output/images/enhanced/enhanced_20250326_010042.png
+2025-03-26 01:00:43,104 - StudioImageGenerator - WARNING - Image composition analysis failed: '<' not supported between instances of 'float' and 'dict_values'
+2025-03-26 01:00:43,578 - StudioImageGenerator - INFO - Final image with integrated typography saved: output/images/final/final_ad_20250326_010043.png
+2025-03-26 01:00:43,582 - StudioImageGenerator - INFO - Successfully created studio ad: output/images/final/final_ad_20250326_010043.png
+2025-03-26 01:21:00,386 - StudioImageGenerator - INFO - Creating studio ad for Perfect Skin face cream with brand L'OREAL
+2025-03-26 01:21:00,932 - StudioImageGenerator - INFO - Selected ad style: minimal for Perfect Skin face cream (product type: generic)
+2025-03-26 01:21:00,934 - StudioImageGenerator - INFO - Generating studio-quality ad image for Perfect Skin face cream
+2025-03-26 01:21:27,157 - StudioImageGenerator - INFO - Raw image saved to: output/images/base/studio_base_20250326_012127.png
+2025-03-26 01:21:27,455 - StudioImageGenerator - INFO - Enhanced image saved to: output/images/enhanced/enhanced_20250326_012127.png
+2025-03-26 01:21:27,565 - StudioImageGenerator - INFO - Headline font loaded: False
+2025-03-26 01:21:27,566 - StudioImageGenerator - INFO - Font type: NoneType
+2025-03-26 01:21:27,566 - StudioImageGenerator - ERROR - Typography application error: 'dict' object has no attribute 'lower'
+2025-03-26 01:21:27,570 - StudioImageGenerator - ERROR - Traceback (most recent call last):
+  File "C:\Users\RAZDAN\content-engine-backup\ad_generator\image_maker.py", line 1494, in apply_integrated_typography
+    text_colors = self._determine_optimal_text_colors(
+        dominant_colors,
+        brightness_map,
+        color_scheme
+    )
+  File "C:\Users\RAZDAN\content-engine-backup\ad_generator\image_maker.py", line 1815, in _determine_optimal_text_colors
+    scheme_lower = color_scheme.lower()
+                   ^^^^^^^^^^^^^^^^^^
+AttributeError: 'dict' object has no attribute 'lower'
+
+2025-03-26 01:21:27,571 - StudioImageGenerator - INFO - Successfully created studio ad: output/images/enhanced/enhanced_20250326_012127.png
+2025-03-26 12:27:37,790 - StudioImageGenerator - INFO - Creating studio ad for Rolex Submariner luxury watch with brand ROLEX
+2025-03-26 12:27:38,216 - StudioImageGenerator - INFO - Selected ad style: luxury for Rolex Submariner luxury watch (product type: luxury_watch)
+2025-03-26 12:27:38,217 - StudioImageGenerator - INFO - Generating studio-quality ad image for Rolex Submariner luxury watch
+2025-03-26 12:28:05,278 - StudioImageGenerator - INFO - Raw image saved to: output/images/base/studio_base_20250326_122805.png
+2025-03-26 12:28:05,679 - StudioImageGenerator - INFO - Enhanced image saved to: output/images/enhanced/enhanced_20250326_122805.png
+2025-03-26 12:28:05,744 - StudioImageGenerator - INFO - Headline font loaded: False
+2025-03-26 12:28:05,744 - StudioImageGenerator - INFO - Font type: NoneType
+2025-03-26 12:28:05,757 - StudioImageGenerator - WARNING - Text overlay is completely transparent
+2025-03-26 12:28:05,857 - StudioImageGenerator - INFO - Final image with integrated typography saved: output/images/final/final_ad_20250326_122805.png
+2025-03-26 12:28:05,859 - StudioImageGenerator - INFO - Successfully created studio ad: output/images/final/final_ad_20250326_122805.png

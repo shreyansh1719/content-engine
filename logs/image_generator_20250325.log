@@ -1,0 +1,27 @@
+2025-03-25 01:19:26,782 - StudioImageGenerator - INFO - Creating studio ad for Rolex Submariner luxury watch with brand ROLEX
+2025-03-25 01:19:28,051 - StudioImageGenerator - INFO - Selected ad style: luxury for Rolex Submariner luxury watch (product type: luxury_watch)
+2025-03-25 01:19:28,052 - StudioImageGenerator - INFO - Generating studio-quality ad image for Rolex Submariner luxury watch
+2025-03-25 01:19:54,638 - StudioImageGenerator - INFO - Raw image saved to: output/images/base/studio_base_20250325_011954.png
+2025-03-25 01:19:55,526 - StudioImageGenerator - INFO - Enhanced image saved to: output/images/enhanced/enhanced_20250325_011955.png
+2025-03-25 01:19:55,866 - StudioImageGenerator - INFO - Final image with integrated typography saved: output/images/final/final_ad_20250325_011955.png
+2025-03-25 01:19:55,869 - StudioImageGenerator - INFO - Successfully created studio ad: output/images/final/final_ad_20250325_011955.png
+2025-03-25 02:37:08,380 - StudioImageGenerator - INFO - Creating studio ad for iPhone 15 Pro with brand APPLE
+2025-03-25 02:37:08,847 - StudioImageGenerator - INFO - Selected ad style: technical for iPhone 15 Pro (product type: smartphone)
+2025-03-25 02:37:08,847 - StudioImageGenerator - INFO - Generating studio-quality ad image for iPhone 15 Pro
+2025-03-25 02:37:44,619 - StudioImageGenerator - INFO - Raw image saved to: output/images/base/studio_base_20250325_023744.png
+2025-03-25 02:37:44,866 - StudioImageGenerator - INFO - Enhanced image saved to: output/images/enhanced/enhanced_20250325_023744.png
+2025-03-25 02:37:44,949 - StudioImageGenerator - WARNING - Image composition analysis failed: '<' not supported between instances of 'float' and 'dict_values'
+2025-03-25 02:37:44,950 - StudioImageGenerator - ERROR - Typography application error: 'NoneType' object has no attribute 'get'
+2025-03-25 02:37:44,952 - StudioImageGenerator - ERROR - Traceback (most recent call last):
+  File "C:\Users\RAZDAN\content-engine-backup\ad_generator\image_maker.py", line 1489, in apply_integrated_typography
+    text_colors = self._determine_optimal_text_colors(
+        dominant_colors,
+        brightness_map,
+        color_scheme
+    )
+  File "C:\Users\RAZDAN\content-engine-backup\ad_generator\image_maker.py", line 1801, in _determine_optimal_text_colors
+    overall_brightness = brightness_map.get('overall', 0.5)
+                         ^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+
+2025-03-25 02:37:44,953 - StudioImageGenerator - INFO - Successfully created studio ad: output/images/enhanced/enhanced_20250325_023744.png
