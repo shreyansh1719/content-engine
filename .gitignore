@@ -1,2 +1,13 @@
 ".env" 
 ".env.txt" 
+.env.*
+*.env
+*.env.*
+
+# Output directories with generated images
+output/
+
+# Any other sensitive files
+*api_key*
+*secret*
+*password*  
