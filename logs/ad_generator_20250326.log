@@ -1,0 +1,44 @@
+2025-03-26 00:39:44,492 - AdGenerator - INFO - OpenAI client initialized successfully
+2025-03-26 00:39:44,498 - AdGenerator - INFO - Starting ad generation for: L'Oreal Perfect Skin face cream
+2025-03-26 00:39:44,499 - AdGenerator - INFO - Extracting brand and product from: L'Oreal Perfect Skin face cream
+2025-03-26 00:39:48,002 - AdGenerator - INFO - Extracted brand: L'OREAL, product: Perfect Skin face cream
+2025-03-26 00:39:48,002 - AdGenerator - INFO - Analyzing brand: L'OREAL
+2025-03-26 00:40:03,941 - AdGenerator - INFO - Brand analysis completed for industry: Cosmetics and Beauty Care, specific category: Skin Care, level: Premium
+2025-03-26 00:40:03,942 - AdGenerator - INFO - Getting social media insights for: Perfect Skin face cream
+2025-03-26 00:40:59,037 - AdGenerator - INFO - Generating ad copy
+2025-03-26 00:41:08,310 - AdGenerator - INFO - Ad copy generation completed with headline: Unleash Timeless Radiance, Scientifically
+2025-03-26 00:41:08,310 - AdGenerator - INFO - Generating ad image with integrated typography
+2025-03-26 00:41:36,425 - AdGenerator - INFO - Ad generation completed successfully: output/images/enhanced/enhanced_20250326_004136.png
+2025-03-26 00:57:01,977 - AdGenerator - INFO - OpenAI client initialized successfully
+2025-03-26 00:57:01,981 - AdGenerator - INFO - Starting ad generation for: L'Oreal Perfect Skin face cream
+2025-03-26 00:57:01,982 - AdGenerator - INFO - Extracting brand and product from: L'Oreal Perfect Skin face cream
+2025-03-26 00:57:04,918 - AdGenerator - INFO - Extracted brand: L'OREAL, product: Perfect Skin face cream
+2025-03-26 00:57:04,919 - AdGenerator - INFO - Analyzing brand: L'OREAL
+2025-03-26 00:57:21,513 - AdGenerator - INFO - Brand analysis completed for industry: Cosmetics & Skincare, level: Premium
+2025-03-26 00:57:21,513 - AdGenerator - INFO - Getting social media insights for: Perfect Skin face cream
+2025-03-26 00:59:41,875 - AdGenerator - INFO - Generating ad copy
+2025-03-26 00:59:52,137 - AdGenerator - INFO - Ad copy generation completed with headline: Unlock Perfection With L'Oreal
+2025-03-26 00:59:52,140 - AdGenerator - INFO - Generating ad image with integrated typography
+2025-03-26 01:00:43,590 - AdGenerator - INFO - Ad generation completed successfully: output/images/final/final_ad_20250326_010043.png
+2025-03-26 01:18:43,598 - AdGenerator - INFO - OpenAI client initialized successfully
+2025-03-26 01:18:43,604 - AdGenerator - INFO - Starting ad generation for: L'Oreal Perfect Skin face cream
+2025-03-26 01:18:43,605 - AdGenerator - INFO - Extracting brand and product from: L'Oreal Perfect Skin face cream
+2025-03-26 01:18:46,406 - AdGenerator - INFO - Extracted brand: L'OREAL, product: Perfect Skin face cream
+2025-03-26 01:18:46,407 - AdGenerator - INFO - Analyzing brand: L'OREAL
+2025-03-26 01:19:04,323 - AdGenerator - INFO - Brand analysis completed for industry: Beauty and Personal Care / Skincare, level: Premium
+2025-03-26 01:19:04,324 - AdGenerator - INFO - Getting social media insights for: Perfect Skin face cream
+2025-03-26 01:20:52,264 - AdGenerator - INFO - Generating ad copy
+2025-03-26 01:21:00,385 - AdGenerator - INFO - Ad copy generation completed with headline: Redefine Elegance, Embrace Perfection
+2025-03-26 01:21:00,385 - AdGenerator - INFO - Generating ad image with integrated typography
+2025-03-26 01:21:27,574 - AdGenerator - INFO - Ad generation completed successfully: output/images/enhanced/enhanced_20250326_012127.png
+2025-03-26 12:26:27,917 - AdGenerator - INFO - OpenAI client initialized successfully
+2025-03-26 12:26:27,927 - AdGenerator - INFO - Starting ad generation for: Rolex Submariner luxury watch
+2025-03-26 12:26:27,928 - AdGenerator - INFO - Extracting brand and product from: Rolex Submariner luxury watch
+2025-03-26 12:26:30,630 - AdGenerator - INFO - Extracted brand: ROLEX, product: Rolex Submariner luxury watch
+2025-03-26 12:26:30,631 - AdGenerator - INFO - Analyzing brand: ROLEX
+2025-03-26 12:26:44,539 - AdGenerator - INFO - Brand analysis completed for industry: Luxury Timepieces, level: Luxury
+2025-03-26 12:26:44,540 - AdGenerator - INFO - Getting social media insights for: Rolex Submariner luxury watch
+2025-03-26 12:27:31,885 - AdGenerator - INFO - Generating ad copy
+2025-03-26 12:27:37,788 - AdGenerator - INFO - Ad copy generation completed with headline: Precision Meets Prestige
+2025-03-26 12:27:37,790 - AdGenerator - INFO - Generating ad image with integrated typography
+2025-03-26 12:28:05,860 - AdGenerator - INFO - Ad generation completed successfully: output/images/final/final_ad_20250326_122805.png

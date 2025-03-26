@@ -1,0 +1,59 @@
+{
+  "timestamp": "2025-03-24T14:28:43.915906",
+  "product": "Perfect Skin face cream",
+  "brand_name": "L'OREAL",
+  "brand_analysis": {
+    "industry": "Beauty and Skincare",
+    "brand_level": "Premium",
+    "tone": "Sophisticated, Authentic, Empowering",
+    "target_market": {
+      "demographics": "Women aged 25 - 45, urban, high income, professional or aspirational",
+      "psychographics": "Pursues quality, believes in self-care, values appearance, brand-conscious, wellness-oriented"
+    },
+    "key_benefits": [
+      "Revitalizing and rejuvenating skin",
+      "Improves skin texture",
+      "Reduces signs of aging"
+    ],
+    "competitors": [
+      "Estee Lauder",
+      "Clinique",
+      "Lancome"
+    ],
+    "ad_style": "Influencer marketing and targeted social media ads leveraging visuals and testimonials",
+    "visual_direction": "High-quality, close-up images of diverse, confident women with radiant skin. Use of light to highlight product benefits and create a premium, aspirational mood.",
+    "color_scheme": "Elegant neutrals with pops of fresh, vibrant colors to denote rejuvenation and vitality",
+    "typography_style": "Clean, modern sans-serif fonts to convey sophistication and accessibility, mixed with elegant script fonts to emphasize premium positioning",
+    "product_highlight": "Revitalizing and rejuvenating skin"
+  },
+  "social_insights": {
+    "recommended_format": "Product showcase with key features highlighted",
+    "text_placement": "centered",
+    "text_style": "bold",
+    "key_elements": [
+      "price feature",
+      "quality feature",
+      "feature feature"
+    ],
+    "visual_focus": "product in use showing key features",
+    "color_scheme": "brand colors with accent highlights",
+    "trending_keywords": [
+      "price",
+      "quality",
+      "feature",
+      "performance"
+    ],
+    "sentiment": "positive"
+  },
+  "ad_copy": {
+    "headline": "Unearth Your Ageless Aura",
+    "subheadline": "Experience the touch of timeless beauty with L'Oreal Perfect Skin",
+    "body_text": "Immerse yourself in the revitalizing embrace of L'Oreal Perfect Skin, expertly formulated to rejuvenate and refine your skin's texture. Feel the luxurious cream-kissed whisper of youth that reduces signs of aging, unveiling your authentic beauty in its purest form.",
+    "call_to_action": "Embrace Your Radiance Now",
+    "image_description": "Close-up shot of a confident, diverse woman's radiant face illuminated by soft, warm light. She smiles, revealing the luminous glow of her perfectly textured skin. The L'Oreal Perfect Skin face cream sits subtly beside her, its glossy packaging catching the light, inviting an intimate connection with the promise of premium skincare."
+  },
+  "image_paths": {
+    "base_path": "output/images/enhanced/enhanced_20250324_142843.png",
+    "final_path": "output/images/enhanced/enhanced_20250324_142843.png"
+  }
+}

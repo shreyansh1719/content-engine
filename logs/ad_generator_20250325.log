@@ -1,0 +1,22 @@
+2025-03-25 01:18:33,514 - AdGenerator - INFO - OpenAI client initialized successfully
+2025-03-25 01:18:33,520 - AdGenerator - INFO - Starting ad generation for:  Rolex Submariner luxury watch
+2025-03-25 01:18:33,521 - AdGenerator - INFO - Extracting brand and product from:  Rolex Submariner luxury watch
+2025-03-25 01:18:36,241 - AdGenerator - INFO - Extracted brand: ROLEX, product: Rolex Submariner luxury watch
+2025-03-25 01:18:36,242 - AdGenerator - INFO - Analyzing brand: ROLEX
+2025-03-25 01:18:54,633 - AdGenerator - INFO - Brand analysis completed for industry: Luxury Goods, specifically High-End Watches, level: Luxury
+2025-03-25 01:18:54,635 - AdGenerator - INFO - Getting social media insights for: Rolex Submariner luxury watch
+2025-03-25 01:19:16,083 - AdGenerator - INFO - Generating ad copy
+2025-03-25 01:19:26,779 - AdGenerator - INFO - Ad copy generation completed with headline: Dive Into Prestige With Rolex Submariner
+2025-03-25 01:19:26,780 - AdGenerator - INFO - Generating ad image with integrated typography
+2025-03-25 01:19:55,871 - AdGenerator - INFO - Ad generation completed successfully: output/images/final/final_ad_20250325_011955.png
+2025-03-25 02:35:43,021 - AdGenerator - INFO - OpenAI client initialized successfully
+2025-03-25 02:35:43,024 - AdGenerator - INFO - Starting ad generation for: iPhone 15 Pro
+2025-03-25 02:35:43,024 - AdGenerator - INFO - Extracting brand and product from: iPhone 15 Pro
+2025-03-25 02:35:45,940 - AdGenerator - INFO - Extracted brand: APPLE, product: iPhone 15 Pro
+2025-03-25 02:35:45,940 - AdGenerator - INFO - Analyzing brand: APPLE
+2025-03-25 02:36:03,643 - AdGenerator - INFO - Brand analysis completed for industry: Consumer Electronics, specifically Mobile Devices, level: Premium
+2025-03-25 02:36:03,644 - AdGenerator - INFO - Getting social media insights for: iPhone 15 Pro
+2025-03-25 02:37:01,525 - AdGenerator - INFO - Generating ad copy
+2025-03-25 02:37:08,379 - AdGenerator - INFO - Ad copy generation completed with headline: Revolutionize Reality With Iphone 15 Pro
+2025-03-25 02:37:08,380 - AdGenerator - INFO - Generating ad image with integrated typography
+2025-03-25 02:37:44,954 - AdGenerator - INFO - Ad generation completed successfully: output/images/enhanced/enhanced_20250325_023744.png
