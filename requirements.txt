@@ -1,24 +1,45 @@
-undetected-chromedriver>=3.5.3  # Handles bot detection for Chrome
-selenium>=4.17.0                # Web automation framework
-requests>=2.31.0                # HTTP requests library
-beautifulsoup4>=4.12.3          # Web scraping and parsing
-lxml>=4.9.3                     # XML and HTML parsing
+# Core packages
+openai==1.12.0                  # OpenAI API
+python-dotenv>=1.0.1            # Manage environment variables
 pandas>=2.2.1                   # Data manipulation and analysis
 numpy>=1.26.4                   # Numerical computing
-nltk>=3.8.1                     # Natural language processing
-praw>=7.7.1                     # Reddit API wrapper
-python-dotenv>=1.0.1            # Manage environment variables
+requests>=2.31.0                # HTTP requests library
 tqdm>=4.66.1                    # Progress bar for loops
+Pillow==10.4.0                # Image processing library (Compatible with MoviePy)
+openpyxl==3.1.2                 # Excel file support
+
+# Web scraping and automation
+selenium>=4.17.0                # Web automation framework
+undetected-chromedriver>=3.5.3  # Handles bot detection for Chrome
+beautifulsoup4>=4.12.3          # Web scraping and parsing
+lxml>=4.9.3                     # XML and HTML parsing
+webdriver-manager==3.8.6        # WebDriver management
+
+# Data processing and analysis
 pytz>=2024.1                    # Timezone handling
 jsonlines>=3.1.0                # JSON streaming
 scikit-learn>=1.4.2             # Machine learning library
 transformers>=4.38.1            # Hugging Face transformers
 tensorboard>=2.15.1             # TensorFlow visualization
-Pillow>=10.2.0                  # Image processing library
+scipy>=1.15.0                   # Scientific computing (updated from 1.10.1)
+nltk>=3.8.1                     # Natural language processing
+
+# Media processing
+moviepy==1.0.3                  # Video processing (Latest Stable Version)
+pydub>=0.25.1                   # Audio processing
+opencv-python>=4.8.0            # Computer vision
+imageio>=2.31.1                 # Image I/O (Latest Compatible Version)
+imageio-ffmpeg>=0.4.9           # FFmpeg support for imageio
+decorator>=4.4.2                # Decorator utilities
+proglog<=1.0.0                  # Progress logging
+
+# API integrations
+praw>=7.7.1                     # Reddit API wrapper
+
+# Development and testing tools
 pytest>=8.1.0                   # Testing framework
 black>=23.12.1                  # Code formatter
 isort>=5.13.2                   # Sorts imports
 pylint>=3.1.0                   # Static code analysis
 mypy>=0.910                     # Static type checker
 flake8>=4.0.1                   # Code linter
-

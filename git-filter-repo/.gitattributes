@@ -1,5 +1,0 @@
-*.sh eol=lf
-*.py eol=lf
-/git-filter-repo eol=lf
-/contrib/filter-repo-demos/[a-z]* eol=lf
-/t/t9*/* eol=lf
