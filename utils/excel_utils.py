@@ -17,16 +17,17 @@ def save_ad_to_excel(ad_data: Dict[str, Any]) -> str:
     Returns:
         Path to saved Excel file
     """
+    # Set up logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+
+    # Timestamp defined here so it's accessible in the except handler too
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
     try:
-        # Set up logging
-        logging.basicConfig(level=logging.INFO)
-        logger = logging.getLogger(__name__)
-        
         # Ensure output directory exists
         os.makedirs("output/excel", exist_ok=True)
-        
-        # Create timestamp for filename
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
         filename = f"output/excel/ad_campaign_{timestamp}.xlsx"
         
         # Prepare data for Excel

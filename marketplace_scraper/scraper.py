@@ -31,18 +31,50 @@ class MarketplaceScraper:
         os.makedirs(os.path.join(self.output_dir, 'processed'), exist_ok=True)
     
     def setup_browser(self):
-        options = Options()
-        if self.headless:
-            options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-notifications')
-        
-        self.driver = webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()),
-            options=options
-        )
-        self.logger.info("Browser initialized")
+        """Initialize the browser with anti-detection measures"""
+        try:
+            # Use undetected-chromedriver to avoid detection
+            import undetected_chromedriver as uc
+
+            options = uc.ChromeOptions()
+            if self.headless:
+                options.add_argument('--headless=new')  # Updated headless flag
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
+            options.add_argument('--disable-notifications')
+            options.add_argument('--disable-blink-features=AutomationControlled')  # Anti-bot detection
+
+            # Create the driver with undetected-chromedriver
+            self.driver = uc.Chrome(options=options)
+            self.driver.set_page_load_timeout(30)
+            self.driver.implicitly_wait(10)
+
+            self.logger.info("Browser initialized with undetected-chromedriver")
+        except Exception as e:
+            self.logger.error(f"Browser initialization error: {e}")
+
+            # Fallback to regular ChromeDriver with selenium-manager
+            try:
+                from selenium import webdriver
+                from selenium.webdriver.chrome.service import Service
+                from selenium.webdriver.chrome.options import Options
+                from selenium.webdriver.chrome.service import Service as ChromeService
+                from webdriver_manager.chrome import ChromeDriverManager
+            
+                options = Options()
+                if self.headless:
+                    options.add_argument('--headless=new')
+                options.add_argument('--no-sandbox')
+                options.add_argument('--disable-dev-shm-usage')
+                options.add_argument('--disable-notifications')
+            
+                service = ChromeService(ChromeDriverManager().install())
+                self.driver = webdriver.Chrome(service=service, options=options)
+            
+                self.logger.info("Browser initialized with selenium-manager (fallback)")
+            except Exception as fallback_error:
+                self.logger.error(f"Fallback initialization error: {fallback_error}")
+                raise
     
     def login(self):
         if not self.username or not self.password:
