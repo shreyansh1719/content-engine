@@ -1,15 +1,15 @@
 """
-AdCraft Pro - FastAPI Backend
+AdCraft Pro — FastAPI Backend
 Serves the ad generation engine via REST API for the Streamlit frontend.
 
 Run with:
-    python api.py
-    or
     uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+or:
+    python api.py
 """
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,9 +19,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI(title="AdCraft Pro API", version="1.0.0")
+# ---------------------------------------------------------------------------
+# App setup
+# ---------------------------------------------------------------------------
 
-# Allow the Streamlit frontend (port 8501) and any other localhost origin
+app = FastAPI(
+    title="AdCraft Pro API",
+    version="1.0.0",
+    description="AI-powered ad generation engine. POST to /generate_ad to create a complete ad.",
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -29,29 +36,90 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve everything inside output/ as /static/...
+# Serve output/ directory as /static/
 # e.g. output/images/final/ad_123.png → /static/images/final/ad_123.png
-Path("output").mkdir(exist_ok=True)
+Path("output/images/final").mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory="output"), name="static")
 
 
 # ---------------------------------------------------------------------------
-# Request / Response schemas
+# Enums / option lists (single source of truth for frontend dropdowns)
+# ---------------------------------------------------------------------------
+
+INDUSTRIES: List[str] = [
+    "Technology",
+    "Fashion",
+    "Beauty",
+    "Automotive",
+    "Luxury",
+    "Food & Beverage",
+    "Fitness",
+    "Home & Living",
+    "Healthcare",
+    "Entertainment",
+    "Finance",
+    "Education",
+]
+
+PLATFORMS: List[str] = [
+    "Instagram",
+    "Facebook",
+    "LinkedIn",
+    "Twitter/X",
+    "Pinterest",
+    "Google Ads",
+    "TikTok",
+    "YouTube",
+]
+
+TONES: List[str] = [
+    "Professional",
+    "Playful",
+    "Luxurious",
+    "Bold",
+    "Minimalist",
+    "Emotional",
+    "Urgent",
+    "Inspirational",
+]
+
+VISUAL_STYLES: List[str] = [
+    "Modern Minimal",
+    "Bold & Vibrant",
+    "Luxury & Elegant",
+    "Tech-Forward",
+    "Natural & Organic",
+    "Urban & Street",
+    "Classic & Timeless",
+]
+
+PRINCIPLES: List[str] = [
+    "Simple",
+    "Unexpected",
+    "Concrete",
+    "Credible",
+    "Emotional",
+    "Story-driven",
+]
+
+
+# ---------------------------------------------------------------------------
+# Schemas
 # ---------------------------------------------------------------------------
 
 class AdRequest(BaseModel):
     product_name: str
     brand_name: str
     product_description: str
-    key_benefit: str
+    industry: str
+    platform: str
     tone: str
     visual_style: str
     principle: str
-    industry: str
-    platform: str
+    key_benefit: Optional[str] = ""
+    audience_desc: Optional[str] = ""
     project_name: Optional[str] = ""
     campaign_name: Optional[str] = ""
-    audience_desc: Optional[str] = ""
 
 
 class AdResponse(BaseModel):
@@ -66,18 +134,41 @@ class AdResponse(BaseModel):
     generation_time: str
 
 
+class HealthResponse(BaseModel):
+    status: str
+    api_key_configured: bool
+
+
+class ApiInfoResponse(BaseModel):
+    industries: List[str]
+    platforms: List[str]
+    tones: List[str]
+    visual_styles: List[str]
+    principles: List[str]
+
+
 # ---------------------------------------------------------------------------
-# Lazy-load the generator so startup is instant
+# Lazy-loaded generator (startup stays instant)
 # ---------------------------------------------------------------------------
 
 _generator = None
 
 
 def get_generator():
+    """Return singleton AdGenerator, raising 503 if OpenAI key is absent."""
     global _generator
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "OPENAI_API_KEY is not configured. "
+                "Add it to your .env file and restart the server."
+            ),
+        )
     if _generator is None:
         from ad_generator import AdGenerator
-        _generator = AdGenerator()
+        _generator = AdGenerator(openai_api_key=api_key)
     return _generator
 
 
@@ -86,7 +177,7 @@ def get_generator():
 # ---------------------------------------------------------------------------
 
 def _local_path_to_url(local_path: str) -> str:
-    """Convert output/images/final/foo.png → /static/images/final/foo.png."""
+    """Convert output/images/final/foo.png  →  /static/images/final/foo.png."""
     if not local_path:
         return ""
     p = Path(local_path)
@@ -94,14 +185,13 @@ def _local_path_to_url(local_path: str) -> str:
         rel = p.relative_to("output")
         return f"/static/{rel.as_posix()}"
     except ValueError:
-        # Path not under output/ — return as-is and let the client deal with it
         return local_path
 
 
 def _build_prompt(req: AdRequest) -> str:
     """
-    Combine the structured frontend fields into a single rich prompt string
-    that AdGenerator.create_ad() can parse with GPT-4o.
+    Combine all structured frontend fields into one rich prompt string for
+    AdGenerator.create_ad(), which feeds it to GPT-4o for analysis.
     """
     parts = [f"{req.product_name} by {req.brand_name}"]
 
@@ -129,30 +219,58 @@ def _build_prompt(req: AdRequest) -> str:
 # Endpoints
 # ---------------------------------------------------------------------------
 
-@app.get("/health")
+@app.get("/health", response_model=HealthResponse, tags=["Meta"])
 def health():
-    """Quick liveness check."""
-    return {"status": "ok"}
+    """Liveness + config check. Safe to call without an API key."""
+    api_key_present = bool(os.getenv("OPENAI_API_KEY", "").strip())
+    return HealthResponse(
+        status="ok",
+        api_key_configured=api_key_present,
+    )
 
 
-@app.post("/generate_ad", response_model=AdResponse)
+@app.get("/api-info", response_model=ApiInfoResponse, tags=["Meta"])
+def api_info():
+    """Return all available dropdown options for the frontend form."""
+    return ApiInfoResponse(
+        industries=INDUSTRIES,
+        platforms=PLATFORMS,
+        tones=TONES,
+        visual_styles=VISUAL_STYLES,
+        principles=PRINCIPLES,
+    )
+
+
+@app.post("/generate_ad", response_model=AdResponse, tags=["Generation"])
 def generate_ad(req: AdRequest):
     """
     Generate a complete ad (copy + image) from structured product information.
-    Returns ad copy and a URL to the generated image served by this API.
+
+    - Calls GPT-4o for brand analysis and copywriting.
+    - Calls DALL-E 3 for image generation.
+    - Returns ad copy fields and a /static/... URL to the generated image.
+    - Returns 503 if OPENAI_API_KEY is missing.
+    - Returns 422 if required fields are empty.
     """
-    if not req.product_name or not req.brand_name:
-        raise HTTPException(status_code=422, detail="product_name and brand_name are required.")
+    if not req.product_name.strip() or not req.brand_name.strip():
+        raise HTTPException(
+            status_code=422,
+            detail="product_name and brand_name are required and cannot be blank.",
+        )
 
     prompt = _build_prompt(req)
 
-    try:
-        generator = get_generator()
-        ad_data = generator.create_ad(prompt)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ad generation failed: {str(e)}")
+    # get_generator() raises 503 if no API key
+    generator = get_generator()
 
-    # The generator may return image_path or final_path depending on the code path taken
+    try:
+        ad_data = generator.create_ad(prompt)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Ad generation failed: {exc}",
+        )
+
     image_path = ad_data.get("final_path") or ad_data.get("image_path") or ""
     image_url = _local_path_to_url(image_path)
 
@@ -168,6 +286,10 @@ def generate_ad(req: AdRequest):
         generation_time=ad_data.get("generation_time", ""),
     )
 
+
+# ---------------------------------------------------------------------------
+# Dev entrypoint
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     import uvicorn

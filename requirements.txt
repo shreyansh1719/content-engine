@@ -1,7 +1,8 @@
-# API server
+# API server + frontend
 fastapi>=0.110.0                # Web framework for the backend API
 uvicorn[standard]>=0.29.0       # ASGI server to run FastAPI
 python-multipart>=0.0.9         # Required by FastAPI for form/file handling
+streamlit>=1.35.0               # Streamlit frontend UI
 
 # Core packages
 openai==1.12.0                  # OpenAI API
