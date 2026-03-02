@@ -1,13 +1,32 @@
-".env" 
-".env.txt" 
+# Secrets / environment
+.env
+.env.txt
 .env.*
 *.env
 *.env.*
-
-# Output directories with generated images
-output/
-
-# Any other sensitive files
 *api_key*
 *secret*
-*password*  
+*password*
+
+# Virtual environments
+venv/
+fb_env/
+.venv/
+env/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Output directories (generated files)
+output/
+logs/
+
+# Data outputs (scraped/processed data)
+data/processed/
+data/raw/
+data/training/
+data/insights/
+marketplace_data/
