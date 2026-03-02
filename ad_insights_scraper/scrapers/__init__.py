@@ -1,8 +1,8 @@
 """
 Ad Insights Scraper - Scrapers Package
 """
-from scrapers.facebook_scraper import FacebookAdsScraper
-from scrapers.reddit_scraper import RedditScraper
-from scrapers.adspy_scraper import AdSpyScraper
+from .facebook_scraper import FacebookAdsScraper
+from .reddit_scraper import RedditScraper
+from .adspy_scraper import AdSpyScraper
 
 __all__ = ['FacebookAdsScraper', 'RedditScraper', 'AdSpyScraper']

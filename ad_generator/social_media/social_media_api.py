@@ -10,7 +10,13 @@ import time
 from typing import Dict, List, Optional
 from collections import Counter
 from datetime import datetime, timedelta
-import praw
+try:
+    import praw
+    PRAW_AVAILABLE = True
+except ImportError:
+    praw = None
+    PRAW_AVAILABLE = False
+
 from dotenv import load_dotenv
 
 # Load environment variables

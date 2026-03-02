@@ -1,3 +1,8 @@
+# API server
+fastapi>=0.110.0                # Web framework for the backend API
+uvicorn[standard]>=0.29.0       # ASGI server to run FastAPI
+python-multipart>=0.0.9         # Required by FastAPI for form/file handling
+
 # Core packages
 openai==1.12.0                  # OpenAI API
 python-dotenv>=1.0.1            # Manage environment variables
@@ -5,7 +10,7 @@ pandas>=2.2.1                   # Data manipulation and analysis
 numpy>=1.26.4                   # Numerical computing
 requests>=2.31.0                # HTTP requests library
 tqdm>=4.66.1                    # Progress bar for loops
-Pillow==10.4.0                # Image processing library (Compatible with MoviePy)
+Pillow>=11.0.0                # Image processing library (Python 3.14 requires >=11)
 openpyxl==3.1.2                 # Excel file support
 
 # Web scraping and automation
