@@ -5,7 +5,12 @@ Provides sophisticated typography with perfect background integration for advert
 import os
 import logging
 import numpy as np
-import cv2
+try:
+    import cv2
+    CV2_AVAILABLE = True
+except ImportError:
+    cv2 = None
+    CV2_AVAILABLE = False
 from typing import Dict, List, Tuple, Any, Optional, Union
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance, ImageChops, ImageColor
 import colorsys

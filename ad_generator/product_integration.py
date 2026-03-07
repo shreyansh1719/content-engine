@@ -35,13 +35,22 @@ class EnhancedProductIntegrator:
         # Try to import OpenAI
         try:
             from openai import OpenAI
-            self.openai_client = OpenAI(api_key=self.openai_api_key)
-            self.has_openai = True
-            self.logger.info("OpenAI client initialized successfully")
+            if self.openai_api_key:
+                self.openai_client = OpenAI(api_key=self.openai_api_key)
+                self.has_openai = True
+                self.logger.info("OpenAI client initialized successfully")
+            else:
+                self.has_openai = False
+                self.openai_client = None
+                self.logger.warning("No OPENAI_API_KEY — OpenAI features disabled, using local fallbacks")
         except ImportError:
             self.has_openai = False
             self.logger.warning("OpenAI package not installed. Some features may be limited.")
             self.openai_client = None
+        except Exception as e:
+            self.has_openai = False
+            self.openai_client = None
+            self.logger.warning(f"OpenAI client init failed: {e} — using local fallbacks")
     
     def setup_logging(self):
         """Set up detailed logging configuration."""

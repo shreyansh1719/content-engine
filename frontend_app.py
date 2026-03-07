@@ -461,13 +461,14 @@ with st.sidebar:
     elif not health.get("api_key_configured"):
         st.markdown("""
         <div class="health-pill health-warn">
-            <span class="dot dot-warn"></span> No API Key
+            <span class="dot dot-warn"></span> DEV MODE
         </div>""", unsafe_allow_html=True)
         st.markdown("""
         <div class="warn-banner" style="margin-top:10px;">
-            ⚠ Add <code style="font-size:0.8rem;background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;">OPENAI_API_KEY</code>
+            ⚠ <strong>DEV MODE</strong> — Using mock data.<br>
+            Add <code style="font-size:0.8rem;background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;">OPENAI_API_KEY</code>
             to your <code style="font-size:0.8rem;background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;">.env</code>
-            file and restart the API.
+            file and restart the API for live generation.
         </div>""", unsafe_allow_html=True)
     else:
         st.markdown("""
@@ -609,8 +610,9 @@ if health is None:
 elif not health.get("api_key_configured"):
     st.markdown("""
     <div class="warn-banner">
-        ⚠ &nbsp;Backend is running but <strong>OPENAI_API_KEY</strong> is not configured.<br>
-        Add it to your <code>.env</code> file and restart the API server.
+        ⚠ &nbsp;<strong>DEV MODE</strong> — No OPENAI_API_KEY configured.
+        Ads will use mock data (placeholder image + template copy).
+        Add <code>OPENAI_API_KEY</code> to your <code>.env</code> and restart the API for live generation.
     </div>""", unsafe_allow_html=True)
 
 with st.form("ad_form", clear_on_submit=False):

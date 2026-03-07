@@ -120,6 +120,16 @@ class AdRequest(BaseModel):
     audience_desc: Optional[str] = ""
     project_name: Optional[str] = ""
     campaign_name: Optional[str] = ""
+    use_fine_tuned: bool = False
+
+
+class FeedbackRequest(BaseModel):
+    ad_id: Optional[str] = ""
+    headline: Optional[str] = ""
+    rating: int                    # 1–5
+    strengths: Optional[str] = ""
+    weaknesses: Optional[str] = ""
+    corrections: Optional[str] = ""
 
 
 class AdResponse(BaseModel):
@@ -137,6 +147,7 @@ class AdResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     api_key_configured: bool
+    dev_mode: bool = False
 
 
 class ApiInfoResponse(BaseModel):
@@ -155,19 +166,11 @@ _generator = None
 
 
 def get_generator():
-    """Return singleton AdGenerator, raising 503 if OpenAI key is absent."""
+    """Return singleton AdGenerator. Works in dev mode (no API key) via mock responses."""
     global _generator
-    api_key = os.getenv("OPENAI_API_KEY", "").strip()
-    if not api_key:
-        raise HTTPException(
-            status_code=503,
-            detail=(
-                "OPENAI_API_KEY is not configured. "
-                "Add it to your .env file and restart the server."
-            ),
-        )
     if _generator is None:
         from ad_generator import AdGenerator
+        api_key = os.getenv("OPENAI_API_KEY", "").strip() or None
         _generator = AdGenerator(openai_api_key=api_key)
     return _generator
 
@@ -226,6 +229,7 @@ def health():
     return HealthResponse(
         status="ok",
         api_key_configured=api_key_present,
+        dev_mode=not api_key_present,
     )
 
 
@@ -249,8 +253,8 @@ def generate_ad(req: AdRequest):
     - Calls GPT-4o for brand analysis and copywriting.
     - Calls DALL-E 3 for image generation.
     - Returns ad copy fields and a /static/... URL to the generated image.
-    - Returns 503 if OPENAI_API_KEY is missing.
     - Returns 422 if required fields are empty.
+    - Supports use_fine_tuned=true to switch to ImprovedAdGenerator.
     """
     if not req.product_name.strip() or not req.brand_name.strip():
         raise HTTPException(
@@ -259,12 +263,17 @@ def generate_ad(req: AdRequest):
         )
 
     prompt = _build_prompt(req)
-
-    # get_generator() raises 503 if no API key
     generator = get_generator()
 
     try:
-        ad_data = generator.create_ad(prompt)
+        if req.use_fine_tuned:
+            from improved_ad_generator import ImprovedAdGenerator
+            ft_generator = ImprovedAdGenerator(
+                openai_api_key=os.getenv("OPENAI_API_KEY", "").strip() or None
+            )
+            ad_data = ft_generator.create_ad(prompt, use_fine_tuned=True)
+        else:
+            ad_data = generator.create_ad(prompt)
     except Exception as exc:
         raise HTTPException(
             status_code=500,
@@ -285,6 +294,41 @@ def generate_ad(req: AdRequest):
         industry=ad_data.get("industry", req.industry),
         generation_time=ad_data.get("generation_time", ""),
     )
+
+
+# ---------------------------------------------------------------------------
+# Feedback endpoint
+# ---------------------------------------------------------------------------
+
+@app.post("/submit_feedback", tags=["Feedback"])
+def submit_feedback(req: FeedbackRequest):
+    """
+    Store user feedback for a generated ad.
+    Writes to data/feedback/ as JSON; used for fine-tuning pipeline.
+    """
+    import json as _json
+    from datetime import datetime as _dt
+
+    if not 1 <= req.rating <= 5:
+        raise HTTPException(status_code=422, detail="rating must be between 1 and 5")
+
+    feedback_dir = Path("data/feedback")
+    feedback_dir.mkdir(parents=True, exist_ok=True)
+
+    record = {
+        "ad_id": req.ad_id,
+        "headline": req.headline,
+        "rating": req.rating,
+        "strengths": req.strengths,
+        "weaknesses": req.weaknesses,
+        "corrections": req.corrections,
+        "timestamp": _dt.now().isoformat(),
+    }
+
+    fname = feedback_dir / f"feedback_{_dt.now().strftime('%Y%m%d_%H%M%S_%f')}.json"
+    fname.write_text(_json.dumps(record, indent=2))
+
+    return {"status": "ok", "saved_to": str(fname)}
 
 
 # ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 """
-Professional Ad Generator with industry-standard quality
-Creates integrated ad campaigns with seamless typography and composition
+Professional Ad Generator with GPT-4o Integration
+Creates integrated ad campaigns with direct OpenAI image handling
 """
 import os
 import json
@@ -9,22 +9,22 @@ import re
 import traceback
 from typing import Dict, Optional, List, Any, Union
 from datetime import datetime
-import random
 
 try:
     from openai import OpenAI
 except ImportError:
     OpenAI = None
 
-from .image_maker import StudioImageGenerator
-from .analytics import AdMetricsAnalyzer
-from .social_media import search_social_media_ads
+from .image_maker import ModernStudioImageGenerator
+
+# Dev mode: enabled automatically when OPENAI_API_KEY is absent
+DEV_MODE = not bool(os.getenv('OPENAI_API_KEY', '').strip())
 
 class AdGenerator:
-    """Generate complete ad campaigns with studio-quality visuals and integrated typography."""
+    """Generate complete ad campaigns with GPT-4o-driven visuals and content."""
     
     def __init__(self, openai_api_key=None):
-        """Initialize generator with API keys and setup components."""
+        """Initialize generator with API key and setup components."""
         # Setup API key
         self.openai_api_key = openai_api_key or os.getenv('OPENAI_API_KEY')
         
@@ -43,11 +43,8 @@ class AdGenerator:
             self.logger.warning("OpenAI package not installed. Some features may not work.")
             self.openai_client = None
         
-        # Initialize enhanced image generator
-        self.image_generator = StudioImageGenerator(self.openai_api_key)
-        
-        # Initialize metrics analyzer
-        self.metrics_analyzer = AdMetricsAnalyzer()
+        # Initialize modernized image generator
+        self.image_generator = ModernStudioImageGenerator(self.openai_api_key)
         
         # Setup output directories
         os.makedirs("output/images", exist_ok=True)
@@ -57,40 +54,46 @@ class AdGenerator:
         self.ad_cache = {}
     
     def setup_logging(self):
-        """Set up detailed logging configuration."""
+        """Set up detailed logging configuration with rotation."""
+        from logging.handlers import RotatingFileHandler
         log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         logging.basicConfig(level=logging.INFO, format=log_format)
         self.logger = logging.getLogger("AdGenerator")
-        
-        # Add file handler for persistent logs
+
+        # Rotating file handler: max 5 MB, keep 3 backups
         try:
             os.makedirs("logs", exist_ok=True)
-            file_handler = logging.FileHandler(f"logs/ad_generator_{datetime.now().strftime('%Y%m%d')}.log")
+            file_handler = RotatingFileHandler(
+                "logs/adcraft.log",
+                maxBytes=5 * 1024 * 1024,
+                backupCount=3,
+            )
             file_handler.setFormatter(logging.Formatter(log_format))
             self.logger.addHandler(file_handler)
         except Exception as e:
             print(f"Warning: Could not set up log file: {e}")
     
-    def analyze_brand(self, prompt: str) -> Dict[str, Any]:
+    def analyze_brand(self, brand_info: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Analyze brand and determine appropriate strategy.
+        Analyze brand and determine appropriate strategy using GPT-4o.
         
         Args:
-            prompt: User's product/brand prompt
+            brand_info: Dictionary with brand and product information
             
         Returns:
             Brand analysis dictionary
         """
         if not self.openai_client:
             self.logger.warning("OpenAI client not available. Using default brand analysis.")
-            return self._generate_default_brand_analysis(prompt)
+            return self._generate_default_brand_analysis(brand_info)
         
         try:
-            # Extract key terms for analysis
-            terms = self._extract_key_terms(prompt)
+            # Extract product and brand name from brand_info
+            product = brand_info['product']
+            brand_name = brand_info['brand']
             
             # Create comprehensive analysis prompt with expert guidance
-            analysis_prompt = f"""Analyze this brand/product request and create a comprehensive strategic brief: "{prompt}"
+            analysis_prompt = f"""Analyze this brand/product request and create a comprehensive strategic brief for {brand_name} {product}:
             
             Identify key elements including:
             - Industry vertical and specific category
@@ -125,20 +128,20 @@ class AdGenerator:
 
             # Get response from OpenAI with increased temperature for creativity
             response = self.openai_client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are a senior brand strategist and market analyst with 15+ years of experience developing campaigns for premium brands. Your specialty is translating product requests into comprehensive marketing briefs."},
                     {"role": "user", "content": analysis_prompt}
                 ],
-                temperature=0.7,
-                max_tokens=1000
+                response_format={"type": "json_object"},
+                temperature=0.7
             )
 
-            # Extract and parse JSON
-            result = self._extract_json(response.choices[0].message.content)
+            # Extract JSON directly
+            result = json.loads(response.choices[0].message.content)
             
             # Validate and enhance response
-            validated_result = self._validate_brand_analysis(result, prompt)
+            validated_result = self._validate_brand_analysis(result, product)
             
             # Log successful analysis
             self.logger.info(f"Brand analysis completed for industry: {validated_result['industry']}, level: {validated_result['brand_level']}")
@@ -149,18 +152,9 @@ class AdGenerator:
             self.logger.error(f"Brand analysis error: {str(e)}")
             self.logger.error(traceback.format_exc())
             # Return default analysis
-            return self._generate_default_brand_analysis(prompt)
+            return self._generate_default_brand_analysis(brand_info)
     
-    def _extract_key_terms(self, prompt: str) -> List[str]:
-        """Extract key terms from prompt for analysis."""
-        # Split into words and remove common words
-        common_words = {'a', 'an', 'the', 'and', 'or', 'but', 'for', 'in', 'to', 'with', 'on', 'at', 'from', 'by'}
-        words = [word.strip().lower() for word in prompt.split() if word.strip().lower() not in common_words]
-        
-        # Return unique words
-        return list(set(words))
-    
-    def _validate_brand_analysis(self, result: Dict[str, Any], prompt: str) -> Dict[str, Any]:
+    def _validate_brand_analysis(self, result: Dict[str, Any], product: str) -> Dict[str, Any]:
         """Validate and enhance brand analysis results."""
         # Ensure all required fields exist with valid values
         required_fields = {
@@ -194,9 +188,13 @@ class AdGenerator:
         
         return result
     
-    def _generate_default_brand_analysis(self, prompt: str) -> Dict[str, Any]:
+    def _generate_default_brand_analysis(self, brand_info: Dict[str, Any]) -> Dict[str, Any]:
         """Generate default brand analysis when API fails."""
-        # Extract potential industry from prompt
+        # Extract product and brand from brand_info
+        product = brand_info['product']
+        brand_name = brand_info['brand']
+        
+        # Extract potential industry from product
         industry = "General"
         brand_level = "Premium"
         
@@ -208,19 +206,19 @@ class AdGenerator:
             "food_beverage": ["food", "drink", "beverage", "restaurant", "coffee", "wine", "spirit"]
         }
         
-        # Check for industry keywords in prompt
-        prompt_lower = prompt.lower()
+        # Check for industry keywords in product
+        product_lower = product.lower()
         for ind, keywords in industry_keywords.items():
-            if any(keyword in prompt_lower for keyword in keywords):
+            if any(keyword in product_lower for keyword in keywords):
                 industry = ind
                 break
         
         # Check for brand level indicators
-        if any(term in prompt_lower for term in ["luxury", "premium", "high-end", "exclusive"]):
+        if any(term in product_lower for term in ["luxury", "premium", "high-end", "exclusive"]):
             brand_level = "Luxury"
-        elif any(term in prompt_lower for term in ["quality", "premium", "professional"]):
+        elif any(term in product_lower for term in ["quality", "premium", "professional"]):
             brand_level = "Premium"
-        elif any(term in prompt_lower for term in ["affordable", "value", "budget"]):
+        elif any(term in product_lower for term in ["affordable", "value", "budget"]):
             brand_level = "Mass-market"
         
         return {
@@ -237,22 +235,16 @@ class AdGenerator:
             "product_highlight": "Quality and craftsmanship"
         }
     
-    def generate_ad_copy(self, prompt: str, brand_analysis: Dict[str, Any], social_insights: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_ad_copy(self, prompt: str, brand_analysis: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Generate professional ad copy based on brand analysis and social media insights.
-    """
+        Generate professional ad copy based on brand analysis using GPT-4o.
+        """
         if not self.openai_client:
             self.logger.warning("OpenAI client not available. Using default ad copy.")
             return self._generate_default_ad_copy(prompt, brand_analysis)
     
         try:
-        # Add insights from ad metrics analyzer
-            metrics_recommendations = self.metrics_analyzer.get_recommendations_for_industry(
-                brand_analysis['industry'], 
-                brand_analysis['brand_level']
-            )
-        
-        # Create comprehensive copy prompt with expert guidance
+            # Create comprehensive copy prompt with expert guidance
             copy_prompt = f"""Create premium advertising copy for: {prompt}
 
             MARKETING BRIEF:
@@ -264,14 +256,6 @@ class AdGenerator:
             Product Highlight: {brand_analysis['product_highlight']}
             Visual Direction: {brand_analysis['visual_direction']}
         
-            SOCIAL MEDIA INSIGHTS:
-            Recommended Format: {social_insights.get('recommended_format', 'Product-focused')}
-            Key Elements: {', '.join(social_insights.get('key_elements', ['quality', 'features']))}
-            {"Trending Keywords: " + ', '.join(social_insights.get('trending_keywords', [])) if 'trending_keywords' in social_insights else ""}
-        
-            PERFORMANCE DATA:
-            {metrics_recommendations.get('copy_patterns', 'Use concise, benefit-focused headlines')}
-        
             Create the following elements with perfect integration and brand alignment:
             1. Headline: An impactful, memorable headline (max 6-8 words) that immediately captures attention
             2. Subheadline: Supporting message (10-15 words) that expands on the headline promise
@@ -281,32 +265,23 @@ class AdGenerator:
         
             Your copy should reflect specific product characteristics and unique selling points.
             For spirits or luxury products, emphasize craftsmanship, premium ingredients, and sensory experience.
-        
-            Response format (JSON):
-            {{
-                "headline": "attention-grabbing headline",
-                "subheadline": "supporting message",
-                "body_text": "main ad copy",
-                "call_to_action": "clear CTA",
-                "image_description": "detailed scene description for product photography"
-            }}
             """
 
-        # Get response from OpenAI with high creativity
+            # Get response from OpenAI with high creativity
             response = self.openai_client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": f"You are a world-class copywriter specializing in {brand_analysis['industry']} advertising for {brand_analysis['brand_level']} brands. Your copy consistently outperforms industry benchmarks by 35% and has won multiple industry awards."},
                     {"role": "user", "content": copy_prompt}
                 ],
-                temperature=0.8,
-                max_tokens=1000
+                response_format={"type": "json_object"},
+                temperature=0.8
             )
 
-        # Extract and parse JSON
-            result = self._extract_json(response.choices[0].message.content)
+            # Extract JSON directly
+            result = json.loads(response.choices[0].message.content)
         
-        # Validate and enhance ad copy
+            # Validate and enhance ad copy
             validated_result = self._validate_ad_copy(result, prompt, brand_analysis)
         
             self.logger.info(f"Ad copy generation completed with headline: {validated_result['headline']}")
@@ -315,7 +290,7 @@ class AdGenerator:
         except Exception as e:
             self.logger.error(f"Ad copy generation error: {str(e)}")
             self.logger.error(traceback.format_exc())
-        # Return default ad copy
+            # Return default ad copy
             return self._generate_default_ad_copy(prompt, brand_analysis)
     
     def _validate_ad_copy(self, result: Dict[str, Any], prompt: str, brand_analysis: Dict[str, Any]) -> Dict[str, Any]:
@@ -349,7 +324,7 @@ class AdGenerator:
         # Ensure call-to-action is clear and action-oriented
         common_ctas = ["SHOP NOW", "LEARN MORE", "DISCOVER", "EXPERIENCE", "GET STARTED"]
         if len(result['call_to_action'].split()) > 5 or len(result['call_to_action']) < 3:
-            result['call_to_action'] = random.choice(common_ctas)
+            result['call_to_action'] = common_ctas[0]
         
         # Enhance image description if too short
         if len(result['image_description'].split()) < 10:
@@ -363,7 +338,7 @@ class AdGenerator:
         product_lower = prompt.lower()
         is_spirit = any(term in product_lower for term in ["gin", "vodka", "whiskey", "rum", "brandy", "tequila", "spirit", "liquor"])
     
-    # Check brand level for appropriate style
+        # Check brand level for appropriate style
         brand_level = brand_analysis.get('brand_level', '').lower()
     
         if is_spirit and 'luxury' in brand_level:
@@ -398,9 +373,10 @@ class AdGenerator:
                 "call_to_action": "SHOP NOW",
                 "image_description": f"Bright, clean product photography of {prompt} with clear details. Simple background with product as hero and space for typography."
             }
+    
     def extract_brand_product(self, prompt: str) -> Dict[str, Any]:
         """
-        Extract brand name and product from prompt.
+        Extract brand name and product from prompt using GPT-4o.
         
         Args:
             prompt: User's input prompt
@@ -427,27 +403,21 @@ class AdGenerator:
             - "Galaxy S22 Ultra" → product="Galaxy S22 Ultra", brand_name="SAMSUNG"
             
             For established products, identify the correct brand. For generic products, use an appropriate category name as the brand.
-            
-            Format your response as JSON with:
-            {{
-                "product": "the exact product or service as mentioned",
-                "brand_name": "the brand name (in ALL CAPS)"
-            }}
             """
 
             # Get response from OpenAI with low temperature for consistency
             response = self.openai_client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": "You are a precise entity extraction specialist focused on accurate identification of products and brands."},
                     {"role": "user", "content": extraction_prompt}
                 ],
-                temperature=0.3,
-                max_tokens=150
+                response_format={"type": "json_object"},
+                temperature=0.3
             )
 
-            # Extract and parse JSON
-            result = self._extract_json(response.choices[0].message.content)
+            # Extract JSON directly
+            result = json.loads(response.choices[0].message.content)
             
             # Validate and enhance extraction
             validated_result = self._validate_brand_product(result, prompt)
@@ -477,6 +447,22 @@ class AdGenerator:
         
         return result
     
+    def extract_brand_info(self, prompt: str) -> Dict[str, Any]:
+        """
+        Extract brand information from prompt.
+        
+        Args:
+            prompt: User's product/brand prompt
+            
+        Returns:
+            Brand information dictionary
+        """
+        brand_product = self.extract_brand_product(prompt)
+        return {
+            'product': brand_product['product'],
+            'brand': brand_product['brand_name']
+        }
+
     def _simple_brand_product_extraction(self, prompt: str) -> Dict[str, Any]:
         """Extract brand and product using simple rules."""
         words = prompt.split()
@@ -523,124 +509,137 @@ class AdGenerator:
             "brand_name": brand
         }
     
-    def create_ad(self, prompt: str) -> Dict[str, Any]:
+    def _generate_mock_ad(self, prompt: str) -> Dict[str, Any]:
+        """Return realistic mock ad data for dev/testing when no API key is set."""
+        from PIL import Image, ImageDraw, ImageFont
+        import math
+
+        words = prompt.split()
+        brand = words[0].upper() if words else "BRAND"
+        product = " ".join(words[:4]) if len(words) >= 4 else prompt
+
+        # Build a gradient placeholder image
+        width, height = 1024, 1024
+        img = Image.new('RGB', (width, height))
+        draw = ImageDraw.Draw(img)
+        for y in range(height):
+            r = int(20 + (40 * y / height))
+            g = int(30 + (60 * y / height))
+            b = int(80 + (100 * y / height))
+            draw.line([(0, y), (width, y)], fill=(r, g, b))
+
+        # Add mock label text
+        try:
+            font_large = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 60)
+            font_small = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 36)
+        except Exception:
+            font_large = ImageFont.load_default()
+            font_small = ImageFont.load_default()
+
+        draw.text((width // 2, height // 2 - 80), f"[MOCK] {brand}",
+                  fill=(255, 255, 255), font=font_large, anchor="mm")
+        draw.text((width // 2, height // 2 + 20), product[:50],
+                  fill=(180, 200, 255), font=font_small, anchor="mm")
+        draw.text((width // 2, height // 2 + 80), "DEV MODE — No API Key",
+                  fill=(120, 140, 180), font=font_small, anchor="mm")
+
+        os.makedirs("output/images/final", exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        mock_path = f"output/images/final/mock_{timestamp}.png"
+        img.save(mock_path)
+
+        return {
+            'product': product,
+            'brand_name': brand,
+            'headline': f"Discover {brand}",
+            'subheadline': f"Experience the quality and innovation of {product}.",
+            'body_text': f"Our {product} delivers unmatched performance and style. "
+                         f"Built for those who demand the best.",
+            'call_to_action': "SHOP NOW",
+            'industry': "General",
+            'brand_level': "Premium",
+            'tone': "Professional",
+            'image_path': mock_path,
+            'final_path': mock_path,
+            'dev_mode': True,
+            'generation_time': datetime.now().isoformat(),
+        }
+
+    def create_ad(self, prompt: str, product_image_path: str = None) -> Dict[str, Any]:
         """
-        Create a complete professional ad with seamless typography integration.
-        
+        Create a complete ad with image and copy using GPT-4o and DALL-E.
+
         Args:
-            prompt: User's product/brand prompt
-            
+            prompt: Description of the product to advertise
+            product_image_path: Optional path to product image
+
         Returns:
-            Complete ad dictionary with paths to generated images
+            Dictionary with ad details
         """
-        try:
-            # Check for cached result
-            cache_key = prompt.strip().lower()
-            if cache_key in self.ad_cache:
-                self.logger.info(f"Using cached ad for: {prompt}")
-                return self.ad_cache[cache_key]
-            
-            self.logger.info(f"Starting ad generation for: {prompt}")
-            
-            # Step 1: Extract brand and product information
-            self.logger.info(f"Extracting brand and product from: {prompt}")
-            extraction = self.extract_brand_product(prompt)
-            product = extraction['product']
-            brand_name = extraction['brand_name']
-            
-            # Step 2: Analyze brand
-            self.logger.info(f"Analyzing brand: {brand_name}")
-            brand_analysis = self.analyze_brand(prompt)
-            
-            # Step 3: Get social media insights
-            self.logger.info(f"Getting social media insights for: {product}")
-            social_media_insights = search_social_media_ads(product, brand_name, brand_analysis['industry'])
-            
-            # Step 4: Generate ad copy
-            self.logger.info("Generating ad copy")
-            ad_copy = self.generate_ad_copy(prompt, brand_analysis, social_media_insights)
-            
-            # Step 5: Generate studio-quality image with integrated typography
-            self.logger.info("Generating ad image with integrated typography")
-            
-            # Create complete ad with enhanced image generator
-            image_result = self.image_generator.create_studio_ad(
-                product=product,
-                brand_name=brand_name,
-                headline=ad_copy['headline'],
-                subheadline=ad_copy['subheadline'],
-                call_to_action=ad_copy['call_to_action'],
-                industry=brand_analysis['industry'],
-                brand_level=brand_analysis['brand_level'],
-                typography_style=brand_analysis['typography_style'],
-                color_scheme=brand_analysis['color_scheme'],
-                image_description=ad_copy['image_description'],
-                visual_focus=social_media_insights.get('visual_focus', 'product details'),
-                text_placement=social_media_insights.get('text_placement', 'dynamic')
-            )
-            
-            # Step 6: Save data for future pattern analysis
-            self._save_ad_data_for_analysis(
-                product, brand_name, brand_analysis, social_media_insights, 
-                ad_copy, image_result
-            )
-            
-            # Step 7: Compile results
-            ad_data = {
-                'product': product,
-                'brand_name': brand_name,
-                'headline': ad_copy['headline'],
-                'subheadline': ad_copy['subheadline'],
-                'body_text': ad_copy['body_text'],
-                'call_to_action': ad_copy['call_to_action'],
-                'image_path': image_result['final_path'],
-                'base_image_path': image_result.get('base_path', ''),
-                'brand_analysis': brand_analysis,
-                'social_media_insights': social_media_insights,
-                'generation_time': datetime.now().isoformat()
-            }
-            
-            # Add to cache
-            self.ad_cache[cache_key] = ad_data
-            
-            self.logger.info(f"Ad generation completed successfully: {ad_data['image_path']}")
-            return ad_data
-            
-        except Exception as e:
-            self.logger.error(f"Error creating ad: {str(e)}")
-            self.logger.error(traceback.format_exc())
-            
-            # Create a fallback ad with basic image
-            return self._create_fallback_ad(prompt)
+        self.logger.info(f"Starting ad generation for: {prompt}")
+
+        # Dev mode: return mock data immediately when no API key is present
+        if DEV_MODE or not self.openai_client:
+            self.logger.warning("DEV MODE active — returning mock ad (no OPENAI_API_KEY set)")
+            return self._generate_mock_ad(prompt)
+
+        # Extract brand and product information
+        brand_info = self.extract_brand_info(prompt)
     
-    def _save_ad_data_for_analysis(self, product: str, brand_name: str, 
-                                  brand_analysis: Dict[str, Any], 
-                                  social_insights: Dict[str, Any],
-                                  ad_copy: Dict[str, Any],
-                                  image_result: Dict[str, str]) -> None:
-        """Save generated ad data for pattern analysis."""
-        try:
-            # Create data object
-            ad_data = {
-                'timestamp': datetime.now().isoformat(),
-                'product': product,
-                'brand_name': brand_name,
-                'brand_analysis': brand_analysis,
-                'social_insights': social_insights,
-                'ad_copy': ad_copy,
-                'image_paths': image_result
-            }
+        # Analyze brand for industry-specific insights
+        brand_analysis = self.analyze_brand(brand_info)
+    
+        # Generate ad copy based on brand analysis
+        ad_copy = self.generate_ad_copy(prompt, brand_analysis)
+    
+        # Process user-provided product image if available
+        if product_image_path:
+            self.logger.info(f"Processing user product image: {product_image_path}")
+        
+            # Validate path before processing
+            if not os.path.exists(product_image_path):
+                self.logger.error(f"Product image not found: {product_image_path}")
+                raise FileNotFoundError(f"Product image not found: {product_image_path}")
             
-            # Save to file
-            os.makedirs("output/data", exist_ok=True)
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            data_path = f"output/data/ad_data_{timestamp}.json"
-            
-            with open(data_path, 'w', encoding='utf-8') as f:
-                json.dump(ad_data, f, indent=2)
-                
-        except Exception as e:
-            self.logger.warning(f"Failed to save ad data for analysis: {str(e)}")
+            # Generate ad with user product image
+            image_result = self.image_generator.create_ad_with_user_product(
+                product_image_path=product_image_path,
+                product=brand_info['product'],
+                brand_name=brand_info['brand'],
+                headline=ad_copy['headline'],
+                subheadline=ad_copy.get('subheadline'),
+                call_to_action=ad_copy.get('call_to_action'),
+                industry=brand_analysis.get('industry'),
+                brand_level=brand_analysis.get('brand_level')
+            )
+        else:
+            # Generate complete ad image from scratch
+            self.logger.info("Generating ad image from scratch")
+        
+            # Use the image generator to create the ad
+            image_result = self.image_generator.create_studio_ad(
+                product=brand_info['product'],
+                brand_name=brand_info['brand'],
+                headline=ad_copy['headline'],
+                subheadline=ad_copy.get('subheadline'),
+                call_to_action=ad_copy.get('call_to_action'),
+                industry=brand_analysis.get('industry'),
+                brand_level=brand_analysis.get('brand_level'),
+                image_description=ad_copy.get('image_description')
+            )
+        
+        # Merge all information into result
+        result = {
+            **ad_copy,
+            **brand_analysis,
+            **image_result,
+            'product': brand_info['product'],
+            'brand_name': brand_info['brand'],
+            'generation_time': datetime.now().isoformat()
+        }
+    
+        self.logger.info("Ad generation completed successfully")
+        return result
     
     def _create_fallback_ad(self, prompt: str) -> Dict[str, Any]:
         """Create a fallback ad when the regular process fails."""
@@ -660,7 +659,7 @@ class AdGenerator:
                 'body_text': f"Our {prompt} offers unmatched performance and style. Experience the difference today.",
                 'call_to_action': "SHOP NOW",
                 'image_path': placeholder_path,
-                'base_image_path': placeholder_path,
+                'final_path': placeholder_path,
                 'brand_analysis': {
                     "industry": "General",
                     "brand_level": "Premium",
@@ -673,14 +672,6 @@ class AdGenerator:
                     "color_scheme": "Blue and white",
                     "typography_style": "Modern sans-serif",
                     "product_highlight": "Overall quality"
-                },
-                'social_media_insights': {
-                    "recommended_format": "Product-focused with clean background",
-                    "text_placement": "centered",
-                    "text_style": "minimal",
-                    "key_elements": ["product close-up", "brand elements", "quality suggestion"],
-                    "visual_focus": "product details",
-                    "color_scheme": "blue gradient"
                 },
                 'generation_time': datetime.now().isoformat(),
                 'error': "Failed to generate ad properly, using fallback."
@@ -697,65 +688,3 @@ class AdGenerator:
                 'generation_time': datetime.now().isoformat(),
                 'error': "Complete generation failure."
             }
-    
-    def _extract_json(self, text: str) -> Dict[str, Any]:
-        """
-        Extract JSON object from text using multiple methods.
-        
-        Args:
-            text: Text containing JSON
-            
-        Returns:
-            Parsed JSON as dictionary
-        """
-        # Remove potential markdown code block formatting
-        text = re.sub(r'```(?:json)?\s*|\s*```', '', text)
-        
-        try:
-            # Try to parse the entire content as JSON
-            return json.loads(text)
-        except json.JSONDecodeError:
-            # Try to extract JSON using regex
-            json_match = re.search(r'(\{.*\})', text, re.DOTALL)
-            if json_match:
-                try:
-                    return json.loads(json_match.group(1))
-                except json.JSONDecodeError:
-                    pass
-            
-            # If regex extraction fails, try line-by-line parsing
-            try:
-                # Look for key-value pairs in the format "key": "value"
-                result = {}
-                lines = text.split('\n')
-                
-                for line in lines:
-                    # Match "key": "value" or "key": ["item1", "item2"]
-                    key_value_match = re.search(r'"([^"]+)"\s*:\s*("([^"]*)"|\[.*\]|[0-9]+|true|false)', line)
-                    if key_value_match:
-                        key = key_value_match.group(1)
-                        value = key_value_match.group(2)
-                        
-                        # If it's a list, parse it
-                        if value.startswith('['):
-                            try:
-                                value = json.loads(value)
-                            except:
-                                value = [item.strip('" ') for item in value.strip('[]').split(',')]
-                        # If it's a number or boolean
-                        elif value in ['true', 'false'] or value.isdigit():
-                            try:
-                                value = json.loads(value)
-                            except:
-                                pass
-                        else:
-                            # Otherwise, remove quotes
-                            value = value.strip('"')
-                        
-                        result[key] = value
-                
-                return result
-            except Exception as e:
-                self.logger.warning(f"Line-by-line JSON parsing failed: {str(e)}")
-                # Return empty dict if all parsing fails
-                return {}
