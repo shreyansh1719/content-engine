@@ -512,13 +512,12 @@ class AdGenerator:
     def _generate_mock_ad(self, prompt: str) -> Dict[str, Any]:
         """Return realistic mock ad data for dev/testing when no API key is set."""
         from PIL import Image, ImageDraw, ImageFont
-        import math
 
         words = prompt.split()
         brand = words[0].upper() if words else "BRAND"
         product = " ".join(words[:4]) if len(words) >= 4 else prompt
 
-        # Build a gradient placeholder image
+        # Build gradient background
         width, height = 1024, 1024
         img = Image.new('RGB', (width, height))
         draw = ImageDraw.Draw(img)
@@ -528,20 +527,38 @@ class AdGenerator:
             b = int(80 + (100 * y / height))
             draw.line([(0, y), (width, y)], fill=(r, g, b))
 
-        # Add mock label text
-        try:
-            font_large = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 60)
-            font_small = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 36)
-        except Exception:
-            font_large = ImageFont.load_default()
-            font_small = ImageFont.load_default()
+        # Ad copy dict for typography system
+        ad_copy = {
+            'headline': f"Discover {brand}",
+            'subheadline': f"Experience the quality and innovation of {product}.",
+            'body_text': (
+                f"Our {product} delivers unmatched performance and style. "
+                f"Built for those who demand the best."
+            ),
+            'call_to_action': "SHOP NOW",
+        }
 
-        draw.text((width // 2, height // 2 - 80), f"[MOCK] {brand}",
-                  fill=(255, 255, 255), font=font_large, anchor="mm")
-        draw.text((width // 2, height // 2 + 20), product[:50],
-                  fill=(180, 200, 255), font=font_small, anchor="mm")
-        draw.text((width // 2, height // 2 + 80), "DEV MODE — No API Key",
-                  fill=(120, 140, 180), font=font_small, anchor="mm")
+        # Apply full typography overlay (same as live pipeline)
+        try:
+            from .typography import TypographySystem
+            typo = TypographySystem()
+            img = typo.apply_typography(img, ad_copy)
+        except Exception as exc:
+            self.logger.warning(
+                "Typography overlay failed in mock mode: %s — falling back to plain text", exc
+            )
+            draw = ImageDraw.Draw(img)
+            try:
+                font_large = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 60)
+                font_small = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 36)
+            except Exception:
+                font_large = font_small = ImageFont.load_default()
+            draw.text((width // 2, height // 2 - 80), f"[MOCK] {brand}",
+                      fill=(255, 255, 255), font=font_large, anchor="mm")
+            draw.text((width // 2, height // 2 + 20), product[:50],
+                      fill=(180, 200, 255), font=font_small, anchor="mm")
+            draw.text((width // 2, height // 2 + 80), "DEV MODE — No API Key",
+                      fill=(120, 140, 180), font=font_small, anchor="mm")
 
         os.makedirs("output/images/final", exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -551,11 +568,7 @@ class AdGenerator:
         return {
             'product': product,
             'brand_name': brand,
-            'headline': f"Discover {brand}",
-            'subheadline': f"Experience the quality and innovation of {product}.",
-            'body_text': f"Our {product} delivers unmatched performance and style. "
-                         f"Built for those who demand the best.",
-            'call_to_action': "SHOP NOW",
+            **ad_copy,
             'industry': "General",
             'brand_level': "Premium",
             'tone': "Professional",

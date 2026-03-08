@@ -38,6 +38,7 @@ class PatternDatabaseIntegration:
     def enhance_ad_prompt(self, original_prompt: str, industry: str, 
                          target_platform: str = None, 
                          target_demographic: str = None) -> Dict:
+        
         """
         Enhance an ad generation prompt with insights from the patterns database.
         
@@ -51,6 +52,7 @@ class PatternDatabaseIntegration:
             Dictionary with enhanced prompt and context
         """
         try:
+
             # Get industry-specific patterns
             industry_patterns = self.patterns_db.get_industry_patterns(industry)
             

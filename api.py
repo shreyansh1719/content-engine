@@ -159,6 +159,42 @@ class ApiInfoResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# API-key validity check (tested once at startup, then cached)
+# ---------------------------------------------------------------------------
+
+_api_key_valid: Optional[bool] = None
+
+
+def _check_api_key() -> bool:
+    """
+    Test whether the configured OPENAI_API_KEY is actually accepted by OpenAI.
+    Calls client.models.list() once; result is cached for the process lifetime.
+    Returns True if the key works, False if absent, invalid, or unreachable.
+    """
+    global _api_key_valid
+    if _api_key_valid is not None:
+        return _api_key_valid
+    key = os.getenv("OPENAI_API_KEY", "").strip()
+    if not key:
+        _api_key_valid = False
+        return False
+    try:
+        from openai import OpenAI
+        client = OpenAI(api_key=key)
+        client.models.list()
+        _api_key_valid = True
+    except Exception:
+        _api_key_valid = False
+    return _api_key_valid
+
+
+@app.on_event("startup")
+async def _startup():
+    """Probe the API key at startup so /health reflects real validity immediately."""
+    _check_api_key()
+
+
+# ---------------------------------------------------------------------------
 # Lazy-loaded generator (startup stays instant)
 # ---------------------------------------------------------------------------
 
@@ -224,12 +260,12 @@ def _build_prompt(req: AdRequest) -> str:
 
 @app.get("/health", response_model=HealthResponse, tags=["Meta"])
 def health():
-    """Liveness + config check. Safe to call without an API key."""
-    api_key_present = bool(os.getenv("OPENAI_API_KEY", "").strip())
+    """Liveness + config check. dev_mode reflects actual API key validity, not just presence."""
+    api_key_valid = _check_api_key()
     return HealthResponse(
         status="ok",
-        api_key_configured=api_key_present,
-        dev_mode=not api_key_present,
+        api_key_configured=api_key_valid,
+        dev_mode=not api_key_valid,
     )
 
 
@@ -289,9 +325,9 @@ def generate_ad(req: AdRequest):
         body_text=ad_data.get("body_text", ""),
         cta=ad_data.get("call_to_action", ""),
         image_url=image_url,
-        brand_name=ad_data.get("brand_name", req.brand_name),
-        product=ad_data.get("product", req.product_name),
-        industry=ad_data.get("industry", req.industry),
+        brand_name=req.brand_name,
+        product=req.product_name,
+        industry=req.industry,
         generation_time=ad_data.get("generation_time", ""),
     )
 

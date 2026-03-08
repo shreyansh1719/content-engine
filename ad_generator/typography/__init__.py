@@ -9,6 +9,9 @@ from .typography_effects import TypographyEffectsEngine
 from .layout_engine import TextLayoutEngine
 from .font_pairing import FontPairingEngine
 from .responsive_scaling import ResponsiveTextScaling
+from .enhanced_typography import EnhancedTypographySystem
+from .typography_integration import integrate_enhanced_typography
+
 
 __all__ = [
     'TypographySystem',
@@ -16,5 +19,7 @@ __all__ = [
     'TypographyEffectsEngine',
     'TextLayoutEngine',
     'FontPairingEngine',
-    'ResponsiveTextScaling'
+    'ResponsiveTextScaling',
+    'EnhancedTypographySystem',
+    'integrate_enhanced_typography'
 ] 

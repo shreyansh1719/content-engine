@@ -220,6 +220,19 @@ class TypographyEffectsEngine:
                     "background_radius": 8,
                     "background_blur": 0
                 }
+            },
+            
+            "shadow": {
+                "description": "Simple shadow effect for text",
+                "params": {
+                    "shadow_enabled": True,
+                    "shadow_offset": 2,
+                    "shadow_opacity": 0.5,
+                    "shadow_blur": 1,
+                    "gradient_enabled": False,
+                    "glow_enabled": False,
+                    "outline_enabled": False
+                }
             }
         }
     
@@ -295,32 +308,52 @@ class TypographyEffectsEngine:
         }
     
     def apply_text_effect(self,
-                        draw: ImageDraw.Draw,
-                        text: str,
-                        position: Tuple[int, int],
-                        font: ImageFont.FreeTypeFont,
-                        alignment: str = "center",
-                        effect: str = "simple",
-                        text_color: Tuple[int, int, int, int] = (255, 255, 255, 255),
-                        accent_color: Optional[Tuple[int, int, int, int]] = None,
-                        typography_style: Optional[Dict[str, Any]] = None,
-                        image: Optional[Image.Image] = None) -> None:
+                         draw: ImageDraw.Draw,
+                         text: str,
+                         position: Tuple[int, int],
+                         font: ImageFont.FreeTypeFont,
+                         alignment: str = "center",
+                         effect: str = "simple",
+                         text_color: Tuple[int, int, int, int] = (255, 255, 255, 255),
+                         accent_color: Optional[Tuple[int, int, int, int]] = None,
+                         typography_style: Optional[Dict[str, Any]] = None,
+                         image: Optional[Image.Image] = None) -> bool:
         """
-        Apply a text effect to the specified text.
+        Apply text effect with detailed error tracking.
         
         Args:
-            draw: ImageDraw object to draw on
-            text: Text string to render
-            position: (x, y) position for text
-            font: Font to use for text
-            alignment: Text alignment (left, center, right)
+            draw: ImageDraw object
+            text: Text to render
+            position: Position (x, y) for the text
+            font: Font to use
+            alignment: Text alignment ("left", "center", "right")
             effect: Name of the effect to apply
             text_color: Text color (RGBA)
             accent_color: Accent color for effects (RGBA)
-            typography_style: Optional typography style parameters
-            image: Optional reference to original image for some effects
+            typography_style: Typography style dictionary
+            image: Original image for reference
+            
+        Returns:
+            True if effect was applied successfully, False otherwise
         """
         try:
+            # Check if font is valid
+            if font is None:
+                self.logger.error("Font is None, cannot apply text effect")
+                # Use emergency fallback
+                try:
+                    font = ImageFont.load_default()
+                    self.logger.info("Using PIL default font as emergency fallback")
+                except Exception as e:
+                    self.logger.error(f"Failed to load default font: {str(e)}")
+                    return False
+            
+            # Force full opacity for text color
+            r, g, b, a = text_color
+            if a < 200:  # If alpha is less than 200 (out of 255)
+                text_color = (r, g, b, 255)  # Force full opacity
+                self.logger.info(f"Forcing full opacity for text color: {text_color}")
+            
             # Get effect parameters
             effect_params = self.effects_registry.get(effect, self.effects_registry["simple"]).get("params", {})
             
@@ -332,160 +365,76 @@ class TypographyEffectsEngine:
             # Get text dimensions
             text_width, text_height = self._get_text_dimensions(text, font)
             
-            # Apply text transformations if needed
-            transform = effect_params.get("transform", None)
-            if transform == "uppercase":
-                text = text.upper()
-            elif transform == "lowercase":
-                text = text.lower()
-            elif transform == "capitalize":
-                text = text.title()
-            
-            # Apply letter spacing if needed
-            letter_spacing = effect_params.get("letter_spacing", 0)
-            if letter_spacing != 0:
-                text = self._apply_letter_spacing(text, letter_spacing)
-                # Recalculate dimensions with spacing
-                text_width, text_height = self._get_text_dimensions(text, font)
-            
             # Calculate position based on alignment
             x, y = position
             if alignment == "center":
                 x = x - text_width // 2
             elif alignment == "right":
                 x = x - text_width
-        
             
-            # For text background
-            if effect_params.get("background_enabled", False):
-                self._apply_text_background(
-                    draw, 
-                    text, 
-                    (x, y), 
-                    font, 
-                    text_width, 
-                    text_height, 
-                    accent_color or (0, 0, 0, int(255 * effect_params.get("background_opacity", 0.7))),
-                    effect_params
-                )
+            # Apply appropriate effect based on effect name
+            self.logger.info(f"Applying effect '{effect}' to text: {text[:20]}{'...' if len(text) > 20 else ''}")
             
-            # For the glass effect
-            if effect_params.get("glass_enabled", False) and image:
-                self._apply_glass_effect(
-                    draw, 
-                    text, 
-                    (x, y), 
-                    font, 
-                    text_color, 
-                    image, 
-                    effect_params
-                )
-                return  # Glass effect handles the text drawing
+            # Map effect names to their implementation methods
+            effect_methods = {
+                "clean_gradient": self._apply_clean_gradient_effect,
+                "elegant_serif": self._apply_elegant_serif_effect,
+                "subtle_shadow": self._apply_shadow,
+                "shadow": self._apply_shadow,
+                "subtle_glow": self._apply_subtle_glow_effect,
+                "dynamic_bold": self._apply_shadow,  # Using shadow with specific params
+                "minimal_elegant": self._apply_minimal_elegant_effect,
+                "luxury_metallic": self._apply_metallic_effect,
+                "vibrant_overlay": self._apply_vibrant_overlay_effect,
+                "gradient": self._apply_gradient_effect,
+                "premium_gradient": self._apply_premium_gradient,
+                "layered_gradient": self._apply_layered_gradient,
+                "glass_effect": self._apply_glass_effect_text,
+                "nike_bold": self._apply_nike_bold_effect,
+                "subtle_bg": self._apply_subtle_bg_effect
+            }
             
-            # For metallic effect
-            if effect_params.get("metallic_enabled", False):
-                self._apply_metallic_effect(
-                    draw, 
-                    text, 
-                    (x, y), 
-                    font, 
-                    text_color, 
-                    accent_color, 
-                    effect_params
-                )
-                return  # Metallic effect handles the text drawing
-            
-            # Create image for effects processing if needed
-            effects_needed = (
-                effect_params.get("shadow_enabled", False) or
-                effect_params.get("glow_enabled", False) or
-                effect_params.get("gradient_enabled", False) or
-                effect_params.get("outline_enabled", False)
-            )
-            
-            if effects_needed:
-                # Create separate image for effects processing
-                padding = 20  # Padding for effects that extend beyond text
-                effects_img = Image.new(
-                    'RGBA', 
-                    (text_width + padding * 2, text_height + padding * 2), 
-                    (0, 0, 0, 0)
-                )
-                effects_draw = ImageDraw.Draw(effects_img)
-                
-                # Apply shadow if enabled
-                if effect_params.get("shadow_enabled", False):
-                    self._apply_shadow(
-                        effects_draw, 
-                        text, 
-                        (padding, padding), 
-                        font, 
-                        text_color, 
-                        effect_params
-                    )
-                
-                # Apply glow if enabled
-                if effect_params.get("glow_enabled", False):
-                    self._apply_glow(
-                        effects_draw, 
-                        text, 
-                        (padding, padding), 
-                        font, 
-                        text_color, 
-                        accent_color, 
-                        effect_params
-                    )
-                
-                # Apply outline if enabled
-                if effect_params.get("outline_enabled", False):
-                    self._apply_outline(
-                        effects_draw, 
-                        text, 
-                        (padding, padding), 
-                        font, 
-                        text_color, 
-                        accent_color or text_color, 
-                        effect_params
-                    )
-                
-                # Apply gradient if enabled
-                if effect_params.get("gradient_enabled", False):
-                    self._apply_gradient(
-                        effects_draw, 
-                        text, 
-                        (padding, padding), 
-                        font, 
-                        text_color, 
-                        accent_color, 
-                        effect_params
-                    )
-                else:
-                    # Draw regular text if no gradient
-                    effects_draw.text((padding, padding), text, font=font, fill=text_color)
-                
-                # Paste effects image onto the main image
-                # Calculate paste position
-                paste_x = x - padding
-                paste_y = y - padding
-                draw._image.paste(effects_img, (paste_x, paste_y), effects_img)
+            # Apply the effect if it has a specific implementation
+            if effect in effect_methods:
+                effect_methods[effect](draw, text, (x, y), font, text_color, accent_color, effect_params)
             else:
-                # Just draw the text directly if no effects needed
+                # Default to simple rendering
                 draw.text((x, y), text, font=font, fill=text_color)
-                
+            
+            self.logger.info(f"Successfully applied effect '{effect}'")
+            return True  # Return success
+        
         except Exception as e:
-            self.logger.error(f"Error applying text effect: {str(e)}")
-            # Fallback to simple text rendering
+            self.logger.error(f"Error applying text effect '{effect}': {str(e)}")
+            import traceback
+            self.logger.error(traceback.format_exc())  # Log detailed stack trace
+            
+            # Emergency rendering - make sure text appears even if effect fails
             try:
-                # Calculate position based on alignment
                 x, y = position
                 if alignment == "center":
-                    x = x - text_width // 2
+                    try:
+                        text_width, text_height = self._get_text_dimensions(text, font)
+                        x = x - text_width // 2
+                    except:
+                        pass  # Keep original x if getting dimensions fails
                 elif alignment == "right":
-                    x = x - text_width
-                    
-                draw.text((x, y), text, font=font, fill=text_color)
-            except:
-                pass
+                    try:
+                        text_width, text_height = self._get_text_dimensions(text, font)
+                        x = x - text_width
+                    except:
+                        pass  # Keep original x if getting dimensions fails
+                
+                # Use high contrast fallback colors for visibility
+                fallback_color = (255, 255, 255, 255)  # Bright white with full opacity
+                
+                # Draw text with basic settings
+                draw.text((x, y), text, font=font, fill=fallback_color)
+                self.logger.info(f"Used fallback text rendering at position {(x, y)}")
+                return False  # Effect failed but we showed the text
+            except Exception as e2:
+                self.logger.error(f"Emergency text rendering also failed: {str(e2)}")
+                return False
     
     def create_button(self,
                      draw: ImageDraw.Draw,
@@ -634,6 +583,22 @@ class TypographyEffectsEngine:
             outline: Optional outline color
             width: Outline width if outline specified
         """
+        # Check if the native rounded_rectangle method is available (Pillow >= 8.0.0)
+        if hasattr(draw, 'rounded_rectangle'):
+            try:
+                # Use the built-in method if available
+                draw.rounded_rectangle(
+                    [(coords[0][0], coords[0][1]), (coords[1][0], coords[1][1])],
+                    radius=radius,
+                    fill=color,
+                    outline=outline,
+                    width=width
+                )
+                return
+            except Exception as e:
+                self.logger.warning(f"Native rounded_rectangle failed: {str(e)}, falling back to manual implementation")
+        
+        # Fall back to manual implementation
         x1, y1 = coords[0]
         x2, y2 = coords[1]
         
@@ -650,9 +615,17 @@ class TypographyEffectsEngine:
         # Draw outline separately if specified
         if outline:
             # This is a simplified outline approach - a full implementation would handle the corners better
-            if hasattr(draw, 'rounded_rectangle'):
-                # Use native rounded rectangle if available (Pillow 8.0.0+)
-                draw.rounded_rectangle([(x1, y1), (x2, y2)], radius, fill=None, outline=outline, width=width)
+            try:
+                # Top line
+                draw.line([(x1 + radius, y1), (x2 - radius, y1)], fill=outline, width=width)
+                # Right line
+                draw.line([(x2, y1 + radius), (x2, y2 - radius)], fill=outline, width=width)
+                # Bottom line
+                draw.line([(x1 + radius, y2), (x2 - radius, y2)], fill=outline, width=width)
+                # Left line
+                draw.line([(x1, y1 + radius), (x1, y2 - radius)], fill=outline, width=width)
+            except Exception as e:
+                self.logger.warning(f"Drawing outline failed: {str(e)}")
     
     def _get_text_dimensions(self, text: str, font: ImageFont.FreeTypeFont) -> Tuple[int, int]:
         """
@@ -679,37 +652,13 @@ class TypographyEffectsEngine:
                 size = getattr(font, 'size', 12)
                 return int(len(text) * size * 0.6), int(size * 1.2)
     
-    def _apply_letter_spacing(self, text: str, spacing_factor: float) -> str:
-        """
-        Apply letter spacing to text.
-        
-        Args:
-            text: Original text
-            spacing_factor: Spacing factor relative to font size
-            
-        Returns:
-            Text with spaces inserted between characters
-        """
-        if spacing_factor <= 0:
-            return text
-            
-        # Add spaces between characters based on spacing factor
-        spaced_text = ""
-        space_width = int(abs(spacing_factor) * 10)
-        
-        for char in text:
-            spaced_text += char
-            if char != ' ':
-                spaced_text += ' ' * space_width
-                
-        return spaced_text
-    
     def _apply_shadow(self,
                      draw: ImageDraw.Draw,
                      text: str,
                      position: Tuple[int, int],
                      font: ImageFont.FreeTypeFont, 
                      text_color: Tuple[int, int, int, int],
+                     accent_color: Optional[Tuple[int, int, int, int]],
                      params: Dict[str, Any]) -> None:
         """
         Apply shadow effect to text.
@@ -720,6 +669,7 @@ class TypographyEffectsEngine:
             position: (x, y) position
             font: Font to use
             text_color: Text color (RGBA)
+            accent_color: Optional accent color (RGBA)
             params: Effect parameters
         """
         x, y = position
@@ -770,17 +720,20 @@ class TypographyEffectsEngine:
                 font=font, 
                 fill=shadow_color
             )
-    
-    def _apply_glow(self,
-                   draw: ImageDraw.Draw,
-                   text: str,
-                   position: Tuple[int, int],
-                   font: ImageFont.FreeTypeFont,
-                   text_color: Tuple[int, int, int, int],
-                   accent_color: Optional[Tuple[int, int, int, int]],
-                   params: Dict[str, Any]) -> None:
+        
+        # Draw main text
+        draw.text((x, y), text, font=font, fill=text_color)
+
+    def _apply_elegant_serif_effect(self,
+                                   draw: ImageDraw.Draw,
+                                   text: str,
+                                   position: Tuple[int, int],
+                                   font: ImageFont.FreeTypeFont,
+                                   text_color: Tuple[int, int, int, int],
+                                   accent_color: Optional[Tuple[int, int, int, int]],
+                                   params: Dict[str, Any]) -> None:
         """
-        Apply glow effect to text.
+        Apply elegant serif effect to text.
         
         Args:
             draw: ImageDraw object
@@ -793,120 +746,71 @@ class TypographyEffectsEngine:
         """
         x, y = position
         
-        # Get glow parameters
-        glow_radius = params.get("glow_radius", 5)
-        glow_opacity = params.get("glow_opacity", 0.3)
+        # Get effect parameters
+        shadow_enabled = params.get("shadow_enabled", True)
+        shadow_offset = params.get("shadow_offset", 1)
+        shadow_opacity = params.get("shadow_opacity", 0.3)
+        shadow_blur = params.get("shadow_blur", 1.0)
+        outline_enabled = params.get("outline_enabled", True)
+        outline_size = params.get("outline_size", 1)
+        outline_opacity = params.get("outline_opacity", 0.2)
+        letter_spacing = params.get("letter_spacing", 0.05)
         
-        # Determine glow color
-        if accent_color:
-            glow_color = accent_color
-        else:
-            # Use a brighter version of the text color
-            r, g, b, a = text_color
-            glow_color = (
-                min(r + 50, 255),
-                min(g + 50, 255),
-                min(b + 50, 255),
-                int(a * glow_opacity)
-            )
-        
-        # Create a separate image for the glow
+        # Get text dimensions
         text_width, text_height = self._get_text_dimensions(text, font)
         
-        # Add padding for glow
-        padding = int(glow_radius * 3)
-        glow_img = Image.new(
-            'RGBA', 
-            (text_width + padding * 2, text_height + padding * 2), 
-            (0, 0, 0, 0)
-        )
-        glow_draw = ImageDraw.Draw(glow_img)
+        # Create a separate layer for the text effect
+        padding = 20
+        text_layer = Image.new('RGBA', (text_width + padding * 2, text_height + padding * 2), (0, 0, 0, 0))
+        text_draw = ImageDraw.Draw(text_layer)
         
-        # Extract glow color components
-        gr, gg, gb, ga = glow_color
-        
-        # Draw progressively more transparent glows
-        for i in range(3):
-            alpha = int(ga / (i + 1))
-            current_color = (gr, gg, gb, alpha)
+        # Apply shadow if enabled
+        if shadow_enabled:
+            shadow_color = (0, 0, 0, int(255 * shadow_opacity))
             
-            # Draw text multiple times with different offsets for omnidirectional glow
-            for offset_x, offset_y in [(-i, -i), (-i, 0), (-i, i), (0, -i), (0, i), (i, -i), (i, 0), (i, i)]:
-                glow_draw.text(
-                    (padding + offset_x, padding + offset_y),
-                    text, 
-                    font=font, 
-                    fill=current_color
-                )
+            # Draw shadow
+            text_draw.text(
+                (padding + shadow_offset, padding + shadow_offset), 
+                text, 
+                font=font, 
+                fill=shadow_color
+            )
+            
+            # Apply blur to shadow
+            if shadow_blur > 0:
+                text_layer = text_layer.filter(ImageFilter.GaussianBlur(radius=shadow_blur))
         
-        # Apply Gaussian blur for smooth glow
-        glow_img = glow_img.filter(ImageFilter.GaussianBlur(radius=glow_radius))
+        # Determine outline color
+        outline_color = accent_color if accent_color else (0, 0, 0, int(255 * outline_opacity))
         
-        # Paste glow layer
-        paste_x = x - padding
-        paste_y = y - padding
-        draw._image.paste(glow_img, (paste_x, paste_y), glow_img)
-        
-        # Draw main text on top
-        draw.text((x, y), text, font=font, fill=text_color)
-    
-    def _apply_outline(self,
-                      draw: ImageDraw.Draw,
-                      text: str,
-                      position: Tuple[int, int],
-                      font: ImageFont.FreeTypeFont,
-                      text_color: Tuple[int, int, int, int],
-                      outline_color: Tuple[int, int, int, int],
-                      params: Dict[str, Any]) -> None:
-        """
-        Apply outline effect to text.
-        
-        Args:
-            draw: ImageDraw object
-            text: Text to render
-            position: (x, y) position
-            font: Font to use
-            text_color: Text color (RGBA)
-            outline_color: Outline color (RGBA)
-            params: Effect parameters
-        """
-        x, y = position
-        
-        # Get outline parameters
-        thickness = params.get("outline_size", 1)
-        opacity = params.get("outline_opacity", 1.0)
-        
-        # Adjust outline color opacity
-        r, g, b, a = outline_color
-        outline_color = (r, g, b, int(a * opacity))
-        
-        # Draw outline by drawing the text multiple times with offsets
-        directions = [
-            (-1, -1), (0, -1), (1, -1),
-            (-1,  0),          (1,  0),
-            (-1,  1), (0,  1), (1,  1)
-        ]
-        
-        for _ in range(thickness):
-            for dx, dy in directions:
-                draw.text(
-                    (x + dx, y + dy), 
+        # Apply outline if enabled
+        if outline_enabled:
+            for dx, dy in [(-outline_size, 0), (outline_size, 0), (0, -outline_size), (0, outline_size)]:
+                text_draw.text(
+                    (padding + dx, padding + dy), 
                     text, 
                     font=font, 
                     fill=outline_color
                 )
         
         # Draw main text
-        draw.text((x, y), text, font=font, fill=text_color)
-    
-    def _apply_gradient(self,
-                       draw: ImageDraw.Draw,
-                       text: str,
-                       position: Tuple[int, int],
-                       font: ImageFont.FreeTypeFont,
-                       text_color: Tuple[int, int, int, int],
-                       accent_color: Optional[Tuple[int, int, int, int]],
-                       params: Dict[str, Any]) -> None:
+        text_draw.text((padding, padding), text, font=font, fill=text_color)
+        
+        # Apply subtle enhancements for serif elegance
+        enhanced_layer = text_layer.copy()
+        enhanced_layer = enhanced_layer.filter(ImageFilter.SMOOTH_MORE)
+        
+        # Paste the result
+        draw._image.paste(text_layer, (x - padding, y - padding), text_layer)
+
+    def _apply_gradient_effect(self,
+                              draw: ImageDraw.Draw,
+                              text: str,
+                              position: Tuple[int, int],
+                              font: ImageFont.FreeTypeFont,
+                              text_color: Tuple[int, int, int, int],
+                              accent_color: Optional[Tuple[int, int, int, int]],
+                              params: Dict[str, Any]) -> None:
         """
         Apply gradient effect to text.
         
@@ -925,61 +829,94 @@ class TypographyEffectsEngine:
         direction = params.get("gradient_direction", "vertical")
         start_opacity = params.get("gradient_start_opacity", 1.0)
         end_opacity = params.get("gradient_end_opacity", 0.7)
-        layers = params.get("gradient_layers", 1)
         
         # Get text dimensions
         text_width, text_height = self._get_text_dimensions(text, font)
         
-        # Setup colors for gradient
+        # Create a separate image for gradient text
+        gradient_img = Image.new('RGBA', (text_width + 20, text_height + 20), (0, 0, 0, 0))
+        gradient_draw = ImageDraw.Draw(gradient_img)
+        
+        # Extract color components
         r1, g1, b1, a1 = text_color
         
         if accent_color:
             r2, g2, b2, a2 = accent_color
         else:
-            # Calculate a darker variant for end color
-            darkness = 0.7
-            r2, g2, b2, a2 = (
-                int(r1 * darkness),
-                int(g1 * darkness),
-                int(b1 * darkness),
-                int(a1 * end_opacity)
-            )
+            # Calculate a darker variant for gradient
+            r2, g2, b2 = int(r1 * 0.7), int(g1 * 0.7), int(b1 * 0.7)
+            a2 = int(a1 * end_opacity)
         
-        # Create layered gradient effect
-        for i in range(layers):
-            # Calculate blend factor for this layer
-            blend = i / layers if layers > 1 else 0
-            
-            # Interpolate colors
-            r = int(r1 * (1 - blend) + r2 * blend)
-            g = int(g1 * (1 - blend) + g2 * blend)
-            b = int(b1 * (1 - blend) + b2 * blend)
-            a = int(a1 * (1 - blend * (1 - end_opacity / start_opacity)))
-            
-            layer_color = (r, g, b, a)
-            
-            # Calculate offset based on direction
-            if direction == "vertical":
-                offset_y = int(text_height * blend * 0.1)
-                offset_x = 0
-            elif direction == "horizontal":
-                offset_x = int(text_width * blend * 0.1)
-                offset_y = 0
-            elif direction == "diagonal":
-                offset_x = int(text_width * blend * 0.05)
-                offset_y = int(text_height * blend * 0.05)
-            else:
-                offset_x = 0
-                offset_y = 0
+        # Apply gradient based on direction
+        if direction == "vertical":
+            # Create vertical gradient
+            for i in range(text_height):
+                # Calculate color for this position in the gradient
+                ratio = i / text_height
+                r = int(r1 * (1 - ratio) + r2 * ratio)
+                g = int(g1 * (1 - ratio) + g2 * ratio)
+                b = int(b1 * (1 - ratio) + b2 * ratio)
+                a = int(a1 * (1 - ratio * (1 - end_opacity/start_opacity)))
                 
-            # Draw layer
-            draw.text(
-                (x + offset_x, y + offset_y), 
-                text, 
-                font=font, 
-                fill=layer_color
-            )
-    
+                # Draw text line by line with current color
+                line_color = (r, g, b, a)
+                gradient_draw.text((10, 10 + i), text, font=font, fill=line_color)
+        
+        elif direction == "horizontal":
+            # For horizontal gradient, we need to approach differently
+            # Draw text in multiple layers
+            steps = 10  # Number of gradient steps
+            for i in range(steps):
+                # Calculate color for this step
+                ratio = i / (steps - 1)
+                r = int(r1 * (1 - ratio) + r2 * ratio)
+                g = int(g1 * (1 - ratio) + g2 * ratio)
+                b = int(b1 * (1 - ratio) + b2 * ratio)
+                a = int(a1 * (1 - ratio * (1 - end_opacity/start_opacity)))
+                
+                # Calculate horizontal slice
+                slice_width = text_width // steps
+                clip_left = i * slice_width
+                clip_right = (i + 1) * slice_width
+                
+                # Draw this slice with current color
+                mask = Image.new('L', (text_width + 20, text_height + 20), 0)
+                mask_draw = ImageDraw.Draw(mask)
+                mask_draw.rectangle([(clip_left + 10, 0), (clip_right + 10, text_height + 20)], fill=255)
+                
+                # Draw text with current color through mask
+                temp_img = Image.new('RGBA', (text_width + 20, text_height + 20), (0, 0, 0, 0))
+                temp_draw = ImageDraw.Draw(temp_img)
+                temp_draw.text((10, 10), text, font=font, fill=(r, g, b, a))
+                
+                # Composite with mask
+                gradient_img.paste(temp_img, (0, 0), mask)
+        
+        else:  # diagonal or any other type, default behavior
+            # Draw text with single color
+            gradient_draw.text((10, 10), text, font=font, fill=text_color)
+        
+        # Apply shadow if enabled
+        if params.get("shadow_enabled", True):
+            shadow_offset = params.get("shadow_offset", 2)
+            shadow_opacity = params.get("shadow_opacity", 0.5)
+            shadow_color = (0, 0, 0, int(255 * shadow_opacity))
+            
+            shadow_img = Image.new('RGBA', (text_width + 20, text_height + 20), (0, 0, 0, 0))
+            shadow_draw = ImageDraw.Draw(shadow_img)
+            shadow_draw.text((10 + shadow_offset, 10 + shadow_offset), text, font=font, fill=shadow_color)
+            
+            if params.get("shadow_blur", 0) > 0:
+                shadow_img = shadow_img.filter(ImageFilter.GaussianBlur(radius=params.get("shadow_blur", 0)))
+            
+            # Composite shadow and gradient
+            composite = Image.alpha_composite(shadow_img, gradient_img)
+        else:
+            composite = gradient_img
+        
+        # Paste the final composite
+        draw._image.paste(composite, (x - 10, y - 10), composite)
+
     def _apply_metallic_effect(self,
                               draw: ImageDraw.Draw,
                               text: str,
@@ -1011,82 +948,73 @@ class TypographyEffectsEngine:
         
         # Create a separate image for metallic effect
         padding = 20
-        metal_img = Image.new(
-            'RGBA', 
-            (text_width + padding * 2, text_height + padding * 2), 
-            (0, 0, 0, 0)
-        )
+        metal_img = Image.new('RGBA', (text_width + padding * 2, text_height + padding * 2), (0, 0, 0, 0))
         metal_draw = ImageDraw.Draw(metal_img)
         
-        # Draw shadow first if enabled
+        # Determine base metallic color (gold or silver by default)
+        if accent_color:
+            base_color = accent_color
+        else:
+            # Default to gold
+            base_color = (212, 175, 55, 255)  # Gold color
+        
+        r, g, b, a = base_color
+        
+        # Draw shadow first
         if params.get("shadow_enabled", True):
             shadow_offset = params.get("shadow_offset", 3)
             shadow_opacity = params.get("shadow_opacity", 0.6)
             shadow_color = (0, 0, 0, int(255 * shadow_opacity))
             
-            metal_draw.text(
-                (padding + shadow_offset, padding + shadow_offset), 
-                text, 
-                font=font, 
-                fill=shadow_color
-            )
+            metal_draw.text((padding + shadow_offset, padding + shadow_offset), 
+                           text, font=font, fill=shadow_color)
         
-        # Determine base metal color
-        if accent_color:
-            base_color = accent_color
-        else:
-            base_color = text_color
-        
-        r, g, b, a = base_color
-        
-        # 1. Draw dark base
-        dark_base = (
-            int(r * shadows),
-            int(g * shadows),
-            int(b * shadows),
-            a
-        )
+        # 1. Draw darker base for depth
+        dark_base = (int(r * shadows), int(g * shadows), int(b * shadows), a)
         metal_draw.text((padding, padding), text, font=font, fill=dark_base)
         
-        # 2. Draw lighter shade for edge highlight
-        edge_highlight = (
-            min(int(r * 1.3), 255),
-            min(int(g * 1.3), 255),
-            min(int(b * 1.3), 255),
-            a
-        )
-        metal_draw.text((padding - 1, padding - 1), text, font=font, fill=edge_highlight)
+        # 2. Draw multiple layers for metallic effect
+        # Bottom highlight
+        bottom_highlight = (min(int(r * 1.2), 255), min(int(g * 1.2), 255), min(int(b * 1.2), 255), int(a * 0.9))
+        metal_draw.text((padding, padding + 1), text, font=font, fill=bottom_highlight)
         
-        # 3. Draw main text
+        # Main color
         metal_draw.text((padding, padding), text, font=font, fill=base_color)
         
-        # 4. Draw top edge highlight
-        highlight_color = (
-            min(int(r * 1.5), 255),
-            min(int(g * 1.5), 255),
-            min(int(b * 1.5), 255),
-            int(a * 0.7)
-        )
-        metal_draw.text((padding - 1, padding - 2), text, font=font, fill=highlight_color)
+        # Top highlight for metallic shine
+        top_highlight = (min(int(r * highlight), 255), min(int(g * highlight), 255), min(int(b * highlight), 255), int(a * 0.8))
+        metal_draw.text((padding, padding - 1), text, font=font, fill=top_highlight)
+        
+        # Extreme highlight for sparkle effect
+        sparkle = (min(int(r * 1.5), 255), min(int(g * 1.5), 255), min(int(b * 1.5), 255), int(a * 0.6))
+        metal_draw.text((padding - 1, padding - 1), text, font=font, fill=sparkle)
+        
+        # Apply outline if specified
+        if params.get("outline_enabled", True):
+            outline_size = params.get("outline_size", 1)
+            outline_opacity = params.get("outline_opacity", 0.5)
+            outline_color = (0, 0, 0, int(255 * outline_opacity))
+            
+            for dx, dy in [(outline_size, 0), (-outline_size, 0), (0, outline_size), (0, -outline_size)]:
+                if dx != 0 or dy != 0:  # Skip center position
+                    metal_draw.text((padding + dx, padding + dy), text, font=font, fill=outline_color)
         
         # Apply slight blur for smoother metallic look
         metal_img = metal_img.filter(ImageFilter.GaussianBlur(radius=0.3))
         
         # Paste the metallic image
-        paste_x = x - padding
-        paste_y = y - padding
-        draw._image.paste(metal_img, (paste_x, paste_y), metal_img)
+        draw._image.paste(metal_img, (x - padding, y - padding), metal_img)
     
-    def _apply_glass_effect(self,
-                           draw: ImageDraw.Draw,
-                           text: str,
-                           position: Tuple[int, int],
-                           font: ImageFont.FreeTypeFont,
-                           text_color: Tuple[int, int, int, int],
-                           image: Image.Image,
-                           params: Dict[str, Any]) -> None:
+    def _apply_clean_gradient_effect(self, 
+                                    draw: ImageDraw.Draw,
+                                    text: str,
+                                    position: Tuple[int, int],
+                                    font: ImageFont.FreeTypeFont,
+                                    text_color: Tuple[int, int, int, int],
+                                    accent_color: Optional[Tuple[int, int, int, int]],
+                                    params: Dict[str, Any]) -> None:
         """
-        Apply glass effect to text.
+        Apply clean gradient effect with modern typography.
         
         Args:
             draw: ImageDraw object
@@ -1094,125 +1022,734 @@ class TypographyEffectsEngine:
             position: (x, y) position
             font: Font to use
             text_color: Text color (RGBA)
-            image: Original image for background
+            accent_color: Optional accent color for gradient
             params: Effect parameters
         """
         x, y = position
         
-        # Get glass parameters
-        blur_radius = params.get("glass_blur", 10)
-        opacity = params.get("glass_opacity", 0.6)
-        reflection_opacity = params.get("glass_reflection", 0.3)
-        
         # Get text dimensions
         text_width, text_height = self._get_text_dimensions(text, font)
         
-        # Calculate the background area we need to blur
-        padding = 10  # Extra space around text
-        bg_left = max(0, x - padding)
-        bg_top = max(0, y - padding)
-        bg_right = min(image.width, x + text_width + padding)
-        bg_bottom = min(image.height, y + text_height + padding)
+        # Create a separate layer for the text effect
+        text_layer = Image.new('RGBA', (text_width + 40, text_height + 40), (0, 0, 0, 0))
+        text_draw = ImageDraw.Draw(text_layer)
         
-        # Create a mask for the text area
-        mask = Image.new('L', image.size, 0)
-        mask_draw = ImageDraw.Draw(mask)
-        mask_draw.text((x, y), text, font=font, fill=255)
+        # Extract color components
+        r, g, b, a = text_color
         
-        # Blur the mask slightly for smoother edges
-        mask = mask.filter(ImageFilter.GaussianBlur(radius=1))
-        
-        # Extract the region from the original image
-        region = image.crop((bg_left, bg_top, bg_right, bg_bottom))
-        
-        # Apply blur to simulate glass effect
-        blurred_region = region.filter(ImageFilter.GaussianBlur(radius=blur_radius))
-        
-        # Create a new transparent overlay
-        overlay = Image.new('RGBA', (bg_right - bg_left, bg_bottom - bg_top), (0, 0, 0, 0))
-        
-        # Paste the blurred region
-        overlay.paste(blurred_region, (0, 0))
-        
-        # Apply semi-transparent white overlay for glass effect
-        glass_overlay = Image.new('RGBA', overlay.size, (255, 255, 255, int(255 * opacity)))
-        overlay = Image.alpha_composite(overlay, glass_overlay)
-        
-        # Add highlight gradient
-        highlight = Image.new('RGBA', overlay.size, (0, 0, 0, 0))
-        highlight_draw = ImageDraw.Draw(highlight)
-        
-        # Create top-to-bottom gradient for reflection
-        for i in range(overlay.height // 3):
-            alpha = int(255 * reflection_opacity * (1 - i / (overlay.height // 3)))
-            highlight_draw.line(
-                [(0, i), (overlay.width, i)],
-                fill=(255, 255, 255, alpha)
+        # Determine gradient end color
+        if accent_color:
+            end_color = accent_color
+        else:
+            # Create a slightly different color for gradient end
+            lightness_factor = 1.3
+            end_color = (
+                min(int(r * lightness_factor), 255),
+                min(int(g * lightness_factor), 255),
+                min(int(b * lightness_factor), 255),
+                a
             )
         
-        # Add highlight to overlay
-        overlay = Image.alpha_composite(overlay, highlight)
+        # Draw gradient text
+        steps = text_height
+        for i in range(steps):
+            # Calculate color for this position
+            ratio = i / steps
+            current_r = int(r * (1 - ratio) + end_color[0] * ratio)
+            current_g = int(g * (1 - ratio) + end_color[1] * ratio)
+            current_b = int(b * (1 - ratio) + end_color[2] * ratio)
+            current_a = int(a * (1 - ratio * 0.2))  # Slight fade
+            
+            line_color = (current_r, current_g, current_b, current_a)
+            text_draw.text((20, 20 + i), text, font=font, fill=line_color)
         
-        # Paste back with mask
-        draw._image.paste(overlay, (bg_left, bg_top), mask.crop((bg_left, bg_top, bg_right, bg_bottom)))
+        # Add subtle shadow
+        shadow_color = (0, 0, 0, 80)
+        shadow_layer = Image.new('RGBA', (text_width + 40, text_height + 40), (0, 0, 0, 0))
+        shadow_draw = ImageDraw.Draw(shadow_layer)
+        shadow_draw.text((21, 21), text, font=font, fill=shadow_color)
+        shadow_layer = shadow_layer.filter(ImageFilter.GaussianBlur(1))
         
-        # Draw text on top with semi-transparency
-        r, g, b, a = text_color
-        text_overlay_color = (r, g, b, int(a * 0.9))
-        draw.text((x, y), text, font=font, fill=text_overlay_color)
+        # Combine shadow and text
+        result = Image.alpha_composite(shadow_layer, text_layer)
+        
+        # Paste the result
+        draw._image.paste(result, (x - 20, y - 20), result)
     
-    def _apply_text_background(self,
-                              draw: ImageDraw.Draw,
-                              text: str,
-                              position: Tuple[int, int],
-                              font: ImageFont.FreeTypeFont,
-                              text_width: int,
-                              text_height: int,
-                              bg_color: Tuple[int, int, int, int],
-                              params: Dict[str, Any]) -> None:
+    def _apply_subtle_glow_effect(self,
+                                 draw: ImageDraw.Draw,
+                                 text: str,
+                                 position: Tuple[int, int],
+                                 font: ImageFont.FreeTypeFont,
+                                 text_color: Tuple[int, int, int, int],
+                                 accent_color: Optional[Tuple[int, int, int, int]],
+                                 params: Dict[str, Any]) -> None:
         """
-        Apply background panel behind text.
+        Apply subtle glow effect to text.
         
         Args:
             draw: ImageDraw object
             text: Text to render
             position: (x, y) position
             font: Font to use
-            text_width: Width of text
-            text_height: Height of text
-            bg_color: Background color (RGBA)
+            text_color: Text color (RGBA)
+            accent_color: Accent color (RGBA)
             params: Effect parameters
         """
         x, y = position
         
-        # Get background parameters
-        padding = params.get("background_padding", 15)
-        radius = params.get("background_radius", 8)
-        opacity = params.get("background_opacity", 0.7)
+        # Get text dimensions
+        text_width, text_height = self._get_text_dimensions(text, font)
         
-        # Calculate background rectangle area
-        bg_left = x - padding
-        bg_top = y - padding
-        bg_right = x + text_width + padding
-        bg_bottom = y + text_height + padding
+        # Add padding for glow
+        padding = 20
+        glow_img = Image.new('RGBA', (text_width + padding * 2, text_height + padding * 2), (0, 0, 0, 0))
+        glow_draw = ImageDraw.Draw(glow_img)
         
-        # Adjust color opacity
-        r, g, b, a = bg_color
-        bg_color_adjusted = (r, g, b, int(255 * opacity) if a > 200 else a)
+        # Get glow parameters
+        glow_radius = params.get("glow_radius", 5)
+        glow_opacity = params.get("glow_opacity", 0.3)
         
-        # Draw the background
-        if radius > 0:
-            self.draw_rounded_rectangle(
-                draw,
-                [(bg_left, bg_top), (bg_right, bg_bottom)],
-                bg_color_adjusted,
-                radius=radius
-            )
+        # Determine glow color
+        if accent_color:
+            r, g, b, a = accent_color
+            glow_color = (r, g, b, int(255 * glow_opacity))
         else:
-            draw.rectangle(
-                [(bg_left, bg_top), (bg_right, bg_bottom)],
-                fill=bg_color_adjusted
+            # Use a brighter version of text color
+            r, g, b, a = text_color
+            glow_color = (
+                min(r + 50, 255),
+                min(g + 50, 255),
+                min(b + 50, 255),
+                int(255 * glow_opacity)
             )
+        
+        # Draw glow
+        glow_draw.text((padding, padding), text, font=font, fill=glow_color)
+        
+        # Apply blur to glow
+        glow_img = glow_img.filter(ImageFilter.GaussianBlur(radius=glow_radius))
+        
+        # Draw main text on separate layer
+        text_layer = Image.new('RGBA', (text_width + padding * 2, text_height + padding * 2), (0, 0, 0, 0))
+        text_draw = ImageDraw.Draw(text_layer)
+        text_draw.text((padding, padding), text, font=font, fill=text_color)
+        
+        # Composite glow and text
+        result = Image.alpha_composite(glow_img, text_layer)
+        
+        # Paste the result
+        draw._image.paste(result, (x - padding, y - padding), result)
+    
+    def _apply_minimal_elegant_effect(self,
+                                     draw: ImageDraw.Draw,
+                                     text: str,
+                                     position: Tuple[int, int],
+                                     font: ImageFont.FreeTypeFont,
+                                     text_color: Tuple[int, int, int, int],
+                                     accent_color: Optional[Tuple[int, int, int, int]],
+                                     params: Dict[str, Any]) -> None:
+        """
+        Apply minimal elegant effect.
+        
+        Args:
+            draw: ImageDraw object
+            text: Text to render
+            position: (x, y) position
+            font: Font to use
+            text_color: Text color (RGBA)
+            accent_color: Accent color (RGBA)
+            params: Effect parameters
+        """
+        x, y = position
+        
+        # Get letter spacing parameter
+        letter_spacing = params.get("letter_spacing", 0.05)
+        lightweight = params.get("lightweight", True)
+        
+        # Get text dimensions
+        text_width, text_height = self._get_text_dimensions(text, font)
+        
+        # Create a separate layer
+        text_layer = Image.new('RGBA', (text_width + 40, text_height + 40), (0, 0, 0, 0))
+        text_draw = ImageDraw.Draw(text_layer)
+        
+        # Apply letter spacing if specified
+        if letter_spacing > 0:
+            # Draw each character with spacing
+            spaced_width = 0
+            for char in text:
+                char_width, _ = self._get_text_dimensions(char, font)
+                text_draw.text((20 + spaced_width, 20), char, font=font, fill=text_color)
+                spaced_width += char_width + int(text_height * letter_spacing)
+        else:
+            # Draw text normally
+            text_draw.text((20, 20), text, font=font, fill=text_color)
+        
+        # Apply very subtle shadow if not lightweight
+        if not lightweight:
+            shadow_color = (0, 0, 0, 40)
+            shadow_offset = 1
+            shadow_layer = Image.new('RGBA', (text_width + 40, text_height + 40), (0, 0, 0, 0))
+            shadow_draw = ImageDraw.Draw(shadow_layer)
+            
+            if letter_spacing > 0:
+                # Draw shadow for each character with spacing
+                spaced_width = 0
+                for char in text:
+                    char_width, _ = self._get_text_dimensions(char, font)
+                    shadow_draw.text((20 + spaced_width + shadow_offset, 20 + shadow_offset), 
+                                  char, font=font, fill=shadow_color)
+                    spaced_width += char_width + int(text_height * letter_spacing)
+            else:
+                # Draw shadow normally
+                shadow_draw.text((20 + shadow_offset, 20 + shadow_offset), 
+                              text, font=font, fill=shadow_color)
+            
+            # Composite shadow and text
+            result = Image.alpha_composite(shadow_layer, text_layer)
+        else:
+            result = text_layer
+        
+        # Paste the result
+        draw._image.paste(result, (x - 20, y - 20), result)
+    
+    def _apply_vibrant_overlay_effect(self,
+                                     draw: ImageDraw.Draw,
+                                     text: str,
+                                     position: Tuple[int, int],
+                                     font: ImageFont.FreeTypeFont,
+                                     text_color: Tuple[int, int, int, int],
+                                     accent_color: Optional[Tuple[int, int, int, int]],
+                                     params: Dict[str, Any]) -> None:
+        """
+        Apply vibrant text with colorful background panel.
+        
+        Args:
+            draw: ImageDraw object
+            text: Text to render
+            position: (x, y) position
+            font: Font to use
+            text_color: Text color (RGBA)
+            accent_color: Accent color (RGBA)
+            params: Effect parameters
+        """
+        x, y = position
+        
+        # Get text dimensions
+        text_width, text_height = self._get_text_dimensions(text, font)
+        
+        # Get background parameters
+        bg_opacity = params.get("background_opacity", 0.8)
+        padding = params.get("background_padding", 15)
+        radius = params.get("background_radius", 10)
+        
+        # Determine background color
+        if accent_color:
+            r, g, b, _ = accent_color
+            bg_color = (r, g, b, int(255 * bg_opacity))
+        else:
+            # Use a complementary color to text
+            r, g, b, _ = text_color
+            bg_color = (255 - r, 255 - g, 255 - b, int(255 * bg_opacity))
+        
+        # Create background layer
+        bg_width = text_width + (padding * 2)
+        bg_height = text_height + (padding * 2)
+        
+        bg_layer = Image.new('RGBA', (bg_width + 20, bg_height + 20), (0, 0, 0, 0))
+        bg_draw = ImageDraw.Draw(bg_layer)
+        
+        # Draw rounded rectangle background
+        self.draw_rounded_rectangle(
+            bg_draw,
+            [(10, 10), (10 + bg_width, 10 + bg_height)],
+            bg_color,
+            radius=radius
+        )
+        
+        # Create text layer
+        text_layer = Image.new('RGBA', (bg_width + 20, bg_height + 20), (0, 0, 0, 0))
+        text_draw = ImageDraw.Draw(text_layer)
+        
+        # Draw text centered on the background
+        text_x = 10 + padding + (text_width // 2)
+        text_y = 10 + padding
+        
+        # Draw text with subtle shadow for depth
+        text_draw.text((text_x + 1, text_y + 1), text, font=font, fill=(0, 0, 0, 80), anchor="mt")
+        text_draw.text((text_x, text_y), text, font=font, fill=text_color, anchor="mt")
+        
+        # Composite background and text
+        result = Image.alpha_composite(bg_layer, text_layer)
+        
+        # Position the composite
+        result_x = x - (bg_width // 2) - 10
+        result_y = y - 10
+        
+        # Paste the result
+        draw._image.paste(result, (result_x, result_y), result)
+    
+    def _apply_premium_gradient(self,
+                               draw: ImageDraw.Draw,
+                               text: str,
+                               position: Tuple[int, int],
+                               font: ImageFont.FreeTypeFont,
+                               text_color: Tuple[int, int, int, int],
+                               accent_color: Optional[Tuple[int, int, int, int]],
+                               params: Dict[str, Any]) -> None:
+        """
+        Apply premium gradient effect with subtle glow.
+        
+        Args:
+            draw: ImageDraw object
+            text: Text to render
+            position: (x, y) position
+            font: Font to use
+            text_color: Text color (RGBA)
+            accent_color: Accent color (RGBA)
+            params: Effect parameters
+        """
+        x, y = position
+        
+        # Get parameters
+        shadow_enabled = params.get("shadow_enabled", True)
+        shadow_offset = params.get("shadow_offset", 2)
+        shadow_opacity = params.get("shadow_opacity", 0.5)
+        gradient_steps = params.get("gradient_steps", 10)
+        glow_enabled = params.get("glow_enabled", True)
+        glow_opacity = params.get("glow_opacity", 0.15)
+        glow_radius = params.get("glow_radius", 3)
+        
+        # Get text dimensions
+        text_width, text_height = self._get_text_dimensions(text, font)
+        
+        # Create a separate layer for the text effect
+        padding = 30  # Extra space for effects
+        text_layer = Image.new('RGBA', (text_width + padding * 2, text_height + padding * 2), (0, 0, 0, 0))
+        text_draw = ImageDraw.Draw(text_layer)
+        
+        # Apply shadow if enabled
+        if shadow_enabled:
+            shadow_color = (0, 0, 0, int(255 * shadow_opacity))
+            text_draw.text(
+                (padding + shadow_offset, padding + shadow_offset),
+                text,
+                font=font,
+                fill=shadow_color
+            )
+        
+        # Apply glow if enabled
+        if glow_enabled:
+            # Determine glow color
+            if accent_color:
+                r, g, b, a = accent_color
+                glow_color = (r, g, b, int(255 * glow_opacity))
+            else:
+                # Use a brighter version of text color
+                r, g, b, a = text_color
+                glow_color = (
+                    min(r + 50, 255),
+                    min(g + 50, 255),
+                    min(b + 50, 255),
+                    int(255 * glow_opacity)
+                )
+            
+            # Create glow layer
+            glow_layer = Image.new('RGBA', text_layer.size, (0, 0, 0, 0))
+            glow_draw = ImageDraw.Draw(glow_layer)
+            glow_draw.text((padding, padding), text, font=font, fill=glow_color)
+            
+            # Apply blur for glow effect
+            glow_layer = glow_layer.filter(ImageFilter.GaussianBlur(radius=glow_radius))
+            
+            # Composite with text layer
+            text_layer = Image.alpha_composite(glow_layer, text_layer)
+        
+        # Apply gradient effect
+        r1, g1, b1, a1 = text_color
+        
+        if accent_color:
+            r2, g2, b2, a2 = accent_color
+        else:
+            # Create complementary color
+            r2 = min(r1 + 70, 255)
+            g2 = min(g1 + 70, 255)
+            b2 = min(b1 + 70, 255)
+            a2 = a1
+        
+        # Create gradient layer
+        gradient_layer = Image.new('RGBA', text_layer.size, (0, 0, 0, 0))
+        gradient_draw = ImageDraw.Draw(gradient_layer)
+        
+        # Draw gradient text
+        for i in range(text_height):
+            # Calculate position in gradient (0 to 1)
+            pos = i / text_height
+            
+            # Calculate color for this position
+            r = int(r1 * (1 - pos) + r2 * pos)
+            g = int(g1 * (1 - pos) + g2 * pos)
+            b = int(b1 * (1 - pos) + b2 * pos)
+            a = int(a1 * (1 - pos * 0.1))  # Slight fade
+            
+            current_color = (r, g, b, a)
+            
+            # Draw text at this position
+            gradient_draw.text((padding, padding + i), text, font=font, fill=current_color)
+        
+        # Composite with result
+        text_layer = Image.alpha_composite(text_layer, gradient_layer)
+        
+        # Paste the result
+        draw._image.paste(text_layer, (x - padding, y - padding), text_layer)
+
+    def _apply_layered_gradient(self,
+                               draw: ImageDraw.Draw,
+                               text: str,
+                               position: Tuple[int, int],
+                               font: ImageFont.FreeTypeFont,
+                               text_color: Tuple[int, int, int, int],
+                               accent_color: Optional[Tuple[int, int, int, int]],
+                               params: Dict[str, Any]) -> None:
+        """
+        Apply complex layered gradient for depth.
+        
+        Args:
+            draw: ImageDraw object
+            text: Text to render
+            position: (x, y) position
+            font: Font to use
+            text_color: Text color (RGBA)
+            accent_color: Accent color (RGBA)
+            params: Effect parameters
+        """
+        x, y = position
+        
+        # Get parameters
+        shadow_enabled = params.get("shadow_enabled", True)
+        shadow_offset = params.get("shadow_offset", 2)
+        shadow_opacity = params.get("shadow_opacity", 0.5)
+        gradient_direction = params.get("gradient_direction", "vertical")
+        gradient_layers = params.get("gradient_layers", 3)
+        
+        # Get text dimensions
+        text_width, text_height = self._get_text_dimensions(text, font)
+        
+        # Create a separate layer for the text effect
+        padding = 30  # Extra space for effects
+        text_layer = Image.new('RGBA', (text_width + padding * 2, text_height + padding * 2), (0, 0, 0, 0))
+        text_draw = ImageDraw.Draw(text_layer)
+        
+        # Apply shadow if enabled
+        if shadow_enabled:
+            shadow_color = (0, 0, 0, int(255 * shadow_opacity))
+            text_draw.text(
+                (padding + shadow_offset, padding + shadow_offset),
+                text,
+                font=font,
+                fill=shadow_color
+            )
+        
+        # Extract color components
+        r1, g1, b1, a1 = text_color
+        
+        if accent_color:
+            r2, g2, b2, a2 = accent_color
+        else:
+            # Create gradient end color
+            r2 = int(r1 * 0.7)
+            g2 = int(g1 * 0.7)
+            b2 = int(b1 * 0.7)
+            a2 = a1
+        
+        # Create multiple gradient layers
+        for layer in range(gradient_layers):
+            # Calculate offset for this layer
+            if gradient_direction == "vertical":
+                offset_x = 0
+                offset_y = layer * 2  # Offset each layer by 2 pixels
+            else:  # horizontal
+                offset_x = layer * 2
+                offset_y = 0
+            
+            # Calculate blend factor for colors
+            blend = layer / (gradient_layers - 1) if gradient_layers > 1 else 0
+            
+            # Calculate color for this layer
+            r = int(r1 * (1 - blend) + r2 * blend)
+            g = int(g1 * (1 - blend) + g2 * blend)
+            b = int(b1 * (1 - blend) + b2 * blend)
+            a = int(a1 * (1 - blend * 0.2))  # Slight fade
+            
+            layer_color = (r, g, b, a)
+            
+            # Create layer
+            layer_img = Image.new('RGBA', text_layer.size, (0, 0, 0, 0))
+            layer_draw = ImageDraw.Draw(layer_img)
+            
+            # Draw text on this layer
+            layer_draw.text(
+                (padding + offset_x, padding + offset_y),
+                text,
+                font=font,
+                fill=layer_color
+            )
+            
+            # Composite with text layer
+            text_layer = Image.alpha_composite(text_layer, layer_img)
+        
+        # Paste the result
+        draw._image.paste(text_layer, (x - padding, y - padding), text_layer)
+
+    def _apply_glass_effect_text(self,
+                               draw: ImageDraw.Draw,
+                               text: str,
+                               position: Tuple[int, int],
+                               font: ImageFont.FreeTypeFont,
+                               text_color: Tuple[int, int, int, int],
+                               accent_color: Optional[Tuple[int, int, int, int]],
+                               params: Dict[str, Any]) -> None:
+        """
+        Apply modern glass-like effect with transparency.
+        
+        Args:
+            draw: ImageDraw object
+            text: Text to render
+            position: (x, y) position
+            font: Font to use
+            text_color: Text color (RGBA)
+            accent_color: Accent color (RGBA)
+            params: Effect parameters
+        """
+        x, y = position
+        
+        # Get parameters
+        glass_opacity = params.get("glass_opacity", 0.6)
+        glass_blur = params.get("glass_blur", 10)
+        glass_reflection = params.get("glass_reflection", 0.3)
+        
+        # Get text dimensions
+        text_width, text_height = self._get_text_dimensions(text, font)
+        
+        # Create a separate layer for the text effect
+        padding = 30  # Extra space for effects
+        text_layer = Image.new('RGBA', (text_width + padding * 2, text_height + padding * 2), (0, 0, 0, 0))
+        text_draw = ImageDraw.Draw(text_layer)
+        
+        # Extract color components
+        r, g, b, a = text_color
+        
+        # Create glass background
+        bg_color = (255, 255, 255, int(255 * glass_opacity * 0.6))
+        
+        # Draw text background with rounded corners
+        self.draw_rounded_rectangle(
+            text_draw,
+            [(padding - 10, padding - 10), (padding + text_width + 10, padding + text_height + 10)],
+            bg_color,
+            radius=10
+        )
+        
+        # Add reflection gradient at top
+        highlight_height = int(text_height * 0.4)
+        for i in range(highlight_height):
+            alpha = int(255 * glass_reflection * (1 - i / highlight_height))
+            highlight_color = (255, 255, 255, alpha)
+            
+            text_draw.line(
+                [(padding - 10, padding - 10 + i), (padding + text_width + 10, padding - 10 + i)],
+                fill=highlight_color
+            )
+        
+        # Draw text
+        text_draw.text((padding, padding), text, font=font, fill=text_color)
+        
+        # Apply blur to create glass effect
+        text_layer = text_layer.filter(ImageFilter.GaussianBlur(radius=1))
+        
+        # Draw text again on top for sharpness
+        text_draw = ImageDraw.Draw(text_layer)
+        text_draw.text((padding, padding), text, font=font, fill=text_color)
+        
+        # Paste the result
+        draw._image.paste(text_layer, (x - padding, y - padding), text_layer)
+
+    def _apply_nike_bold_effect(self,
+                               draw: ImageDraw.Draw,
+                               text: str,
+                               position: Tuple[int, int],
+                               font: ImageFont.FreeTypeFont,
+                               text_color: Tuple[int, int, int, int],
+                               accent_color: Optional[Tuple[int, int, int, int]],
+                               params: Dict[str, Any]) -> None:
+        """
+        Apply Nike-style bold condensed typography.
+        
+        Args:
+            draw: ImageDraw object
+            text: Text to render
+            position: (x, y) position
+            font: Font to use
+            text_color: Text color (RGBA)
+            accent_color: Accent color (RGBA)
+            params: Effect parameters
+        """
+        x, y = position
+        
+        # Get parameters
+        outline_enabled = params.get("outline_enabled", True)
+        outline_size = params.get("outline_size", 1)
+        outline_opacity = params.get("outline_opacity", 0.8)
+        condensed = params.get("condensed", True)
+        letter_spacing = params.get("letter_spacing", -0.05)
+        transform = params.get("transform", "uppercase")
+        
+        # Transform text if needed
+        if transform == "uppercase":
+            text = text.upper()
+        elif transform == "lowercase":
+            text = text.lower()
+        elif transform == "capitalize":
+            text = text.title()
+        
+        # Get text dimensions
+        text_width, text_height = self._get_text_dimensions(text, font)
+        
+        # Create a separate layer for the text effect
+        padding = 30  # Extra space for effects
+        text_layer = Image.new('RGBA', (text_width + padding * 2, text_height + padding * 2), (0, 0, 0, 0))
+        text_draw = ImageDraw.Draw(text_layer)
+        
+        # Handle condensed text with custom letter spacing
+        if condensed and letter_spacing != 0:
+            # Calculate letter spacing in pixels
+            spacing_px = int(text_height * letter_spacing)
+            
+            # Draw each character with spacing
+            pos_x = padding
+            for char in text:
+                char_width, _ = self._get_text_dimensions(char, font)
+                
+                # Apply outline if enabled
+                if outline_enabled:
+                    outline_color = (0, 0, 0, int(255 * outline_opacity))
+                    for dx, dy in [(outline_size, 0), (-outline_size, 0), (0, outline_size), (0, -outline_size)]:
+                        text_draw.text(
+                            (pos_x + dx, padding + dy),
+                            char,
+                            font=font,
+                            fill=outline_color
+                        )
+                
+                # Draw character
+                text_draw.text((pos_x, padding), char, font=font, fill=text_color)
+                
+                # Move to next position with spacing
+                pos_x += char_width + spacing_px
+        else:
+            # Apply outline if enabled
+            if outline_enabled:
+                outline_color = (0, 0, 0, int(255 * outline_opacity))
+                for dx, dy in [(outline_size, 0), (-outline_size, 0), (0, outline_size), (0, -outline_size)]:
+                    text_draw.text(
+                        (padding + dx, padding + dy),
+                        text,
+                        font=font,
+                        fill=outline_color
+                    )
+            
+            # Draw text normally
+            text_draw.text((padding, padding), text, font=font, fill=text_color)
+        
+        # Paste the result
+        draw._image.paste(text_layer, (x - padding, y - padding), text_layer)
+
+    def _apply_subtle_bg_effect(self,
+                               draw: ImageDraw.Draw,
+                               text: str,
+                               position: Tuple[int, int],
+                               font: ImageFont.FreeTypeFont,
+                               text_color: Tuple[int, int, int, int],
+                               accent_color: Optional[Tuple[int, int, int, int]],
+                               params: Dict[str, Any]) -> None:
+        """
+        Apply text with subtle background for better legibility.
+        
+        Args:
+            draw: ImageDraw object
+            text: Text to render
+            position: (x, y) position
+            font: Font to use
+            text_color: Text color (RGBA)
+            accent_color: Accent color (RGBA)
+            params: Effect parameters
+        """
+        x, y = position
+        
+        # Get parameters
+        background_enabled = params.get("background_enabled", True)
+        background_opacity = params.get("background_opacity", 0.7)
+        background_padding = params.get("background_padding", 15)
+        background_radius = params.get("background_radius", 8)
+        background_blur = params.get("background_blur", 0)
+        
+        # Get text dimensions
+        text_width, text_height = self._get_text_dimensions(text, font)
+        
+        # Create a separate layer for the text effect
+        padding = max(30, background_padding + 10)  # Extra space for effects
+        text_layer = Image.new('RGBA', (text_width + padding * 2, text_height + padding * 2), (0, 0, 0, 0))
+        text_draw = ImageDraw.Draw(text_layer)
+        
+        # Create background if enabled
+        if background_enabled:
+            # Determine background color
+            if accent_color:
+                r, g, b, a = accent_color
+            else:
+                # Use dark gray for light text, light gray for dark text
+                r, g, b, a = text_color
+                brightness = (r * 299 + g * 587 + b * 114) / 1000
+                if brightness > 128:
+                    r, g, b = 0, 0, 0  # Dark background for light text
+                else:
+                    r, g, b = 255, 255, 255  # Light background for dark text
+            
+            bg_color = (r, g, b, int(255 * background_opacity))
+            
+            # Draw background with rounded corners
+            self.draw_rounded_rectangle(
+                text_draw,
+                [
+                    (padding - background_padding, padding - background_padding),
+                    (padding + text_width + background_padding, padding + text_height + background_padding)
+                ],
+                bg_color,
+                radius=background_radius
+            )
+            
+            # Apply blur if specified
+            if background_blur > 0:
+                text_layer = text_layer.filter(ImageFilter.GaussianBlur(radius=background_blur))
+                
+                # Redraw background after blur
+                text_draw = ImageDraw.Draw(text_layer)
+                self.draw_rounded_rectangle(
+                    text_draw,
+                    [
+                        (padding - background_padding, padding - background_padding),
+                        (padding + text_width + background_padding, padding + text_height + background_padding)
+                    ],
+                    bg_color,
+                    radius=background_radius
+                )
+        
+        # Draw text
+        text_draw.text((padding, padding), text, font=font, fill=text_color)
+
+    # Paste the result
+        draw._image.paste(text_layer, (x - padding, y - padding), text_layer)
     
     def _draw_rounded_button(self,
                             draw: ImageDraw.Draw,
@@ -1636,4 +2173,4 @@ class TypographyEffectsEngine:
         text_y = top + (height - text_height) // 2
         
         # Draw text 
-        draw.text((text_x, text_y), text, font=font, fill=text_color) 
+        draw.text((text_x, text_y), text, font=font, fill=text_color)

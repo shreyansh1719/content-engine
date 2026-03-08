@@ -5,6 +5,7 @@ Provides advanced layout algorithms for ideal text placement
 import logging
 import math
 from typing import Dict, List, Tuple, Any, Optional, Union
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 class TextLayoutEngine:
@@ -277,14 +278,14 @@ class TextLayoutEngine:
                 
                 # Crop and calculate brightness
                 cell = gray.crop((left, upper, right, lower))
-                brightness = sum(list(cell.getdata())) / (cell_width * cell_height * 255)
+                brightness = float(np.array(cell).sum()) / (cell_width * cell_height * 255)
                 
                 # Store in map
                 position = f"{['top', 'middle', 'bottom'][row]}_{['left', 'center', 'right'][col]}"
                 brightness_map[position] = brightness
         
         # Calculate overall brightness
-        brightness_map['overall'] = sum(list(gray.getdata())) / (width * height * 255)
+        brightness_map['overall'] = float(np.array(gray).sum()) / (width * height * 255)
         
         return brightness_map
     
@@ -307,7 +308,7 @@ class TextLayoutEngine:
             edges = gray.filter(ImageFilter.FIND_EDGES)
             
             # Find strongest edges
-            edge_data = list(edges.getdata())
+            edge_data = list(np.array(edges).flatten())
             strongest_edges = []
             threshold = sum(edge_data) / len(edge_data) * 1.5  # Adjust threshold as needed
             
@@ -356,7 +357,7 @@ class TextLayoutEngine:
             edges = gray.filter(ImageFilter.FIND_EDGES)
             
             # Calculate edge density
-            edge_data = list(edges.getdata())
+            edge_data = list(np.array(edges).flatten())
             edge_sum = sum(edge_data)
             max_possible = 255 * len(edge_data)
             

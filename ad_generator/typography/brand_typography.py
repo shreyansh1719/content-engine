@@ -6,6 +6,7 @@ import os
 import logging
 import re
 from typing import Dict, List, Tuple, Any, Optional, Union
+import numpy as np
 from PIL import Image, ImageColor
 
 class BrandTypographyManager:
@@ -852,7 +853,7 @@ class BrandTypographyManager:
             img_small = img_small.convert('RGB')
         
         # Get colors
-        pixels = list(img_small.getdata())
+        pixels = [tuple(p) for p in np.array(img_small).reshape(-1, 3)]
         
         # Count occurrences of each color
         color_counts = {}

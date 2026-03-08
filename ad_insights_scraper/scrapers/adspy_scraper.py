@@ -124,71 +124,94 @@ class AdSpyScraper:
         self.scraped_ads = []
     
     def _launch_browser(self) -> bool:
-        """
-        Launch undetected-chromedriver with anti-detection measures.
-        
-        Returns:
-            True if browser launched successfully, False otherwise
-        """
+        """Launch browser with anti-detection measures"""
         try:
-            # Close any existing browser session
+        # Close any existing browser session
             if self.driver:
                 try:
                     self.driver.quit()
                 except:
                     pass
-            
-            # Setup Chrome options with randomized fingerprint
+        
+        # Use undetected-chromedriver for better anti-bot measures
+            import undetected_chromedriver as uc
+        
+        # Setup Chrome options with randomized fingerprint
             options = uc.ChromeOptions()
-            
-            # Apply fingerprint randomization
+        
+        # Apply fingerprint randomization
             self.fingerprint_randomizer.apply_to_options(options)
-            
-            # Set user agent
+        
+        # Set user agent
             options.add_argument(f'--user-agent={self.user_agent_rotator.get_random_user_agent()}')
-            
-            # Apply proxy if available
+        
+        # Apply proxy if available
             proxy = None
             if self.proxy_manager:
                 proxy = self.proxy_manager.get_next_proxy()
                 if proxy:
                     self.logger.info(f"Using proxy: {proxy['host']}:{proxy['port']}")
                     options.add_argument(f'--proxy-server={proxy["host"]}:{proxy["port"]}')
-            
-            # Additional settings to prevent detection
+        
+        # Additional settings to prevent detection
             options.add_argument('--disable-blink-features=AutomationControlled')
             options.add_argument('--disable-features=IsolateOrigins,site-per-process')
-            
+        
             if self.headless:
-                options.add_argument('--headless=new')
+                options.add_argument('--headless=new')  # Updated headless mode
                 options.add_argument('--window-size=1920,1080')
-            
-            # Create a new driver instance
-            self.driver = uc.Chrome(options=options, use_subprocess=True)
-            
-            # Set default timeouts
+        
+        # Create a new driver instance
+            self.driver = uc.Chrome(options=options)
+        
+        # Set default timeouts
             self.driver.set_page_load_timeout(30)
             self.driver.implicitly_wait(10)
-            
-            # Reset session counters
+        
+        # Reset session counters
             self.session_start_time = datetime.now()
             self.last_action_time = self.session_start_time
             self.page_load_count = 0
-            
-            # Resize window to typical dimensions
+        
+        # Resize window to typical dimensions if not headless
             if not self.headless:
                 width = random.randint(1024, 1920)
                 height = random.randint(768, 1080)
                 self.driver.set_window_size(width, height)
-            
-            self.logger.info("Browser launched successfully")
+        
+            self.logger.info("Browser launched successfully with undetected-chromedriver")
             return True
-            
+        
         except Exception as e:
             self.logger.error(f"Browser launch failed: {str(e)}")
             import traceback
             traceback.print_exc()
-            return False
+        
+        # Try fallback method if undetected-chromedriver fails
+            try:
+                from selenium import webdriver
+                from selenium.webdriver.chrome.options import Options
+                from selenium.webdriver.chrome.service import Service
+                from webdriver_manager.chrome import ChromeDriverManager
+            
+                options = Options()
+            
+                # Apply settings
+                if self.headless:
+                    options.add_argument('--headless=new')
+                options.add_argument('--disable-blink-features=AutomationControlled')
+                options.add_argument('--disable-notifications')
+            
+            # Create driver with selenium-manager
+                service = Service(ChromeDriverManager().install())
+                self.driver = webdriver.Chrome(service=service, options=options)
+            
+                self.logger.info("Browser launched successfully with selenium-manager (fallback)")
+                return True
+            
+            except Exception as fallback_error:
+                self.logger.error(f"Fallback browser launch failed: {str(fallback_error)}")
+                return False
     
     def _human_like_wait(self, min_seconds: float = 1.0, max_seconds: float = 4.0) -> None:
         """

@@ -10,7 +10,8 @@ from PIL import Image
 from io import BytesIO
 import random
 import glob
-from .image_maker import RunwayImageGenerator
+
+# from .image_maker import RunwayImageGenerator
 
 
 class AdCampaignGenerator:
@@ -28,7 +29,7 @@ class AdCampaignGenerator:
         self.runway_api_key = os.getenv('RUNWAY_API_KEY')
         
         # Initialize image generator
-        self.image_generator = RunwayImageGenerator(api_key=self.runway_api_key)
+        #self.image_generator = RunwayImageGenerator(api_key=self.runway_api_key)
         
         # Load training materials if available
         self.load_training_materials()
