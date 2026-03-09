@@ -65,6 +65,12 @@ class AdGenerator:
         # Layout variety tracking — avoids repeating same layout in one session
         self._used_layouts: List[str] = []
 
+        # Design approach tracking — avoids repeating same HTML/CSS layout in one session
+        self._used_styles: List[str] = []
+
+        # HTML typography renderer (lazy-initialized on first real-pipeline call)
+        self._html_renderer = None
+
         # Cache for generated ads to improve performance
         self.ad_cache = {}
     
@@ -766,14 +772,216 @@ Respond with a JSON object with EXACTLY these keys:
             'generation_time': datetime.now().isoformat(),
         }
 
+    # ── HTML/CSS pipeline methods ─────────────────────────────────────────────
+
+    def _expand_brief_to_full_ad(self, creative_brief: Dict[str, Any],
+                                  brand_info: Dict[str, Any],
+                                  brand_analysis: Dict[str, Any],
+                                  tone: str = None,
+                                  visual_style: str = None) -> Dict[str, Any]:
+        """GPT-4o creates ad copy + production-ready HTML/CSS overlay."""
+        product = brand_info.get('product', '')
+        brand = brand_info.get('brand', '')
+
+        brief_tone = tone or creative_brief.get('tone', brand_analysis.get('tone', 'Premium'))
+        brief_visual = visual_style or creative_brief.get('visual_style', brand_analysis.get('visual_direction', 'Modern'))
+        technique = creative_brief.get('conceptual_technique', brand_analysis.get('ad_style', ''))
+        emotion = creative_brief.get('emotion', 'aspiration')
+        typography_style = brand_analysis.get('typography_style', '')
+        color_scheme = brand_analysis.get('color_scheme', '')
+
+        avoid = ""
+        if self._used_styles:
+            avoid = f"\nDo NOT reuse these approaches (already used this session): {', '.join(self._used_styles[-3:])}"
+
+        prompt_text = f"""You are a world-class advertising art director who creates production-ready ad typography.
+
+CREATIVE BRIEF:
+- Brand: {brand}
+- Product: {product}
+- Tone: {brief_tone}
+- Visual style: {brief_visual}
+- Technique: {technique}
+- Emotion to evoke: {emotion}
+- Typography direction: {typography_style}
+- Color direction: {color_scheme}
+{avoid}
+
+Create compelling ad copy AND a production-quality HTML/CSS overlay.
+
+The overlay will be rendered at exactly 1024×1024 pixels and composited onto a product photograph. The HTML background MUST be fully transparent — only text and decorative elements should be visible.
+
+Respond ONLY with JSON:
+{{
+  "headline": "powerful 3-8 word headline in title case or ALL CAPS depending on brand voice",
+  "subheadline": "engaging 8-15 word subheadline",
+  "body_text": "1-2 sentence body (can be empty string if cleaner without it)",
+  "call_to_action": "2-4 word CTA",
+  "design_approach": "brief 5-word description of the layout approach you chose",
+  "overlay_html": "COMPLETE HTML DOCUMENT AS A STRING (see rules below)"
+}}
+
+RULES FOR overlay_html — YOU MUST FOLLOW ALL OF THESE:
+
+1. STRUCTURE: Must be a complete document: <!DOCTYPE html><html><head><style>CSS HERE</style></head><body>CONTENT</body></html>
+
+2. TRANSPARENT BACKGROUND:
+   html, body {{ margin: 0; padding: 0; width: 1024px; height: 1024px; overflow: hidden; background: transparent; }}
+
+3. FONTS: Import 1-2 Google Fonts that match the brand personality using a <style> @import inside <head>:
+   Font choices by tone:
+   - Luxury/Premium: Playfair Display, Cormorant Garamond, Cinzel
+   - Bold/Urban/Street: Oswald, Anton, Bebas Neue
+   - Clean/Tech/Minimal: Inter, Outfit, Space Grotesk, DM Sans
+   - Playful/Friendly: Poppins, Quicksand, Nunito
+   - Editorial/Fashion: Libre Baskerville, EB Garamond, Lora
+
+4. TEXT SHADOWS: Every text element must have text-shadow for readability over photographs:
+   text-shadow: 0 2px 8px rgba(0,0,0,0.7), 0 0 30px rgba(0,0,0,0.4);
+
+5. LAYOUT: Use CSS flexbox or absolute positioning. Keep product zone (roughly center 30-70% height) clear of text. Group text in deliberate zones.
+
+6. VARIETY: Mix these approaches — each brand gets a unique treatment:
+   - Left-aligned editorial (text on left, product on right)
+   - Bottom-heavy (all text in lower 35%)
+   - Top headline with bottom CTA (classic)
+   - Centered dramatic (large centered headline)
+   - Magazine-style (horizontal band)
+   - Bold statement (oversized headline, minimal other text)
+
+7. SCRIM/OVERLAY: Add a subtle gradient or semi-transparent area ONLY behind text zones:
+   - Linear gradient: background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 30%);
+   - Backdrop blur: backdrop-filter: blur(8px); background: rgba(0,0,0,0.3);
+   - Or just strong text-shadow with no overlay for clean images
+
+8. CTA BUTTON STYLES — match brand personality:
+   - Pill: border-radius: 50px; padding: 14px 40px; background: accent-color;
+   - Square/ghost: border: 2px solid white; padding: 12px 36px; background: transparent;
+   - Underline CTA: text-decoration: underline; text-underline-offset: 6px; (with → arrow)
+   - Block bar: width: 70%; padding: 16px; background: accent-color; text-align: center;
+
+9. COLORS: Do NOT default to white text every time. Choose colors matching brand personality (luxury = gold/cream, tech = blue/white, food = warm/green). Use accent color for CTA.
+
+10. SIZE HIERARCHY:
+    - Headline: 52-80px (shorter headline = bigger font; if >5 words use ≤60px to avoid wrapping)
+    - Subheadline: 20-28px
+    - Body: 16-18px (omit if cleaner)
+    - CTA: 18-24px bold
+    - Add letter-spacing: 0.05em to 0.15em for uppercase headlines
+
+11. DO NOT include any <img> tags, JavaScript, or external resources besides Google Fonts.
+
+12. The HTML must look like a real ad when overlaid on a product photo — professional agency quality."""
+
+        response = self.openai_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a senior advertising art director who writes flawless, production-ready HTML/CSS. "
+                        "Your typography overlays look like they came from a top creative agency. "
+                        "You never repeat the same layout — every brand gets a unique visual treatment. "
+                        "Respond ONLY with valid JSON."
+                    )
+                },
+                {"role": "user", "content": prompt_text}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.95
+        )
+
+        ad_data = json.loads(response.choices[0].message.content)
+
+        # Normalise alternate key names
+        if "body" in ad_data and "body_text" not in ad_data:
+            ad_data["body_text"] = ad_data.pop("body")
+        if "cta" in ad_data and "call_to_action" not in ad_data:
+            ad_data["call_to_action"] = ad_data.pop("cta")
+
+        overlay_html = ad_data.get("overlay_html", "")
+        if not overlay_html or "<html" not in overlay_html.lower():
+            raise ValueError(
+                f"GPT-4o did not return valid overlay_html. Got: {overlay_html[:200]}"
+            )
+
+        approach = ad_data.get("design_approach", "")
+        if approach:
+            self._used_styles.append(approach)
+
+        # Carry creative brief metadata forward
+        ad_data["tone"] = brief_tone
+        ad_data["visual_style"] = brief_visual
+        ad_data["conceptual_technique"] = technique
+        ad_data["emotion"] = emotion
+
+        return ad_data
+
+    def _generate_dalle_image(self, ad_data: Dict[str, Any],
+                               creative_brief: Dict[str, Any],
+                               brand_info: Dict[str, Any]) -> Image.Image:
+        """Generate a text-free DALL-E 3 product image guided by creative brief."""
+        import requests as _req
+        from io import BytesIO
+        from PIL import Image as PILImage
+
+        product = brand_info.get('product', '')
+        brand = brand_info.get('brand', '')
+        visual_style = creative_brief.get('visual_style', 'professional photography')
+        technique = creative_brief.get('conceptual_technique', '')
+        color_scheme = ad_data.get('color_scheme', creative_brief.get('color_scheme', ''))
+
+        dalle_prompt = f"""Create a premium advertisement photograph for {brand} {product}.
+
+VISUAL DIRECTION:
+{visual_style}
+
+COLOR DIRECTION:
+{color_scheme}
+
+CONCEPTUAL APPROACH:
+{technique}
+
+TECHNICAL REQUIREMENTS:
+- Professional studio-quality lighting
+- Shot on medium format camera with shallow depth of field
+- Product is the clear hero — prominently featured and recognizable
+- Clean composition with intentional negative space for text overlay
+- Leave the top 20% and bottom 25% slightly less busy (text will be added there)
+- Color grading should match the brand personality
+- Premium post-production quality
+
+CRITICAL — DO NOT INCLUDE ANY TEXT:
+- No text, words, letters, numbers, or typography of any kind
+- No brand names, logos, or watermarks
+- No signs, labels, or printed text visible in the scene
+- The image must be completely free of any written content
+
+Style: {visual_style}. Make it look like a real campaign photo from {brand}'s actual advertising."""
+
+        response = self.openai_client.images.generate(
+            model="dall-e-3",
+            prompt=dalle_prompt,
+            size="1024x1024",
+            quality="hd",
+            n=1
+        )
+
+        image_url = response.data[0].url
+        img_data = _req.get(image_url, timeout=30)
+        img = PILImage.open(BytesIO(img_data.content)).convert("RGB")
+        self.logger.info(f"DALL-E 3 image generated: {img.size}")
+        return img
+
     def create_ad(self, prompt: str, product_image_path: str = None,
                   tone: str = None, visual_style: str = None) -> Dict[str, Any]:
         """
-        Two-model pipeline:
+        HTML/CSS pipeline:
           1. Fine-tuned model → creative brief (tone, visual_style, technique, draft headline)
-          2. GPT-4o          → full copy + layout JSON
-          3. DALL-E 3        → layout-aware product image
-          4. TypographySystem→ dynamic text overlay
+          2. GPT-4o          → ad copy + complete HTML/CSS overlay document
+          3. DALL-E 3        → text-free product image (improved prompts)
+          4. Playwright      → renders HTML/CSS overlay to transparent 1024x1024 PNG
+          5. Pillow          → composites overlay onto DALL-E image
         """
         self.logger.info(f"Starting ad generation for: {prompt}")
 
@@ -788,79 +996,61 @@ Respond with a JSON object with EXACTLY these keys:
         # --- Step 1: creative brief from fine-tuned model ---
         creative_brief = self.generate_creative_brief(brand_info, brand_analysis)
 
-        # --- Step 2: full copy + layout from GPT-4o ---
-        ad_copy = self.generate_ad_copy(
-            brand_info['product'],
-            brand_analysis,
-            creative_brief=creative_brief,
-            tone=tone,
-            visual_style=visual_style,
+        # --- Step 2: ad copy + HTML/CSS overlay from GPT-4o ---
+        ad_data = self._expand_brief_to_full_ad(
+            creative_brief, brand_info, brand_analysis,
+            tone=tone, visual_style=visual_style
         )
+        overlay_html = ad_data.pop("overlay_html")
 
-        layout = ad_copy.get('layout', {})
-
-        # --- Step 3: DALL-E image (layout-aware, text-free) ---
+        # --- Step 3: DALL-E 3 text-free product image ---
         if product_image_path:
             if not os.path.exists(product_image_path):
                 raise FileNotFoundError(f"Product image not found: {product_image_path}")
-            image_result = self.image_generator.create_ad_with_user_product(
-                product_image_path=product_image_path,
-                product=brand_info['product'],
-                brand_name=brand_info['brand'],
-                headline=ad_copy['headline'],
-                subheadline=ad_copy.get('subheadline'),
-                call_to_action=ad_copy.get('call_to_action'),
-                industry=brand_analysis.get('industry'),
-                brand_level=brand_analysis.get('brand_level'),
-            )
+            from PIL import Image as PILImage
+            base_image = PILImage.open(product_image_path).convert("RGB")
+            base_image = base_image.resize((1024, 1024), PILImage.LANCZOS)
         else:
-            self.logger.info("Generating ad image from scratch (layout-aware)")
-            image_result = self.image_generator.create_studio_ad(
-                product=brand_info['product'],
-                brand_name=brand_info['brand'],
-                headline=ad_copy['headline'],
-                subheadline=ad_copy.get('subheadline'),
-                call_to_action=ad_copy.get('call_to_action'),
-                industry=brand_analysis.get('industry'),
-                brand_level=brand_analysis.get('brand_level'),
-                image_description=ad_copy.get('image_description'),
-                layout_hint=layout,
-            )
+            self.logger.info("Generating DALL-E 3 product image (text-free, HD)")
+            base_image = self._generate_dalle_image(ad_data, creative_brief, brand_info)
 
-        # --- Step 4: dynamic typography overlay ---
-        final_path = image_result.get('final_path')
-        if final_path and os.path.exists(final_path):
-            try:
-                from PIL import Image as PILImage
-                from .typography import TypographySystem
-                typo          = TypographySystem()
-                img           = PILImage.open(final_path)
-                img_with_text = typo.apply_typography(img, ad_copy, layout=layout)
-                img_with_text.save(final_path)
-                self.logger.info(
-                    f"Typography overlay applied — style={layout.get('style')}, "
-                    f"overlay={layout.get('overlay_type')}, cta={layout.get('cta_style')}"
-                )
-            except Exception as exc:
-                self.logger.warning(f"Typography overlay failed (raw DALL-E image kept): {exc}")
+        # --- Step 4: render HTML/CSS overlay with Playwright ---
+        if self._html_renderer is None:
+            from .typography.html_renderer import HTMLTypographyRenderer
+            self._html_renderer = HTMLTypographyRenderer()
+
+        self.logger.info("Rendering HTML/CSS typography overlay via Playwright")
+        overlay_image = self._html_renderer.render_overlay(overlay_html, width=1024, height=1024)
+
+        # --- Step 5: composite overlay onto base image ---
+        final_image = self._html_renderer.composite_overlay(base_image, overlay_image)
+
+        # --- Save final image ---
+        os.makedirs("output/images/final", exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        final_path = f"output/images/final/final_ad_{timestamp}.png"
+        final_image.save(final_path, "PNG")
+        self.logger.info(
+            f"Final ad saved: {final_path}  design={ad_data.get('design_approach')}"
+        )
 
         # --- Merge result ---
         result = {
-            **ad_copy,
+            **ad_data,
             **brand_analysis,
-            **image_result,
-            'product':         brand_info['product'],
-            'brand_name':      brand_info['brand'],
-            'layout':          layout,
-            'tone':            creative_brief.get('tone') or brand_analysis.get('tone', ''),
-            'visual_style':    creative_brief.get('visual_style') or brand_analysis.get('visual_direction', ''),
-            'conceptual_technique': creative_brief.get('conceptual_technique', ''),
-            'emotion':         creative_brief.get('emotion', ''),
-            'generation_time': datetime.now().isoformat(),
+            'product':              brand_info['product'],
+            'brand_name':           brand_info['brand'],
+            'final_path':           final_path,
+            'image_path':           final_path,
+            'tone':                 ad_data.get('tone') or brand_analysis.get('tone', ''),
+            'visual_style':         ad_data.get('visual_style') or brand_analysis.get('visual_direction', ''),
+            'conceptual_technique': ad_data.get('conceptual_technique', ''),
+            'emotion':              ad_data.get('emotion', ''),
+            'generation_time':      datetime.now().isoformat(),
         }
 
         self.logger.info("Ad generation completed successfully")
-        self._save_ad_metadata(result, final_path or '')
+        self._save_ad_metadata(result, final_path)
         return result
     
     def _save_ad_metadata(self, result: Dict[str, Any], image_path: str) -> None:

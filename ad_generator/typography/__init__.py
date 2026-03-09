@@ -11,6 +11,7 @@ from .font_pairing import FontPairingEngine
 from .responsive_scaling import ResponsiveTextScaling
 from .enhanced_typography import EnhancedTypographySystem
 from .typography_integration import integrate_enhanced_typography
+from .html_renderer import HTMLTypographyRenderer
 
 
 __all__ = [
@@ -21,5 +22,6 @@ __all__ = [
     'FontPairingEngine',
     'ResponsiveTextScaling',
     'EnhancedTypographySystem',
-    'integrate_enhanced_typography'
-] 
+    'integrate_enhanced_typography',
+    'HTMLTypographyRenderer',
+]
