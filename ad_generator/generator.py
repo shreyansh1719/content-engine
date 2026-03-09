@@ -11,6 +11,12 @@ from typing import Dict, Optional, List, Any, Union
 from datetime import datetime
 
 try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+try:
     from openai import OpenAI
 except ImportError:
     OpenAI = None
@@ -19,6 +25,8 @@ from .image_maker import ModernStudioImageGenerator
 
 # Dev mode: enabled automatically when OPENAI_API_KEY is absent
 DEV_MODE = not bool(os.getenv('OPENAI_API_KEY', '').strip())
+
+FINE_TUNED_MODEL = os.getenv("FINE_TUNED_MODEL", "ft:gpt-3.5-turbo-0125:shreyansh::BLDyTfqs")
 
 class AdGenerator:
     """Generate complete ad campaigns with GPT-4o-driven visuals and content."""
@@ -235,102 +243,172 @@ class AdGenerator:
             "product_highlight": "Quality and craftsmanship"
         }
     
-    def generate_ad_copy(self, prompt: str, brand_analysis: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_ad_copy(self, product: str, brand_analysis: Dict[str, Any],
+                         creative_brief: Dict[str, Any] = None,
+                         tone: str = None, visual_style: str = None) -> Dict[str, Any]:
         """
-        Generate professional ad copy based on brand analysis using GPT-4o.
+        Generate full ad copy + layout JSON using GPT-4o.
+        Optionally incorporates a creative brief from the fine-tuned model.
         """
         if not self.openai_client:
             self.logger.warning("OpenAI client not available. Using default ad copy.")
-            return self._generate_default_ad_copy(prompt, brand_analysis)
-    
+            return self._generate_default_ad_copy(product, brand_analysis)
+
         try:
-            # Create comprehensive copy prompt with expert guidance
-            copy_prompt = f"""Create premium advertising copy for: {prompt}
+            # Build creative brief context string
+            brief_ctx = ""
+            if creative_brief:
+                brief_ctx = (
+                    f"\nCREATIVE BRIEF (from brand specialist):\n"
+                    f"  Draft headline: {creative_brief.get('headline', '')}\n"
+                    f"  Tone signal: {creative_brief.get('tone', '')}\n"
+                    f"  Visual style: {creative_brief.get('visual_style', '')}\n"
+                    f"  Technique: {creative_brief.get('conceptual_technique', '')}\n"
+                    f"  Emotion: {creative_brief.get('emotion', '')}\n"
+                )
 
-            MARKETING BRIEF:
-            Industry: {brand_analysis['industry']}
-            Brand Level: {brand_analysis['brand_level']}
-            Brand Voice: {brand_analysis['tone']}
-            Target Audience: {brand_analysis['target_market']}
-            Key Benefits: {', '.join(brand_analysis['key_benefits'])}
-            Product Highlight: {brand_analysis['product_highlight']}
-            Visual Direction: {brand_analysis['visual_direction']}
-        
-            Create the following elements with perfect integration and brand alignment:
-            1. Headline: An impactful, memorable headline (max 6-8 words) that immediately captures attention
-            2. Subheadline: Supporting message (10-15 words) that expands on the headline promise
-            3. Body Text: Concise main copy (2-3 sentences) focusing on key benefits and emotional connection
-            4. Call to Action: Clear, motivating CTA (3-5 words) that drives specific action
-            5. Image Description: Detailed creative direction for the product photography
-        
-            Your copy should reflect specific product characteristics and unique selling points.
-            For spirits or luxury products, emphasize craftsmanship, premium ingredients, and sensory experience.
-            """
+            tone_str   = tone         or brand_analysis.get('tone', 'professional')
+            visual_str = visual_style or brand_analysis.get('visual_direction', 'modern')
 
-            # Get response from OpenAI with high creativity
+            copy_prompt = f"""Create premium advertising copy and visual layout for: {product}
+
+MARKETING BRIEF:
+Industry: {brand_analysis['industry']}
+Brand Level: {brand_analysis['brand_level']}
+Brand Voice: {tone_str}
+Target Audience: {brand_analysis['target_market']}
+Key Benefits: {', '.join(brand_analysis['key_benefits'])}
+Product Highlight: {brand_analysis['product_highlight']}
+Visual Direction: {visual_str}
+{brief_ctx}
+Respond with a JSON object with EXACTLY these keys:
+{{
+  "headline": "impactful headline, max 8 words",
+  "subheadline": "supporting message, 10-15 words",
+  "body_text": "2-3 sentences on key benefits and emotional connection",
+  "call_to_action": "motivating CTA, 3-5 words",
+  "image_description": "detailed product photography direction",
+  "layout": {{
+    "style": "left_column | bottom_banner | centered | top_bottom | split_horizontal | bold_statement | diagonal | floating_cards",
+    "text_color": "#FFFFFF",
+    "accent_color": "#HEX",
+    "overlay_type": "gradient_top_bottom | gradient_left | vignette_bottom | frosted_strip | shadow_only | solid_bar",
+    "overlay_opacity": 0.7,
+    "headline_position": "top_center | top_left | center | bottom_left",
+    "headline_size": "large | xlarge | medium",
+    "cta_style": "pill_button | square_button | text_underline | block_inverted",
+    "cta_color": "#FFFFFF",
+    "show_body_text": true,
+    "mood": "dark_luxury | bright_clean | bold_contrast | soft_elegant | urban_gritty"
+  }}
+}}
+Choose the layout style, colors, and overlay that best fit the brand personality and industry.
+A luxury watch should look completely different from a streetwear sneaker ad."""
+
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
-                    {"role": "system", "content": f"You are a world-class copywriter specializing in {brand_analysis['industry']} advertising for {brand_analysis['brand_level']} brands. Your copy consistently outperforms industry benchmarks by 35% and has won multiple industry awards."},
+                    {
+                        "role": "system",
+                        "content": (
+                            f"You are a world-class advertising copywriter AND art director "
+                            f"specializing in {brand_analysis['industry']} for {brand_analysis['brand_level']} brands. "
+                            f"You create compelling copy AND design the complete visual layout for every ad. "
+                            f"Be creative and varied — never repeat the same layout for different products. "
+                            f"Respond in JSON format."
+                        )
+                    },
                     {"role": "user", "content": copy_prompt}
                 ],
                 response_format={"type": "json_object"},
                 temperature=0.8
             )
 
-            # Extract JSON directly
             result = json.loads(response.choices[0].message.content)
-        
-            # Validate and enhance ad copy
-            validated_result = self._validate_ad_copy(result, prompt, brand_analysis)
-        
-            self.logger.info(f"Ad copy generation completed with headline: {validated_result['headline']}")
-            return validated_result
-        
+            validated = self._validate_ad_copy(result, product, brand_analysis)
+            self.logger.info(f"Ad copy generation completed with headline: {validated['headline']}")
+            return validated
+
         except Exception as e:
             self.logger.error(f"Ad copy generation error: {str(e)}")
             self.logger.error(traceback.format_exc())
-            # Return default ad copy
-            return self._generate_default_ad_copy(prompt, brand_analysis)
+            return self._generate_default_ad_copy(product, brand_analysis)
     
-    def _validate_ad_copy(self, result: Dict[str, Any], prompt: str, brand_analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """Validate and enhance ad copy results."""
-        # Ensure all required fields exist
-        required_fields = {
-            'headline': f"EXPERIENCE {prompt.upper()}",
-            'subheadline': f"Discover the quality and innovation of our premium {prompt}.",
-            'body_text': f"Our {prompt} offers unmatched performance and style. Experience the difference today.",
-            'call_to_action': "SHOP NOW",
-            'image_description': f"Professional product photography of {prompt} with perfect lighting and composition."
+    def _validate_ad_copy(self, result: Dict[str, Any], product: str, brand_analysis: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate ad copy — normalise alternate key names, fill defaults, validate layout."""
+        # --- Normalise alternate JSON key names GPT-4o sometimes uses ---
+        alt_keys = {
+            'subheadline':     ['sub_headline', 'subheading', 'sub', 'subtitle'],
+            'body_text':       ['body', 'copy', 'main_copy', 'description', 'text'],
+            'call_to_action':  ['cta', 'cta_text', 'action', 'button_text'],
+            'image_description': ['image', 'visual', 'photo_description', 'image_direction'],
         }
-        
-        # Check and fix each field
-        for field, default_value in required_fields.items():
-            if field not in result or not result[field]:
-                result[field] = default_value
-        
-        # Enhance headline if needed
-        if len(result['headline'].split()) > 8:
-            # Truncate to 8 words
-            words = result['headline'].split()[:8]
-            result['headline'] = ' '.join(words)
-        
-        # Ensure headline is impactful - capitalize if brand level is luxury or premium
-        if brand_analysis['brand_level'].lower() in ['luxury', 'premium'] and not result['headline'].isupper():
-            # Check if headline is in title case
-            if not all(word[0].isupper() for word in result['headline'].split() if word):
-                result['headline'] = result['headline'].title()
-        
-        # Ensure call-to-action is clear and action-oriented
-        common_ctas = ["SHOP NOW", "LEARN MORE", "DISCOVER", "EXPERIENCE", "GET STARTED"]
-        if len(result['call_to_action'].split()) > 5 or len(result['call_to_action']) < 3:
-            result['call_to_action'] = common_ctas[0]
-        
-        # Enhance image description if too short
-        if len(result['image_description'].split()) < 10:
-            result['image_description'] += f" Professional studio lighting with dramatic shadows highlighting the product's key features. {brand_analysis['visual_direction']}"
-        
+        for canonical, alts in alt_keys.items():
+            if not result.get(canonical):
+                for alt in alts:
+                    if result.get(alt):
+                        result[canonical] = result[alt]
+                        break
+
+        # --- Defaults ---
+        defaults = {
+            'headline':          f"Experience {product}",
+            'subheadline':       f"Discover the quality and craftsmanship of {product}.",
+            'body_text':         f"Crafted for those who demand excellence. {product} delivers unmatched performance and style.",
+            'call_to_action':    "SHOP NOW",
+            'image_description': f"Professional studio photography of {product} with dramatic lighting and perfect composition.",
+        }
+        for field, default in defaults.items():
+            if not result.get(field):
+                result[field] = default
+
+        # CTA sanity check (no truncation of headline — trust GPT-4o)
+        if len(result['call_to_action'].split()) > 6:
+            result['call_to_action'] = "SHOP NOW"
+
+        # --- Layout ---
+        layout = result.get('layout')
+        if isinstance(layout, dict):
+            result['layout'] = self._validate_layout(layout)
+        else:
+            result['layout'] = self._validate_layout({})
+
         return result
+
+    _VALID_STYLES        = {'left_column','bottom_banner','centered','top_bottom',
+                            'split_horizontal','bold_statement','diagonal','floating_cards'}
+    _VALID_OVERLAYS      = {'gradient_top_bottom','gradient_left','vignette_bottom',
+                            'frosted_strip','shadow_only','solid_bar'}
+    _VALID_HEADLINE_POS  = {'top_center','top_left','center','bottom_left'}
+    _VALID_HEADLINE_SIZE = {'large','xlarge','medium'}
+    _VALID_CTA_STYLES    = {'pill_button','square_button','text_underline','block_inverted'}
+
+    def _validate_layout(self, layout: Dict[str, Any]) -> Dict[str, Any]:
+        """Fill defaults and clamp values for the layout dict."""
+        layout.setdefault('style',            'top_bottom')
+        layout.setdefault('text_color',       '#FFFFFF')
+        layout.setdefault('accent_color',     '#FFFFFF')
+        layout.setdefault('overlay_type',     'gradient_top_bottom')
+        layout.setdefault('overlay_opacity',  0.7)
+        layout.setdefault('headline_position','top_center')
+        layout.setdefault('headline_size',    'large')
+        layout.setdefault('cta_style',        'pill_button')
+        layout.setdefault('cta_color',        '#FFFFFF')
+        layout.setdefault('show_body_text',   True)
+        layout.setdefault('mood',             'bold_contrast')
+
+        if layout['style']            not in self._VALID_STYLES:        layout['style']            = 'top_bottom'
+        if layout['overlay_type']     not in self._VALID_OVERLAYS:     layout['overlay_type']     = 'gradient_top_bottom'
+        if layout['headline_position']not in self._VALID_HEADLINE_POS: layout['headline_position']= 'top_center'
+        if layout['headline_size']    not in self._VALID_HEADLINE_SIZE: layout['headline_size']    = 'large'
+        if layout['cta_style']        not in self._VALID_CTA_STYLES:    layout['cta_style']        = 'pill_button'
+
+        try:
+            layout['overlay_opacity'] = max(0.2, min(1.0, float(layout['overlay_opacity'])))
+        except (TypeError, ValueError):
+            layout['overlay_opacity'] = 0.7
+
+        return layout
     
     def _generate_default_ad_copy(self, prompt: str, brand_analysis: Dict[str, Any]) -> Dict[str, Any]:
         """Generate default ad copy when API fails."""
@@ -374,6 +452,70 @@ class AdGenerator:
                 "image_description": f"Bright, clean product photography of {prompt} with clear details. Simple background with product as hero and space for typography."
             }
     
+    # ── Two-model pipeline — Step 1 ───────────────────────────────────────────
+
+    def generate_creative_brief(self, brand_info: Dict[str, Any],
+                                 brand_analysis: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Call the fine-tuned model to produce a creative brief:
+        tone, visual_style, conceptual_technique, draft headline, emotion.
+        Falls back to defaults if the model is unavailable.
+        """
+        if DEV_MODE or not self.openai_client:
+            return self._default_creative_brief(brand_analysis)
+
+        try:
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an expert advertising creative director. Given a brand and product, "
+                        "generate a complete ad creative brief including copy and visual direction. "
+                        "Respond only in JSON."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Create an ad for:\n"
+                        f"Brand: {brand_info['brand']}\n"
+                        f"Product type: {brand_info['product']}\n"
+                        f"Tone: {brand_analysis.get('tone', 'professional')}\n"
+                        f"Visual style: {brand_analysis.get('visual_direction', 'modern')}\n"
+                        f"Conceptual technique: {brand_analysis.get('ad_style', 'product showcase')}\n"
+                        f"Format: image"
+                    ),
+                },
+            ]
+            response = self.openai_client.chat.completions.create(
+                model=FINE_TUNED_MODEL,
+                messages=messages,
+                response_format={"type": "json_object"},
+                temperature=0.75,
+            )
+            brief = json.loads(response.choices[0].message.content)
+            self.logger.info(
+                f"Creative brief: tone={brief.get('tone')}, "
+                f"visual_style={brief.get('visual_style')}, "
+                f"technique={brief.get('conceptual_technique')}"
+            )
+            return brief
+
+        except Exception as exc:
+            self.logger.warning(f"Fine-tuned model failed ({exc}), using default brief")
+            return self._default_creative_brief(brand_analysis)
+
+    def _default_creative_brief(self, brand_analysis: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "headline":             "",
+            "caption":              "",
+            "tone":                 brand_analysis.get('tone', 'professional'),
+            "visual_style":         brand_analysis.get('visual_direction', 'modern minimal'),
+            "conceptual_technique": brand_analysis.get('ad_style', 'product showcase'),
+            "call_to_action":       "SHOP NOW",
+            "emotion":              "confidence",
+        }
+
     def extract_brand_product(self, prompt: str) -> Dict[str, Any]:
         """
         Extract brand name and product from prompt using GPT-4o.
@@ -409,7 +551,7 @@ class AdGenerator:
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
-                    {"role": "system", "content": "You are a precise entity extraction specialist focused on accurate identification of products and brands."},
+                    {"role": "system", "content": "You are a precise entity extraction specialist focused on accurate identification of products and brands. Respond in JSON format."},
                     {"role": "user", "content": extraction_prompt}
                 ],
                 response_format={"type": "json_object"},
@@ -578,43 +720,43 @@ class AdGenerator:
             'generation_time': datetime.now().isoformat(),
         }
 
-    def create_ad(self, prompt: str, product_image_path: str = None) -> Dict[str, Any]:
+    def create_ad(self, prompt: str, product_image_path: str = None,
+                  tone: str = None, visual_style: str = None) -> Dict[str, Any]:
         """
-        Create a complete ad with image and copy using GPT-4o and DALL-E.
-
-        Args:
-            prompt: Description of the product to advertise
-            product_image_path: Optional path to product image
-
-        Returns:
-            Dictionary with ad details
+        Two-model pipeline:
+          1. Fine-tuned model → creative brief (tone, visual_style, technique, draft headline)
+          2. GPT-4o          → full copy + layout JSON
+          3. DALL-E 3        → layout-aware product image
+          4. TypographySystem→ dynamic text overlay
         """
         self.logger.info(f"Starting ad generation for: {prompt}")
 
-        # Dev mode: return mock data immediately when no API key is present
         if DEV_MODE or not self.openai_client:
             self.logger.warning("DEV MODE active — returning mock ad (no OPENAI_API_KEY set)")
             return self._generate_mock_ad(prompt)
 
-        # Extract brand and product information
-        brand_info = self.extract_brand_info(prompt)
-    
-        # Analyze brand for industry-specific insights
+        # --- Step 0: extract brand/product ---
+        brand_info     = self.extract_brand_info(prompt)
         brand_analysis = self.analyze_brand(brand_info)
-    
-        # Generate ad copy based on brand analysis
-        ad_copy = self.generate_ad_copy(prompt, brand_analysis)
-    
-        # Process user-provided product image if available
+
+        # --- Step 1: creative brief from fine-tuned model ---
+        creative_brief = self.generate_creative_brief(brand_info, brand_analysis)
+
+        # --- Step 2: full copy + layout from GPT-4o ---
+        ad_copy = self.generate_ad_copy(
+            brand_info['product'],
+            brand_analysis,
+            creative_brief=creative_brief,
+            tone=tone,
+            visual_style=visual_style,
+        )
+
+        layout = ad_copy.get('layout', {})
+
+        # --- Step 3: DALL-E image (layout-aware, text-free) ---
         if product_image_path:
-            self.logger.info(f"Processing user product image: {product_image_path}")
-        
-            # Validate path before processing
             if not os.path.exists(product_image_path):
-                self.logger.error(f"Product image not found: {product_image_path}")
                 raise FileNotFoundError(f"Product image not found: {product_image_path}")
-            
-            # Generate ad with user product image
             image_result = self.image_generator.create_ad_with_user_product(
                 product_image_path=product_image_path,
                 product=brand_info['product'],
@@ -623,13 +765,10 @@ class AdGenerator:
                 subheadline=ad_copy.get('subheadline'),
                 call_to_action=ad_copy.get('call_to_action'),
                 industry=brand_analysis.get('industry'),
-                brand_level=brand_analysis.get('brand_level')
+                brand_level=brand_analysis.get('brand_level'),
             )
         else:
-            # Generate complete ad image from scratch
-            self.logger.info("Generating ad image from scratch")
-        
-            # Use the image generator to create the ad
+            self.logger.info("Generating ad image from scratch (layout-aware)")
             image_result = self.image_generator.create_studio_ad(
                 product=brand_info['product'],
                 brand_name=brand_info['brand'],
@@ -638,19 +777,42 @@ class AdGenerator:
                 call_to_action=ad_copy.get('call_to_action'),
                 industry=brand_analysis.get('industry'),
                 brand_level=brand_analysis.get('brand_level'),
-                image_description=ad_copy.get('image_description')
+                image_description=ad_copy.get('image_description'),
+                layout_hint=layout,
             )
-        
-        # Merge all information into result
+
+        # --- Step 4: dynamic typography overlay ---
+        final_path = image_result.get('final_path')
+        if final_path and os.path.exists(final_path):
+            try:
+                from PIL import Image as PILImage
+                from .typography import TypographySystem
+                typo          = TypographySystem()
+                img           = PILImage.open(final_path)
+                img_with_text = typo.apply_typography(img, ad_copy, layout=layout)
+                img_with_text.save(final_path)
+                self.logger.info(
+                    f"Typography overlay applied — style={layout.get('style')}, "
+                    f"overlay={layout.get('overlay_type')}, cta={layout.get('cta_style')}"
+                )
+            except Exception as exc:
+                self.logger.warning(f"Typography overlay failed (raw DALL-E image kept): {exc}")
+
+        # --- Merge result ---
         result = {
             **ad_copy,
             **brand_analysis,
             **image_result,
-            'product': brand_info['product'],
-            'brand_name': brand_info['brand'],
-            'generation_time': datetime.now().isoformat()
+            'product':         brand_info['product'],
+            'brand_name':      brand_info['brand'],
+            'layout':          layout,
+            'tone':            creative_brief.get('tone') or brand_analysis.get('tone', ''),
+            'visual_style':    creative_brief.get('visual_style') or brand_analysis.get('visual_direction', ''),
+            'conceptual_technique': creative_brief.get('conceptual_technique', ''),
+            'emotion':         creative_brief.get('emotion', ''),
+            'generation_time': datetime.now().isoformat(),
         }
-    
+
         self.logger.info("Ad generation completed successfully")
         return result
     

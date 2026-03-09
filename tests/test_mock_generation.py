@@ -4,9 +4,10 @@ import pytest
 
 
 def test_dev_mode_flag():
-    """DEV_MODE should be True when OPENAI_API_KEY is absent."""
+    """DEV_MODE should be True when OPENAI_API_KEY is blank."""
     import os as _os
-    orig = _os.environ.pop("OPENAI_API_KEY", None)
+    orig = _os.environ.get("OPENAI_API_KEY")
+    _os.environ["OPENAI_API_KEY"] = ""   # blank → load_dotenv won't override
     try:
         import importlib, ad_generator.generator as gen_mod
         importlib.reload(gen_mod)
@@ -14,13 +15,15 @@ def test_dev_mode_flag():
     finally:
         if orig is not None:
             _os.environ["OPENAI_API_KEY"] = orig
+        else:
+            _os.environ.pop("OPENAI_API_KEY", None)
         import importlib, ad_generator.generator as gen_mod2
         importlib.reload(gen_mod2)
 
 
 def test_mock_ad_creates_image(tmp_path, monkeypatch):
     """AdGenerator.create_ad in mock mode must return a valid image path."""
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "")   # blank → load_dotenv won't override
 
     # Reload with patched env
     import importlib

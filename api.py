@@ -309,7 +309,11 @@ def generate_ad(req: AdRequest):
             )
             ad_data = ft_generator.create_ad(prompt, use_fine_tuned=True)
         else:
-            ad_data = generator.create_ad(prompt)
+            ad_data = generator.create_ad(
+                prompt,
+                tone=req.tone or None,
+                visual_style=req.visual_style or None,
+            )
     except Exception as exc:
         raise HTTPException(
             status_code=500,

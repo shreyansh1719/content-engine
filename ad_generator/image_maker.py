@@ -13,6 +13,12 @@ from io import BytesIO
 import requests
 from PIL import Image
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 class ModernStudioImageGenerator:
     """Generate studio-quality ad images with GPT-4o-driven typography and composition."""
     
@@ -614,7 +620,8 @@ The final result should be a studio-quality advertisement with perfect integrati
     
     def create_studio_ad(self, product: str, brand_name: str = None, headline: str = None,
                        subheadline: str = None, call_to_action: str = None, industry: str = None,
-                       brand_level: str = None, image_description: str = None) -> Dict[str, str]:
+                       brand_level: str = None, image_description: str = None,
+                       layout_hint: Dict = None) -> Dict[str, str]:
         """
         Create complete studio-quality ad with integrated typography.
         
@@ -642,10 +649,10 @@ The final result should be a studio-quality advertisement with perfect integrati
                 call_to_action = ad_content.get("call_to_action", "Shop Now")
                 image_description = ad_content.get("image_description") or image_description
             
-            # Create a complete prompt for DALL-E that includes both image and text
+            # Create a clean product-only DALL-E prompt (no text — TypographySystem handles text)
             complete_prompt = self._create_complete_ad_prompt(
-                product, brand_name, headline, subheadline, call_to_action, 
-                industry, brand_level, image_description
+                product, brand_name, industry=industry, brand_level=brand_level,
+                image_description=image_description, layout_hint=layout_hint,
             )
             
             # Generate image with DALL-E
@@ -696,70 +703,75 @@ The final result should be a studio-quality advertisement with perfect integrati
                 'error': str(e)
             }
     
-    def _create_complete_ad_prompt(self, product: str, brand_name: str = None, headline: str = None,
-                                subheadline: str = None, call_to_action: str = None,
+    def _create_complete_ad_prompt(self, product: str, brand_name: str = None,
                                 industry: str = None, brand_level: str = "premium",
-                                image_description: str = None) -> str:
+                                image_description: str = None,
+                                layout_hint: Dict = None) -> str:
         """
-        Create a comprehensive prompt for DALL-E to generate a complete ad.
-        
-        Args:
-            product: Product name/description
-            brand_name: Brand name
-            headline: Ad headline
-            subheadline: Ad subheadline
-            call_to_action: Call to action text
-            industry: Industry category
-            brand_level: Brand positioning level
-            image_description: Specific image description
-            
-        Returns:
-            Complete prompt for DALL-E
+        Build a clean DALL-E prompt focused on product photography only.
+        Text rendering is handled entirely by TypographySystem — DALL-E must NOT
+        add any text, logos, or typography to the image.
+        layout_hint tells DALL-E where to leave compositional space for overlay zones.
         """
-        # Get creative direction for this product/industry
         creative_direction = self._generate_creative_direction(
             product, brand_name, industry, image_description, brand_level
         )
-        
-        # Extract base image prompt
-        base_prompt = creative_direction.get("image_prompt", 
-            f"Professional advertisement photograph of {product} with studio lighting and perfect composition")
-        
-        # Create text instruction
-        text_instruction = "Include the following text with professional typography:"
-        if headline:
-            text_instruction += f"\nHeadline: \"{headline}\""
-        if subheadline:
-            text_instruction += f"\nSubheadline: \"{subheadline}\""
-        if call_to_action:
-            text_instruction += f"\nCall to Action: \"{call_to_action}\""
-        if brand_name:
-            text_instruction += f"\nBrand: \"{brand_name}\""
-        
-        # Get typography recommendations
-        typography = creative_direction.get("typography", {})
-        typography_instruction = "Typography styling:"
-        for element, style in typography.items():
-            if isinstance(style, dict):
-                style_text = ", ".join([f"{k}: {v}" for k, v in style.items()])
-                typography_instruction += f"\n- {element}: {style_text}"
-        
-        # Complete prompt
-        complete_prompt = f"""{base_prompt}
 
-{text_instruction}
+        base_prompt = creative_direction.get(
+            "image_prompt",
+            f"Professional advertisement photograph of {product} with studio lighting and perfect composition",
+        )
 
-{typography_instruction}
+        # Positioning hint — leaves space for the correct text overlay zones
+        layout_hint = layout_hint or {}
+        style       = layout_hint.get('style', '')
+        headline_pos= layout_hint.get('headline_position', 'top_center')
+        overlay     = layout_hint.get('overlay_type', '')
 
-Layout: {creative_direction.get("layout", "balanced composition with clear text hierarchy")}
+        if style == 'left_column' or overlay == 'gradient_left':
+            positioning = (
+                "Position the main product on the right two-thirds of the frame. "
+                "The left side should be darker and visually clean, fading naturally toward the edge."
+            )
+        elif style == 'split_horizontal':
+            positioning = (
+                "Place the product on the left half of the image. "
+                "The right half should be clean and uncluttered."
+            )
+        elif style == 'bottom_banner':
+            positioning = (
+                "Center the product in the upper 60% of the frame. "
+                "The bottom 35% should transition to a darker, simpler background."
+            )
+        elif style == 'bold_statement':
+            positioning = (
+                "High-contrast, dramatic composition. "
+                "Leave visual breathing room across the center of the image."
+            )
+        elif style == 'centered':
+            positioning = (
+                "Center-weighted product with clear open space above and below."
+            )
+        elif headline_pos == 'bottom_left':
+            positioning = (
+                "Product prominent in the upper-right area. "
+                "Lower-left quadrant should be darker and cleaner."
+            )
+        else:
+            positioning = (
+                "Leave the top 30% and bottom 30% of the frame relatively clean and darker "
+                "to provide contrast zones for text overlay."
+            )
 
-Color scheme: {creative_direction.get("color_scheme", "professional and brand-appropriate")}
+        complete_prompt = (
+            f"{base_prompt}\n\n"
+            f"{positioning}\n\n"
+            f"Color scheme: {creative_direction.get('color_scheme', 'professional and brand-appropriate')}\n\n"
+            f"IMPORTANT: Do NOT include any text, words, logos, typography, or written elements "
+            f"anywhere in the image. This is a pure product photography base for a {brand_level} "
+            f"brand in the {industry or 'general'} industry. Text will be added separately."
+        )
 
-The final result should be a studio-quality advertisement with perfect integration of product image and text,
-suitable for a {brand_level} brand in the {industry or "general"} industry.
-The typography should be professional and perfectly integrated with the image composition.
-"""
-        
         return complete_prompt
     
     def _create_fallback_image(self, product: str, brand_name: str = None) -> str:

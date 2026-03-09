@@ -312,107 +312,347 @@ class TypographySystem:
     # apply_typography — corrected pipeline (fixes bugs 1-5)
     # ──────────────────────────────────────────────────────────────────────────
 
-    def apply_typography(self, image: Image.Image, ad_copy: Dict[str, str]) -> Image.Image:
+    def apply_typography(self, image: Image.Image, ad_copy: Dict[str, str],
+                         layout: Optional[Dict[str, Any]] = None) -> Image.Image:
         """
-        Apply zone-based typography to an ad image, fixing all 5 known bugs.
+        Apply dynamic zone-based typography using a GPT-4o-designed layout dict.
 
-        Bug 1 — Readability overlay: semi-transparent dark gradient added at top
-                 (32 %) and bottom (32 %) before any text.
-        Bug 2 — Text overflow: pixel-accurate wrapping via textbbox(); 5 % min
-                 horizontal padding enforced on every line.
-        Bug 3 — Product overlap: zone-based placement — headline 5-22 %,
-                 subheadline 23-35 %, NO TEXT 35-70 %, body 70-82 %, CTA 84-94 %.
-        Bug 4 — CTA button: opacity ≥ 220, rounded corners, white border, generous
-                 padding, dark text.
-        Bug 5 — Size hierarchy: headline = width/16, sub = 60 %, body = 45 %,
-                 CTA = 55 % (all bold/semi-bold).
-
-        Args:
-            image:   Base PIL Image (any mode).
-            ad_copy: Dict with keys 'headline', 'subheadline', 'body_text',
-                     'call_to_action'.
-
-        Returns:
-            RGB Image with typography applied.
-
-        Raises:
-            ValueError: If ad_copy is None or empty.
+        layout keys (all optional, sensible defaults provided):
+          style            — left_column | bottom_banner | centered | top_bottom |
+                             split_horizontal | bold_statement | diagonal | floating_cards
+          text_color       — hex string, default #FFFFFF
+          accent_color     — hex string, default #FFFFFF
+          overlay_type     — gradient_top_bottom | gradient_left | vignette_bottom |
+                             frosted_strip | shadow_only | solid_bar
+          overlay_opacity  — float 0.2-1.0, default 0.7
+          headline_position— top_center | top_left | center | bottom_left
+          headline_size    — large | xlarge | medium
+          cta_style        — pill_button | square_button | text_underline | block_inverted
+          cta_color        — hex string, default #FFFFFF
+          show_body_text   — bool, default True
         """
         if not ad_copy:
-            raise ValueError("ad_copy must be a non-empty dict containing text elements")
+            raise ValueError("ad_copy must be a non-empty dict")
+
+        layout = layout or {}
+
+        # --- Parse layout params ---
+        style         = layout.get('style', 'top_bottom')
+        text_color    = self._parse_color(layout.get('text_color',  '#FFFFFF'))
+        accent_color  = self._parse_color(layout.get('accent_color','#FFFFFF'))
+        overlay_type  = layout.get('overlay_type',  'gradient_top_bottom')
+        opacity       = float(layout.get('overlay_opacity', 0.7))
+        headline_pos  = layout.get('headline_position', 'top_center')
+        headline_size = layout.get('headline_size',  'large')
+        cta_style     = layout.get('cta_style',      'pill_button')
+        cta_color     = self._parse_color(layout.get('cta_color', '#FFFFFF'))
+        show_body     = layout.get('show_body_text', True)
 
         width, height = image.size
         base = image.convert('RGBA')
 
-        # ── Bug 1: Readability gradient overlay ──────────────────────────────
-        overlay = Image.new('RGBA', base.size, (0, 0, 0, 0))
-        ov_draw = ImageDraw.Draw(overlay)
-        depth = int(height * 0.32)
+        # --- Overlay ---
+        base = self._apply_overlay(base, overlay_type, opacity, accent_color)
 
-        for y in range(depth):
-            progress = y / depth
-            top_alpha = int(175 * (1.0 - progress))
-            ov_draw.line([(0, y), (width - 1, y)], fill=(0, 0, 0, top_alpha))
-            bottom_y = height - 1 - y
-            bot_alpha = int(190 * (1.0 - progress))
-            ov_draw.line([(0, bottom_y), (width - 1, bottom_y)], fill=(0, 0, 0, bot_alpha))
+        # --- Font sizes ---
+        if headline_size == 'xlarge':
+            h_px = max(48, width // 12)
+        elif headline_size == 'medium':
+            h_px = max(28, width // 20)
+        else:
+            h_px = max(36, width // 16)
+        s_px = max(24, int(h_px * 0.60))
+        b_px = max(18, int(h_px * 0.45))
+        c_px = max(20, int(h_px * 0.55))
+        fonts = self._load_sized_fonts(h_px, s_px, b_px, c_px)
 
-        base = Image.alpha_composite(base, overlay)
+        # --- Zones + alignment ---
+        zones, alignment, tx_start, tx_w = self._calculate_zones(
+            style, headline_pos, width, height
+        )
 
-        # ── Bug 5: Font size hierarchy ────────────────────────────────────────
-        headline_px = max(36, width // 16)
-        sub_px      = max(24, int(headline_px * 0.60))
-        body_px     = max(18, int(headline_px * 0.45))
-        cta_px      = max(20, int(headline_px * 0.55))
+        pad = max(int(width * 0.05), 20)
 
-        fonts = self._load_sized_fonts(headline_px, sub_px, body_px, cta_px)
-
-        # ── Bug 3: Zone definitions ───────────────────────────────────────────
-        zones = {
-            'headline':    (int(height * 0.05), int(height * 0.22)),
-            'subheadline': (int(height * 0.23), int(height * 0.35)),
-            # 35–70 % is the product zone — no text drawn here
-            'body':        (int(height * 0.70), int(height * 0.82)),
-            'cta':         (int(height * 0.84), int(height * 0.94)),
-        }
-
-        # ── Bug 2: 5 % minimum horizontal padding ─────────────────────────────
-        padding_x = max(int(width * 0.05), 20)
-
-        # Text layer (RGBA, composited at end)
         text_layer = Image.new('RGBA', base.size, (0, 0, 0, 0))
-        draw = ImageDraw.Draw(text_layer)
+        draw       = ImageDraw.Draw(text_layer)
 
-        headline = ad_copy.get('headline', '').strip()
-        if headline:
-            self._draw_text_in_zone(
-                draw, headline, fonts['headline'],
-                zones['headline'], width, padding_x,
-                color=(255, 255, 255, 255)
-            )
+        # Headline
+        hl = ad_copy.get('headline', '').strip()
+        if hl and zones.get('headline'):
+            self._draw_zoned_text(draw, hl, fonts['headline'], zones['headline'],
+                                  width, tx_w, tx_start, pad, text_color, alignment)
 
-        subheadline = ad_copy.get('subheadline', '').strip()
-        if subheadline:
-            self._draw_text_in_zone(
-                draw, subheadline, fonts['subheadline'],
-                zones['subheadline'], width, padding_x,
-                color=(220, 220, 220, 230)
-            )
+        # Subheadline
+        sh = ad_copy.get('subheadline', '').strip()
+        if sh and zones.get('subheadline'):
+            sub_c = (text_color[0], text_color[1], text_color[2], min(text_color[3], 220))
+            self._draw_zoned_text(draw, sh, fonts['subheadline'], zones['subheadline'],
+                                  width, tx_w, tx_start, pad, sub_c, alignment)
 
-        body = ad_copy.get('body_text', '').strip()
-        if body:
-            self._draw_text_in_zone(
-                draw, body, fonts['body'],
-                zones['body'], width, padding_x,
-                color=(200, 200, 200, 210)
-            )
+        # Body text (only if zone exists and show_body_text is True)
+        if show_body:
+            body = ad_copy.get('body_text', '').strip()
+            if body and zones.get('body'):
+                body_c = (text_color[0], text_color[1], text_color[2], min(text_color[3], 200))
+                self._draw_zoned_text(draw, body, fonts['body'], zones['body'],
+                                      width, tx_w, tx_start, pad, body_c, alignment)
 
+        # CTA
         cta = ad_copy.get('call_to_action', '').strip()
-        if cta:
-            self._draw_cta_button(draw, cta, fonts['cta'], zones['cta'], width)
+        if cta and zones.get('cta'):
+            self._draw_cta_styled(draw, cta, fonts['cta'], zones['cta'],
+                                  width, tx_start, tx_w,
+                                  cta_style, cta_color, accent_color, alignment)
 
         result = Image.alpha_composite(base, text_layer)
         return result.convert('RGB')
+
+    # ── Layout helpers ────────────────────────────────────────────────────────
+
+    def _parse_color(self, hex_color: Any, alpha: int = 255) -> Tuple[int, int, int, int]:
+        """Parse a hex color string to an RGBA tuple."""
+        try:
+            h = str(hex_color).lstrip('#')
+            if len(h) == 6:
+                return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), alpha)
+        except (ValueError, AttributeError):
+            pass
+        return (255, 255, 255, alpha)
+
+    def _apply_overlay(self, base: Image.Image, overlay_type: str,
+                       opacity: float, accent_color: Tuple) -> Image.Image:
+        """Apply the specified readability overlay to the base RGBA image."""
+        width, height = base.size
+        ov  = Image.new('RGBA', base.size, (0, 0, 0, 0))
+        d   = ImageDraw.Draw(ov)
+        max_a = int(220 * max(0.2, min(1.0, opacity)))
+
+        if overlay_type == 'gradient_top_bottom':
+            depth = int(height * 0.32)
+            for y in range(depth):
+                p = y / depth
+                d.line([(0, y),           (width-1, y)],           fill=(0, 0, 0, int(max_a*(1-p))))
+                d.line([(0, height-1-y),  (width-1, height-1-y)],  fill=(0, 0, 0, int(min(255, max_a*(1-p)*1.1))))
+
+        elif overlay_type == 'gradient_left':
+            fade = int(width * 0.55)
+            for x in range(fade):
+                p = x / fade
+                d.line([(x, 0), (x, height-1)], fill=(0, 0, 0, int(max_a * (1 - p**0.7))))
+
+        elif overlay_type == 'vignette_bottom':
+            depth = int(height * 0.52)
+            for y in range(depth):
+                p = y / depth
+                d.line([(0, height-1-y), (width-1, height-1-y)], fill=(0, 0, 0, int(max_a * p**0.6)))
+            for y in range(int(height * 0.15)):
+                p = y / (height * 0.15)
+                d.line([(0, y), (width-1, y)], fill=(0, 0, 0, int(60 * (1-p))))
+
+        elif overlay_type == 'frosted_strip':
+            alpha = int(max_a * 0.88)
+            d.rectangle([0, int(height*0.60), width, height],    fill=(15, 15, 25, alpha))
+            d.rectangle([0, 0, width, int(height*0.38)],          fill=(15, 15, 25, int(alpha*0.90)))
+
+        elif overlay_type == 'shadow_only':
+            d.rectangle([0, 0, width, height], fill=(0, 0, 0, 28))
+
+        elif overlay_type == 'solid_bar':
+            r, g, b = accent_color[:3] if len(accent_color) >= 3 else (0, 0, 0)
+            bar_a   = min(255, int(max_a * 1.1))
+            d.rectangle([0, 0, width, int(height*0.22)],               fill=(r, g, b, bar_a))
+            d.rectangle([0, int(height*0.70), width, height],           fill=(r, g, b, bar_a))
+
+        else:  # fallback: gradient_top_bottom
+            depth = int(height * 0.32)
+            for y in range(depth):
+                p = y / depth
+                d.line([(0, y),          (width-1, y)],          fill=(0, 0, 0, int(175*(1-p))))
+                d.line([(0, height-1-y), (width-1, height-1-y)], fill=(0, 0, 0, int(190*(1-p))))
+
+        return Image.alpha_composite(base, ov)
+
+    def _calculate_zones(self, style: str, headline_pos: str,
+                          width: int, height: int) -> Tuple[Dict, str, int, int]:
+        """
+        Return (zones_dict, alignment, text_x_start, text_area_width).
+        zones_dict values are (top_y, bot_y) or None (skip that element).
+        """
+        def pct(f): return int(height * f)
+
+        if style == 'left_column':
+            return ({
+                'headline':    (pct(0.08), pct(0.26)),
+                'subheadline': (pct(0.28), pct(0.42)),
+                'body':        (pct(0.44), pct(0.65)),
+                'cta':         (pct(0.70), pct(0.82)),
+            }, 'left', int(width*0.04), int(width*0.42))
+
+        if style == 'bottom_banner':
+            return ({
+                'headline':    (pct(0.62), pct(0.74)),
+                'subheadline': (pct(0.75), pct(0.84)),
+                'body':        None,
+                'cta':         (pct(0.86), pct(0.95)),
+            }, 'center', 0, width)
+
+        if style == 'bold_statement':
+            return ({
+                'headline':    (pct(0.28), pct(0.58)),
+                'subheadline': (pct(0.60), pct(0.72)),
+                'body':        None,
+                'cta':         (pct(0.76), pct(0.90)),
+            }, 'center', 0, width)
+
+        if style in ('centered', 'floating_cards'):
+            return ({
+                'headline':    (pct(0.32), pct(0.50)),
+                'subheadline': (pct(0.52), pct(0.62)),
+                'body':        None,                        # no body in product zone (35-70%)
+                'cta':         (pct(0.76), pct(0.87)),
+            }, 'center', 0, width)
+
+        if style == 'split_horizontal':
+            return ({
+                'headline':    (pct(0.12), pct(0.30)),
+                'subheadline': (pct(0.32), pct(0.46)),
+                'body':        (pct(0.48), pct(0.64)),
+                'cta':         (pct(0.68), pct(0.80)),
+            }, 'left', int(width*0.52), int(width*0.44))
+
+        if style == 'diagonal':
+            return ({
+                'headline':    (pct(0.08), pct(0.26)),
+                'subheadline': (pct(0.28), pct(0.40)),
+                'body':        (pct(0.70), pct(0.82)),
+                'cta':         (pct(0.84), pct(0.94)),
+            }, 'center', 0, width)
+
+        # --- top_bottom (default) — headline_position adjusts behaviour ---
+        if headline_pos == 'top_left':
+            return ({
+                'headline':    (pct(0.05), pct(0.22)),
+                'subheadline': (pct(0.23), pct(0.35)),
+                'body':        (pct(0.70), pct(0.82)),
+                'cta':         (pct(0.84), pct(0.94)),
+            }, 'left', 0, width)
+
+        if headline_pos == 'center':
+            return ({
+                'headline':    (pct(0.35), pct(0.52)),
+                'subheadline': (pct(0.54), pct(0.64)),
+                'body':        (pct(0.70), pct(0.80)),     # enforced ≥70% (product zone ends at 70%)
+                'cta':         (pct(0.82), pct(0.93)),
+            }, 'center', 0, width)
+
+        if headline_pos == 'bottom_left':
+            return ({
+                'headline':    (pct(0.63), pct(0.75)),
+                'subheadline': (pct(0.76), pct(0.85)),
+                'body':        None,
+                'cta':         (pct(0.87), pct(0.96)),
+            }, 'left', 0, width)
+
+        # top_center (default)
+        return ({
+            'headline':    (pct(0.05), pct(0.22)),
+            'subheadline': (pct(0.23), pct(0.35)),
+            'body':        (pct(0.70), pct(0.82)),
+            'cta':         (pct(0.84), pct(0.94)),
+        }, 'center', 0, width)
+
+    def _draw_zoned_text(self, draw: ImageDraw.Draw, text: str,
+                          font: ImageFont.FreeTypeFont,
+                          zone: Tuple[int, int],
+                          total_w: int, area_w: int, area_left: int,
+                          pad: int, color: Tuple, alignment: str) -> None:
+        """Wrap and draw text inside zone with correct alignment."""
+        if zone is None:
+            return
+        avail = (area_w if area_w > 0 else total_w) - 2 * pad
+        lines = self._wrap_text(draw, text, font, avail)
+
+        z_top, z_bot = zone
+        z_h = z_bot - z_top
+        bbox  = draw.textbbox((0, 0), 'Ag', font=font)
+        lh    = bbox[3] - bbox[1]
+        step  = int(lh * 1.25)
+        total_h = step * len(lines)
+        start_y = z_top + max(0, (z_h - total_h) // 2)
+
+        for i, line in enumerate(lines):
+            y = start_y + i * step
+            if y + lh <= z_top or y >= z_bot:
+                continue
+            lb = draw.textbbox((0, 0), line, font=font)
+            lw = lb[2] - lb[0]
+
+            if alignment == 'left':
+                x = area_left + pad
+            elif alignment == 'right':
+                x = area_left + (area_w if area_w else total_w) - lw - pad
+            else:  # center
+                if area_w < total_w:
+                    x = area_left + max(pad, (area_w - lw) // 2)
+                else:
+                    x = max(pad, (total_w - lw) // 2)
+
+            shadow = max(1, lh // 22)
+            draw.text((x+shadow, y+shadow), line, font=font, fill=(0, 0, 0, 160))
+            draw.text((x, y),               line, font=font, fill=color)
+
+    def _draw_cta_styled(self, draw: ImageDraw.Draw, text: str,
+                          font: ImageFont.FreeTypeFont,
+                          zone: Tuple[int, int],
+                          total_w: int, area_left: int, area_w: int,
+                          cta_style: str, cta_color: Tuple,
+                          accent_color: Tuple, alignment: str) -> None:
+        """Render CTA in the chosen style."""
+        z_top, z_bot = zone
+        z_h   = z_bot - z_top
+        text_up = text.upper()
+        bbox  = draw.textbbox((0, 0), text_up, font=font)
+        tw, th = bbox[2]-bbox[0], bbox[3]-bbox[1]
+        fill  = (cta_color[0], cta_color[1], cta_color[2], 235)
+        dark  = (20, 20, 20, 255)
+
+        # Horizontal centre of the CTA element
+        if alignment == 'left':
+            cx = area_left + min(int(total_w * 0.22), (area_w or total_w) // 2)
+        else:
+            cx = total_w // 2
+        cy = z_top + z_h // 2
+
+        if cta_style == 'square_button':
+            px = max(20, int(tw * 0.35)); py = max(10, int(th * 0.45))
+            bw, bh = tw+2*px, th+2*py
+            x0,y0 = cx-bw//2, cy-bh//2; x1,y1 = cx+bw//2, cy+bh//2
+            draw.rectangle([x0,y0,x1,y1], fill=fill, outline=(255,255,255,200), width=2)
+            draw.text((cx-tw//2, cy-th//2), text_up, font=font, fill=dark)
+
+        elif cta_style == 'text_underline':
+            x = area_left + int(total_w*0.05) if alignment == 'left' else max(int(total_w*0.05),(total_w-tw)//2)
+            ty = cy - th//2
+            tc = (cta_color[0], cta_color[1], cta_color[2], 255)
+            draw.text((x, ty), text_up, font=font, fill=tc)
+            draw.line([(x, ty+th+4), (x+tw, ty+th+4)], fill=tc, width=2)
+
+        elif cta_style == 'block_inverted':
+            bt = z_top + int(z_h*0.08); bb = z_bot - int(z_h*0.08)
+            draw.rectangle([0, bt, total_w, bb], fill=(cta_color[0],cta_color[1],cta_color[2],230))
+            draw.text(((total_w-tw)//2, (bt+bb)//2-th//2), text_up, font=font, fill=dark)
+
+        else:  # pill_button (default)
+            px = max(24, int(tw*0.45)); py = max(12, int(th*0.55))
+            bw, bh = tw+2*px, th+2*py
+            x0,y0 = cx-bw//2, cy-bh//2; x1,y1 = cx+bw//2, cy+bh//2
+            r = bh // 3
+            try:
+                draw.rounded_rectangle([x0,y0,x1,y1], radius=r, fill=fill,
+                                        outline=(255,255,255,255), width=2)
+            except (AttributeError, TypeError):
+                draw.rectangle([x0,y0,x1,y1], fill=fill, outline=(255,255,255,255), width=2)
+            draw.text((cx-tw//2, cy-th//2), text_up, font=font, fill=dark)
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
