@@ -59,7 +59,7 @@ class AdGenerator:
         # Fine-tuned model ID (creative brief step)
         self.fine_tuned_model_id = os.getenv(
             'FINE_TUNED_MODEL_ID',
-            'ft:gpt-3.5-turbo-0125:shreyansh::BLDyTfqs'
+            'ft:gpt-4o-mini-2024-07-18:shreyansh::DHRbE3oW'
         )
 
         # Layout variety tracking — avoids repeating same layout in one session
