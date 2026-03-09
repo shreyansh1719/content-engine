@@ -26,8 +26,6 @@ from .image_maker import ModernStudioImageGenerator
 # Dev mode: enabled automatically when OPENAI_API_KEY is absent
 DEV_MODE = not bool(os.getenv('OPENAI_API_KEY', '').strip())
 
-FINE_TUNED_MODEL = os.getenv("FINE_TUNED_MODEL", "ft:gpt-3.5-turbo-0125:shreyansh::BLDyTfqs")
-
 class AdGenerator:
     """Generate complete ad campaigns with GPT-4o-driven visuals and content."""
     
@@ -58,6 +56,12 @@ class AdGenerator:
         os.makedirs("output/images", exist_ok=True)
         os.makedirs("output/data", exist_ok=True)
         
+        # Fine-tuned model ID (creative brief step)
+        self.fine_tuned_model_id = os.getenv(
+            'FINE_TUNED_MODEL_ID',
+            'ft:gpt-3.5-turbo-0125:shreyansh::BLDyTfqs'
+        )
+
         # Cache for generated ads to improve performance
         self.ad_cache = {}
     
@@ -488,7 +492,7 @@ A luxury watch should look completely different from a streetwear sneaker ad."""
                 },
             ]
             response = self.openai_client.chat.completions.create(
-                model=FINE_TUNED_MODEL,
+                model=self.fine_tuned_model_id,
                 messages=messages,
                 response_format={"type": "json_object"},
                 temperature=0.75,
