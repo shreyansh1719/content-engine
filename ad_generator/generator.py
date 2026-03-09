@@ -62,6 +62,9 @@ class AdGenerator:
             'ft:gpt-3.5-turbo-0125:shreyansh::BLDyTfqs'
         )
 
+        # Layout variety tracking — avoids repeating same layout in one session
+        self._used_layouts: List[str] = []
+
         # Cache for generated ads to improve performance
         self.ad_cache = {}
     
@@ -274,6 +277,12 @@ class AdGenerator:
             tone_str   = tone         or brand_analysis.get('tone', 'professional')
             visual_str = visual_style or brand_analysis.get('visual_direction', 'modern')
 
+            avoid_str = (
+                f"\nDo NOT use these layout styles (already used this session): "
+                f"{', '.join(self._used_layouts)}"
+                if self._used_layouts else ""
+            )
+
             copy_prompt = f"""Create premium advertising copy and visual layout for: {product}
 
 MARKETING BRIEF:
@@ -285,6 +294,38 @@ Key Benefits: {', '.join(brand_analysis['key_benefits'])}
 Product Highlight: {brand_analysis['product_highlight']}
 Visual Direction: {visual_str}
 {brief_ctx}
+You MUST select a layout combination that fits this product's category. Use ALL options across different products — do not default to the same layout.
+
+LAYOUT STYLES:
+- "top_bottom": Headline top, CTA bottom. Best for: products centered in frame.
+- "left_column": All text left-aligned in left 40%. Best for: lifestyle/fashion.
+- "bottom_banner": Text in bottom 30% only. Best for: hero product shots.
+- "centered": Text centered vertically. Best for: minimal/clean products.
+- "bold_statement": Massive headline fills top 40%, no body text. Best for: brand statements.
+- "split_horizontal": Text on right side panel. Best for: editorial/magazine feel.
+
+OVERLAY TYPES:
+- "gradient_top_bottom": Classic gradient top and bottom.
+- "gradient_left": Dark fade from left. Pair with left_column.
+- "vignette_bottom": Heavy bottom darkening. Pair with bottom_banner.
+- "frosted_strip": Behind-text-only blur strip. Pair with split_horizontal.
+- "shadow_only": No overlay — rely on text shadows. For clean/bright images.
+- "solid_bar": Opaque colored bar. For bold/graphic style.
+
+CTA STYLES:
+- "pill_button": Rounded pill with fill. Classic.
+- "square_button": Sharp borders, no fill. Premium/editorial.
+- "text_underline": Text + underline + arrow. Most minimal/premium.
+- "block_inverted": Wide colored bar. Bold/graphic.
+
+CATEGORY RULES (follow these):
+- luxury/premium → left_column or bold_statement + shadow_only or gradient_left + text_underline or square_button
+- streetwear/urban → bold_statement or bottom_banner + solid_bar or vignette_bottom + block_inverted or pill_button
+- food/beverage/plant-based → centered or bottom_banner + gradient_top_bottom or frosted_strip + pill_button
+- tech/electronics → split_horizontal or top_bottom + frosted_strip or shadow_only + square_button or pill_button
+- fashion/beauty → left_column + gradient_left + text_underline
+- automotive → bold_statement + vignette_bottom + block_inverted
+{avoid_str}
 Respond with a JSON object with EXACTLY these keys:
 {{
   "headline": "impactful headline, max 8 words",
@@ -293,11 +334,11 @@ Respond with a JSON object with EXACTLY these keys:
   "call_to_action": "motivating CTA, 3-5 words",
   "image_description": "detailed product photography direction",
   "layout": {{
-    "style": "left_column | bottom_banner | centered | top_bottom | split_horizontal | bold_statement | diagonal | floating_cards",
+    "style": "top_bottom | left_column | bottom_banner | centered | bold_statement | split_horizontal",
     "text_color": "#FFFFFF",
     "accent_color": "#HEX",
     "overlay_type": "gradient_top_bottom | gradient_left | vignette_bottom | frosted_strip | shadow_only | solid_bar",
-    "overlay_opacity": 0.7,
+    "overlay_opacity": 0.65,
     "headline_position": "top_center | top_left | center | bottom_left",
     "headline_size": "large | xlarge | medium",
     "cta_style": "pill_button | square_button | text_underline | block_inverted",
@@ -305,9 +346,7 @@ Respond with a JSON object with EXACTLY these keys:
     "show_body_text": true,
     "mood": "dark_luxury | bright_clean | bold_contrast | soft_elegant | urban_gritty"
   }}
-}}
-Choose the layout style, colors, and overlay that best fit the brand personality and industry.
-A luxury watch should look completely different from a streetwear sneaker ad."""
+}}"""
 
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o",
@@ -328,8 +367,11 @@ A luxury watch should look completely different from a streetwear sneaker ad."""
                 temperature=0.8
             )
 
-            result = json.loads(response.choices[0].message.content)
+            result    = json.loads(response.choices[0].message.content)
             validated = self._validate_ad_copy(result, product, brand_analysis)
+            chosen    = validated.get('layout', {}).get('style', '')
+            if chosen and chosen not in self._used_layouts:
+                self._used_layouts.append(chosen)
             self.logger.info(f"Ad copy generation completed with headline: {validated['headline']}")
             return validated
 
@@ -818,8 +860,22 @@ A luxury watch should look completely different from a streetwear sneaker ad."""
         }
 
         self.logger.info("Ad generation completed successfully")
+        self._save_ad_metadata(result, final_path or '')
         return result
     
+    def _save_ad_metadata(self, result: Dict[str, Any], image_path: str) -> None:
+        """Save a JSON sidecar file next to the generated image."""
+        if not image_path:
+            return
+        try:
+            meta_path = image_path.replace('.png', '_metadata.json').replace('.jpg', '_metadata.json')
+            safe = {k: v for k, v in result.items() if k != 'image'}
+            with open(meta_path, 'w', encoding='utf-8') as f:
+                json.dump(safe, f, indent=2, default=str)
+            self.logger.info(f"Metadata saved to {meta_path}")
+        except Exception as exc:
+            self.logger.warning(f"Metadata save failed: {exc}")
+
     def _create_fallback_ad(self, prompt: str) -> Dict[str, Any]:
         """Create a fallback ad when the regular process fails."""
         try:

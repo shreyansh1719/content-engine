@@ -5,7 +5,7 @@ Orchestrates typography components to create studio-quality ad layouts
 import os
 import logging
 from typing import Dict, List, Any, Optional, Tuple, Union
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 try:
     import numpy as np
     from collections import Counter as _Counter
@@ -336,7 +336,7 @@ class TypographySystem:
         headline_pos  = layout.get('headline_position','top_center')
         headline_size = layout.get('headline_size',    'large')
         cta_style     = layout.get('cta_style',        'pill_button')
-        show_body     = layout.get('show_body_text',   True)
+        show_body_pref = layout.get('show_body_text',  True)
         mood          = layout.get('mood',             '')
 
         width, height = image.size
@@ -389,57 +389,294 @@ class TypographySystem:
             tx_start, tx_w
         )
 
-        # ── 8. Render text ────────────────────────────────────────────────────
-        text_layer = Image.new('RGBA', base.size, (0, 0, 0, 0))
-        draw       = ImageDraw.Draw(text_layer)
-        pad = max(int(width * 0.05), 24)
+        # ── 8. Render elements — each composites blurred shadow + text onto base ─
+        pad         = max(int(width * 0.05), 24)
+        hl_tracking = max(1, h_px // 24)
 
-        hl_tracking = max(1, h_px // 24)    # tracking ~4% of font size
-        sh_tracking = max(0, s_px // 45)   # minimal on subheadline
-
-        # Headline
         if hl and zones.get('headline'):
-            self._draw_element_in_zone(
-                draw, hl, fonts['headline'], zones['headline'],
+            base = self._render_text_element(
+                base, hl, fonts['headline'], zones['headline'],
                 width, tx_w, tx_start, pad, text_color, alignment,
-                tracking=hl_tracking, line_height_mult=1.20, is_headline=True
+                tracking=hl_tracking, lh_mult=1.20,
+                shadow_offset=(4, 4), shadow_blur=8, shadow_opacity=200,
+                outline_width=2,
             )
 
-        # Subheadline
         sh = ad_copy.get('subheadline', '').strip()
         if sh and zones.get('subheadline'):
-            sub_c = (text_color[0], text_color[1], text_color[2],
-                     min(text_color[3], 220))
-            self._draw_element_in_zone(
-                draw, sh, fonts['subheadline'], zones['subheadline'],
+            sub_c = (text_color[0], text_color[1], text_color[2], min(text_color[3], 220))
+            base = self._render_text_element(
+                base, sh, fonts['subheadline'], zones['subheadline'],
                 width, tx_w, tx_start, pad, sub_c, alignment,
-                tracking=sh_tracking, line_height_mult=1.40
+                tracking=0, lh_mult=1.40,
+                shadow_offset=(2, 2), shadow_blur=5, shadow_opacity=160,
+                outline_width=1,
             )
 
-        # Body text
-        if show_body:
+        if show_body_pref and zones.get('body'):
             body = ad_copy.get('body_text', '').strip()
-            if body and zones.get('body'):
-                body_c = (text_color[0], text_color[1], text_color[2],
-                          min(text_color[3], 200))
-                self._draw_element_in_zone(
-                    draw, body, fonts['body'], zones['body'],
-                    width, tx_w, tx_start, pad, body_c, alignment,
-                    tracking=0, line_height_mult=1.45
-                )
+            if body:
+                z_top, z_bot = zones['body']
+                if self._should_show_body_text(image, z_top, z_bot):
+                    body_c = (text_color[0], text_color[1], text_color[2],
+                              min(text_color[3], 200))
+                    base = self._render_text_element(
+                        base, body, fonts['body'], zones['body'],
+                        width, tx_w, tx_start, pad, body_c, alignment,
+                        tracking=0, lh_mult=1.45,
+                        shadow_offset=(1, 1), shadow_blur=3, shadow_opacity=140,
+                        outline_width=0,
+                    )
 
-        # CTA
         cta = ad_copy.get('call_to_action', '').strip()
         if cta and zones.get('cta'):
-            self._draw_cta_v2(
-                draw, cta, fonts['cta'], zones['cta'],
+            base = self._render_cta(
+                base, cta, fonts['cta'], zones['cta'],
                 width, tx_start, tx_w,
                 cta_style, text_color, accent_color, alignment,
-                is_dark_image=is_dark
+                is_dark_image=is_dark,
             )
 
-        result = Image.alpha_composite(base, text_layer)
-        return result.convert('RGB')
+        return base.convert('RGB')
+
+    # ── New image-based renderers (gaussian shadow + outline) ─────────────────
+
+    def _wrap_text_with_font(self, text: str, font: ImageFont.FreeTypeFont,
+                              max_width: int) -> List[str]:
+        """Wrap text using font metrics — no ImageDraw required."""
+        words = text.split()
+        lines: List[str] = []
+        current = ''
+        for word in words:
+            candidate = (current + ' ' + word).strip()
+            try:
+                w = font.getlength(candidate)
+            except AttributeError:
+                bb = font.getbbox(candidate)
+                w  = bb[2] - bb[0]
+            if w <= max_width:
+                current = candidate
+            else:
+                if current:
+                    lines.append(current)
+                current = word
+        if current:
+            lines.append(current)
+        return lines or [text]
+
+    def _should_show_body_text(self, img: Image.Image,
+                                zone_y_start: int, zone_y_end: int) -> bool:
+        """Return False if the body zone is too visually busy for small text."""
+        if not _NUMPY_OK:
+            return True
+        try:
+            region = img.crop((0, zone_y_start, img.width,
+                               min(zone_y_end, img.height)))
+            arr      = np.array(region.convert('L'))
+            variance = float(np.var(arr))
+            return variance < 2000
+        except Exception:
+            return True
+
+    def _render_text_element(self, img: Image.Image, text: str,
+                              font: ImageFont.FreeTypeFont,
+                              zone: Optional[Tuple[int, int]],
+                              total_w: int, area_w: int, area_left: int,
+                              pad: int, color: Tuple, alignment: str,
+                              tracking: int = 0, lh_mult: float = 1.35,
+                              shadow_offset: Tuple = (3, 3), shadow_blur: int = 6,
+                              shadow_opacity: int = 180,
+                              outline_width: int = 0) -> Image.Image:
+        """
+        Render one text element onto img with:
+          • Gaussian-blurred drop shadow
+          • Optional outline (stroke) for legibility on busy backgrounds
+          • Letter tracking on headlines
+        Returns the updated RGBA image.
+        """
+        if zone is None:
+            return img
+
+        z_top, z_bot = zone
+        z_h   = z_bot - z_top
+        avail = (area_w if area_w > 0 else total_w) - 2 * pad
+
+        # Auto-shrink font until text fits zone height
+        font  = self._shrink_font_to_fit(font, text, avail, z_h, lh_mult)
+        lines = self._wrap_text_with_font(text, font, avail)
+
+        try:
+            lh = font.getbbox('Ag')[3] - font.getbbox('Ag')[1]
+        except Exception:
+            lh = 14
+        step    = int(lh * lh_mult)
+        total_h = step * len(lines)
+        start_y = z_top + max(0, (z_h - total_h) // 2)
+
+        # Build per-line positions
+        positions: List[Tuple[int, int, str]] = []
+        for i, line in enumerate(lines):
+            y = start_y + i * step
+            if y + lh > z_bot:
+                break
+            lw = self._measure_tracked_text(line, font, tracking)
+            if alignment == 'left':
+                x = area_left + pad
+            elif alignment == 'right':
+                x = area_left + (area_w or total_w) - lw - pad
+            else:
+                aw = area_w if area_w < total_w else total_w
+                x  = area_left + max(pad, (aw - lw) // 2)
+            positions.append((x, y, line))
+
+        if not positions:
+            return img
+
+        img = img.convert('RGBA')
+
+        # ── Gaussian shadow ──────────────────────────────────────────────────
+        if shadow_blur > 0 or shadow_offset != (0, 0):
+            sh_layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
+            sh_draw  = ImageDraw.Draw(sh_layer)
+            ox, oy   = shadow_offset
+            for x, y, line in positions:
+                self._draw_tracked_text(sh_draw, x + ox, y + oy, line, font,
+                                        (0, 0, 0, shadow_opacity), tracking)
+            if shadow_blur > 0:
+                sh_layer = sh_layer.filter(ImageFilter.GaussianBlur(radius=shadow_blur))
+            img = Image.alpha_composite(img, sh_layer)
+
+        # ── Text layer (outline + fill) ───────────────────────────────────────
+        tx_layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
+        tx_draw  = ImageDraw.Draw(tx_layer)
+
+        if outline_width > 0:
+            oc = (0, 0, 0, 200)
+            for dx in range(-outline_width, outline_width + 1):
+                for dy in range(-outline_width, outline_width + 1):
+                    if dx == 0 and dy == 0:
+                        continue
+                    for x, y, line in positions:
+                        # Use plain text for outline (±2px misalignment with tracking
+                        # is imperceptible at this scale)
+                        tx_draw.text((x + dx, y + dy), line, font=font, fill=oc)
+
+        for x, y, line in positions:
+            self._draw_tracked_text(tx_draw, x, y, line, font, color, tracking)
+
+        return Image.alpha_composite(img, tx_layer)
+
+    def _render_cta(self, img: Image.Image, text: str,
+                    font: ImageFont.FreeTypeFont,
+                    zone: Tuple[int, int],
+                    total_w: int, area_left: int, area_w: int,
+                    cta_style: str, text_color: Tuple,
+                    accent_color: Tuple, alignment: str,
+                    is_dark_image: bool = True) -> Image.Image:
+        """Render CTA button with Gaussian-blurred drop shadow. Returns updated image."""
+        z_top, z_bot = zone
+        z_h   = z_bot - z_top
+        text_up = text.upper()
+
+        # Measure text with a throwaway draw
+        _tmp_img  = Image.new('L', (2, 2))
+        _tmp_draw = ImageDraw.Draw(_tmp_img)
+        bbox      = _tmp_draw.textbbox((0, 0), text_up, font=font)
+        tw, th    = bbox[2] - bbox[0], bbox[3] - bbox[1]
+
+        # Resolve accent color — must contrast with background
+        ar, ag, ab = accent_color[:3]
+        acc_lum = 0.299*ar + 0.587*ag + 0.114*ab
+        if is_dark_image and acc_lum < 55:
+            ar, ag, ab = 230, 210, 170
+        elif not is_dark_image and acc_lum > 210:
+            ar, ag, ab = 30, 30, 70
+
+        inner_lum = 0.299*ar + 0.587*ag + 0.114*ab
+        inner_tc  = (10, 10, 10, 255) if inner_lum > 160 else (255, 255, 255, 255)
+
+        if alignment == 'left':
+            cx = area_left + min(int(total_w * 0.22), (area_w or total_w) // 2)
+        else:
+            cx = total_w // 2
+        cy = z_top + z_h // 2
+
+        img = img.convert('RGBA')
+
+        if cta_style == 'text_underline':
+            text_arrow = text_up + '  \u2192'
+            layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
+            draw  = ImageDraw.Draw(layer)
+            ab2   = draw.textbbox((0, 0), text_arrow, font=font)
+            atw   = ab2[2] - ab2[0]
+            x     = (area_left + int(total_w * 0.05) if alignment == 'left'
+                     else max(int(total_w * 0.05), (total_w - atw) // 2))
+            ty    = cy - th // 2
+            tc    = (ar, ag, ab, 255)
+            draw.text((x + 2, ty + 2), text_arrow, font=font, fill=(0, 0, 0, 120))
+            draw.text((x, ty),          text_arrow, font=font, fill=tc)
+            draw.line([(x, ty+th+5), (x+atw, ty+th+5)], fill=tc, width=3)
+            draw.line([(x, ty+th+8), (x+atw, ty+th+8)], fill=(ar, ag, ab, 100), width=1)
+            return Image.alpha_composite(img, layer)
+
+        elif cta_style == 'square_button':
+            layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
+            draw  = ImageDraw.Draw(layer)
+            px = max(20, int(tw * 0.35)); py = max(10, int(th * 0.45))
+            bw, bh = tw+2*px, th+2*py
+            x0, y0 = cx-bw//2, cy-bh//2; x1, y1 = cx+bw//2, cy+bh//2
+            draw.rectangle([x0, y0, x1, y1], fill=(ar, ag, ab, 40),
+                           outline=(ar, ag, ab, 240), width=3)
+            draw.text((x0+2, y0+2), text_up, font=font, fill=(0, 0, 0, 100))
+            draw.text((cx-tw//2, cy-th//2), text_up, font=font, fill=(ar, ag, ab, 255))
+            return Image.alpha_composite(img, layer)
+
+        elif cta_style == 'block_inverted':
+            layer  = Image.new('RGBA', img.size, (0, 0, 0, 0))
+            draw   = ImageDraw.Draw(layer)
+            margin = max(20, int(total_w * 0.15))
+            bt = z_top + int(z_h * 0.10); bb = z_bot - int(z_h * 0.10)
+            draw.rectangle([margin, bt, total_w-margin, bb], fill=(ar, ag, ab, 225))
+            bh_block = bb - bt
+            draw.text(((total_w-tw)//2, bt+(bh_block-th)//2),
+                      text_up, font=font, fill=inner_tc)
+            return Image.alpha_composite(img, layer)
+
+        else:  # pill_button — true pill + Gaussian shadow
+            tracking_cta = 2
+            tw_t = self._measure_tracked_text(text_up, font, tracking_cta)
+            px   = max(30, int(tw_t * 0.50)); py = max(14, int(th * 0.60))
+            bw, bh_btn = tw_t + 2*px, th + 2*py
+            x0, y0 = cx - bw//2, cy - bh_btn//2
+            x1, y1 = cx + bw//2, cy + bh_btn//2
+            r = bh_btn // 2
+
+            # Gaussian shadow for button
+            sh_layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
+            sh_draw  = ImageDraw.Draw(sh_layer)
+            try:
+                sh_draw.rounded_rectangle([x0+3, y0+5, x1+3, y1+5],
+                                          radius=r, fill=(0, 0, 0, 120))
+            except (AttributeError, TypeError):
+                sh_draw.rectangle([x0+3, y0+5, x1+3, y1+5], fill=(0, 0, 0, 120))
+            sh_layer = sh_layer.filter(ImageFilter.GaussianBlur(radius=8))
+            img = Image.alpha_composite(img, sh_layer)
+
+            # Button fill
+            layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
+            draw  = ImageDraw.Draw(layer)
+            try:
+                draw.rounded_rectangle([x0, y0, x1, y1], radius=r,
+                                       fill=(ar, ag, ab, 240),
+                                       outline=(255, 255, 255, 150), width=2)
+            except (AttributeError, TypeError):
+                draw.rectangle([x0, y0, x1, y1], fill=(ar, ag, ab, 240),
+                               outline=(255, 255, 255, 150), width=2)
+
+            tx_off = cx - tw_t // 2
+            self._draw_tracked_text(draw, tx_off, cy - th//2,
+                                    text_up, font, inner_tc, tracking_cta)
+            return Image.alpha_composite(img, layer)
 
     # ── Color extraction & selection ──────────────────────────────────────────
 
@@ -553,6 +790,8 @@ class TypographySystem:
                 alpha = max(0, min(255, alpha))
                 d.line([(x0_scrim, y), (x1_scrim - 1, y)], fill=(0, 0, 0, alpha))
 
+        # Blur scrim edges for natural blending
+        ov = ov.filter(ImageFilter.GaussianBlur(radius=12))
         return Image.alpha_composite(base, ov)
 
     def _apply_overlay(self, base: Image.Image, overlay_type: str,
@@ -683,29 +922,28 @@ class TypographySystem:
                              text: str, avail_w: int, zone_h: int,
                              lh_mult: float, min_size: int = 14
                              ) -> ImageFont.FreeTypeFont:
-        """Reduce font size until wrapped text fits inside zone_h. Returns fitted font."""
+        """Reduce font size until wrapped text fits inside zone_h."""
         try:
             path = font.path
             size = int(font.size)
         except AttributeError:
             return font  # bitmap / default font — cannot resize
 
-        tmp_img  = Image.new('L', (10, 10))
-        tmp_draw = ImageDraw.Draw(tmp_img)
-
         while size >= min_size:
             try:
                 f = ImageFont.truetype(path, size)
             except (IOError, OSError):
                 break
-            lines  = self._wrap_text(tmp_draw, text, f, avail_w)
-            bbox   = tmp_draw.textbbox((0, 0), 'Ag', font=f)
-            lh     = bbox[3] - bbox[1]
+            lines  = self._wrap_text_with_font(text, f, avail_w)
+            try:
+                lh = f.getbbox('Ag')[3] - f.getbbox('Ag')[1]
+            except Exception:
+                lh = size
             needed = len(lines) * int(lh * lh_mult)
             if needed <= zone_h:
                 return f
-            size -= 3   # step down in 3px increments for speed
-        return font   # last resort: return original
+            size -= 3
+        return font
 
     def _draw_element_in_zone(self, draw: ImageDraw.Draw, text: str,
                                font: ImageFont.FreeTypeFont,
