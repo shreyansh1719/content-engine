@@ -563,9 +563,18 @@ Respond with a JSON object with EXACTLY these keys:
             "caption":              "",
             "tone":                 brand_analysis.get('tone', 'professional'),
             "visual_style":         brand_analysis.get('visual_direction', 'modern minimal'),
+            "visual_direction":     brand_analysis.get('visual_direction', 'clean studio photography'),
             "conceptual_technique": brand_analysis.get('ad_style', 'product showcase'),
+            "ad_style":             brand_analysis.get('ad_style', 'product showcase'),
             "call_to_action":       "SHOP NOW",
             "emotion":              "confidence",
+            "typography_style":     brand_analysis.get('typography_style', 'modern sans-serif'),
+            "color_scheme":         brand_analysis.get('color_scheme', 'neutral with brand accent'),
+            "target_market":        brand_analysis.get('target_market', ''),
+            "key_benefits":         brand_analysis.get('key_benefits', []),
+            "product_highlight":    brand_analysis.get('product_highlight', ''),
+            "core_principles":      "",
+            "platform_context":     "digital advertising",
         }
 
     def extract_brand_product(self, prompt: str) -> Dict[str, Any]:
@@ -779,99 +788,159 @@ Respond with a JSON object with EXACTLY these keys:
                                   brand_analysis: Dict[str, Any],
                                   tone: str = None,
                                   visual_style: str = None) -> Dict[str, Any]:
-        """GPT-4o creates ad copy + production-ready HTML/CSS overlay."""
+        """GPT-4o creates ad copy + production-ready HTML/CSS overlay.
+        ALL creative brief fields from the fine-tuned model are passed verbatim.
+        """
         product = brand_info.get('product', '')
         brand = brand_info.get('brand', '')
 
-        brief_tone = tone or creative_brief.get('tone', brand_analysis.get('tone', 'Premium'))
-        brief_visual = visual_style or creative_brief.get('visual_style', brand_analysis.get('visual_direction', 'Modern'))
-        technique = creative_brief.get('conceptual_technique', brand_analysis.get('ad_style', ''))
-        emotion = creative_brief.get('emotion', 'aspiration')
-        typography_style = brand_analysis.get('typography_style', '')
-        color_scheme = brand_analysis.get('color_scheme', '')
+        # Pull directly from creative_brief (fine-tuned model's own words), with
+        # brand_analysis as fallback only for fields the fine-tuned model didn't return.
+        cb_tone          = tone         or creative_brief.get('tone')             or brand_analysis.get('tone', '')
+        cb_visual_style  = visual_style or creative_brief.get('visual_style')    or brand_analysis.get('visual_direction', '')
+        cb_technique     = creative_brief.get('conceptual_technique')             or brand_analysis.get('ad_style', '')
+        cb_emotion       = creative_brief.get('emotion', '')
+        cb_typography    = creative_brief.get('typography_style')                 or brand_analysis.get('typography_style', '')
+        cb_color         = creative_brief.get('color_scheme')                     or brand_analysis.get('color_scheme', '')
+        cb_visual_dir    = creative_brief.get('visual_direction')                 or brand_analysis.get('visual_direction', '')
+        cb_headline      = creative_brief.get('headline', '')
+        cb_caption       = creative_brief.get('caption', '')
+        cb_cta           = creative_brief.get('call_to_action', '')
+        cb_target_market = creative_brief.get('target_market') or brand_analysis.get('target_market', '')
+        cb_key_benefits  = creative_brief.get('key_benefits')  or brand_analysis.get('key_benefits', [])
+        cb_product_hl    = creative_brief.get('product_highlight') or brand_analysis.get('product_highlight', '')
+        cb_ad_style      = creative_brief.get('ad_style')       or brand_analysis.get('ad_style', '')
+        cb_core          = creative_brief.get('core_principles', '')
+        cb_platform      = creative_brief.get('platform_context', '')
+
+        # Serialise list/dict fields safely
+        target_str   = json.dumps(cb_target_market) if isinstance(cb_target_market, dict) else str(cb_target_market)
+        benefits_str = json.dumps(cb_key_benefits)  if isinstance(cb_key_benefits, list)  else str(cb_key_benefits)
 
         avoid = ""
         if self._used_styles:
-            avoid = f"\nDo NOT reuse these approaches (already used this session): {', '.join(self._used_styles[-3:])}"
+            recent = self._used_styles[-4:]
+            avoid = f"\nYou have recently used these approaches: {', '.join(recent)}. Choose something DIFFERENT this time."
 
-        prompt_text = f"""You are a world-class advertising art director who creates production-ready ad typography.
+        prompt_text = f"""You are a world-class advertising art director who creates production-ready HTML/CSS.
 
-CREATIVE BRIEF:
+CREATIVE BRIEF FROM OUR TRAINED AD AI:
 - Brand: {brand}
 - Product: {product}
-- Tone: {brief_tone}
-- Visual style: {brief_visual}
-- Technique: {technique}
-- Emotion to evoke: {emotion}
-- Typography direction: {typography_style}
-- Color direction: {color_scheme}
+- Headline direction: {cb_headline}
+- Caption direction: {cb_caption}
+- Tone: {cb_tone}
+- Visual style: {cb_visual_style}
+- Visual direction: {cb_visual_dir}
+- Conceptual technique: {cb_technique}
+- Ad style: {cb_ad_style}
+- Emotion to evoke: {cb_emotion}
+- CTA direction: {cb_cta}
+- Typography style recommendation: {cb_typography}
+- Color scheme recommendation: {cb_color}
+- Target market: {target_str}
+- Key benefits: {benefits_str}
+- Product highlight: {cb_product_hl}
+- Core principles: {cb_core}
+- Platform context: {cb_platform}
 {avoid}
 
-Create compelling ad copy AND a production-quality HTML/CSS overlay.
+Use the typography_style recommendation to choose your Google Font.
+Use the color_scheme recommendation to choose text and accent colors.
+Use the tone to decide layout personality (luxury = editorial, streetwear = bold graphic, tech = clean minimal).
+Use the emotion to guide the overall mood of the typography treatment.
 
-The overlay will be rendered at exactly 1024×1024 pixels and composited onto a product photograph. The HTML background MUST be fully transparent — only text and decorative elements should be visible.
+Create compelling ad copy AND a complete HTML/CSS overlay for a 1024×1024 pixel ad image.
+
+The overlay will be composited onto a DALL-E 3 product photograph. The HTML background MUST be fully transparent.
 
 Respond ONLY with JSON:
 {{
-  "headline": "powerful 3-8 word headline in title case or ALL CAPS depending on brand voice",
+  "headline": "powerful headline (use brief's headline direction as inspiration, refine it)",
   "subheadline": "engaging 8-15 word subheadline",
-  "body_text": "1-2 sentence body (can be empty string if cleaner without it)",
+  "body_text": "1-2 sentence body (or empty string if design is cleaner without it)",
   "call_to_action": "2-4 word CTA",
-  "design_approach": "brief 5-word description of the layout approach you chose",
-  "overlay_html": "COMPLETE HTML DOCUMENT AS A STRING (see rules below)"
+  "design_approach": "5-word description of your layout approach",
+  "overlay_html": "COMPLETE HTML DOCUMENT — see requirements below"
 }}
 
-RULES FOR overlay_html — YOU MUST FOLLOW ALL OF THESE:
+OVERLAY HTML REQUIREMENTS — FOLLOW ALL:
 
-1. STRUCTURE: Must be a complete document: <!DOCTYPE html><html><head><style>CSS HERE</style></head><body>CONTENT</body></html>
+DOCUMENT STRUCTURE:
+<!DOCTYPE html><html><head>FONTS+STYLE</head><body>CONTENT</body></html>
 
-2. TRANSPARENT BACKGROUND:
-   html, body {{ margin: 0; padding: 0; width: 1024px; height: 1024px; overflow: hidden; background: transparent; }}
+TRANSPARENT BACKGROUND — CRITICAL:
+html, body {{ margin: 0; padding: 0; width: 1024px; height: 1024px; overflow: hidden; background: transparent; }}
 
-3. FONTS: Import 1-2 Google Fonts that match the brand personality using a <style> @import inside <head>:
-   Font choices by tone:
-   - Luxury/Premium: Playfair Display, Cormorant Garamond, Cinzel
-   - Bold/Urban/Street: Oswald, Anton, Bebas Neue
-   - Clean/Tech/Minimal: Inter, Outfit, Space Grotesk, DM Sans
-   - Playful/Friendly: Poppins, Quicksand, Nunito
-   - Editorial/Fashion: Libre Baskerville, EB Garamond, Lora
+GOOGLE FONTS:
+- Import via @import url('https://fonts.googleapis.com/css2?family=NAME:wght@300;400;700;900&display=swap');
+- Use the typography_style from the brief to choose fonts — import at least 2 weights
+- Font suggestions by personality:
+  Luxury: Playfair Display, Cormorant Garamond, Cinzel, DM Serif Display
+  Bold/Urban: Oswald, Anton, Bebas Neue, Archivo Black
+  Clean/Tech: Inter, Space Grotesk, DM Sans, Outfit
+  Playful: Poppins, Quicksand, Nunito, Comfortaa
+  Editorial/Fashion: Libre Baskerville, EB Garamond, Lora, Source Serif 4
 
-4. TEXT SHADOWS: Every text element must have text-shadow for readability over photographs:
-   text-shadow: 0 2px 8px rgba(0,0,0,0.7), 0 0 30px rgba(0,0,0,0.4);
+READABILITY — every text element needs:
+  text-shadow: 0 2px 8px rgba(0,0,0,0.7), 0 0 20px rgba(0,0,0,0.3);
 
-5. LAYOUT: Use CSS flexbox or absolute positioning. Keep product zone (roughly center 30-70% height) clear of text. Group text in deliberate zones.
+SPACING — CRITICAL (prevent overlapping text):
+- Headline line-height: 1.05 to 1.15
+- Subheadline line-height: 1.3
+- Minimum 24px gap between headline and subheadline
+- Minimum 32px gap between last text element and CTA
+- CTA must be at least 40px from bottom edge
+- PREFER flexbox with gap: display: flex; flex-direction: column; gap: 20px;
+- AVOID absolute positioning for stacked text — use flexbox instead; absolute causes overlaps
+- If headline might wrap to 2+ lines, give subheadline enough room below it
 
-6. VARIETY: Mix these approaches — each brand gets a unique treatment:
-   - Left-aligned editorial (text on left, product on right)
-   - Bottom-heavy (all text in lower 35%)
-   - Top headline with bottom CTA (classic)
-   - Centered dramatic (large centered headline)
-   - Magazine-style (horizontal band)
-   - Bold statement (oversized headline, minimal other text)
+SIZE HIERARCHY:
+- Headline 1-3 words → 72-90px
+- Headline 4-6 words → 52-68px
+- Headline 7+ words → 40-52px
+- Subheadline: 18-26px
+- Body: 14-18px (or omit for cleaner design)
+- CTA: 16-22px bold
 
-7. SCRIM/OVERLAY: Add a subtle gradient or semi-transparent area ONLY behind text zones:
-   - Linear gradient: background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 30%);
-   - Backdrop blur: backdrop-filter: blur(8px); background: rgba(0,0,0,0.3);
-   - Or just strong text-shadow with no overlay for clean images
+HEADLINE TREATMENT:
+- Uppercase + letter-spacing 0.05–0.15em for bold/luxury/statement ads
+- Title case for editorial/friendly/playful ads
+- Choose based on tone from the creative brief
 
-8. CTA BUTTON STYLES — match brand personality:
-   - Pill: border-radius: 50px; padding: 14px 40px; background: accent-color;
-   - Square/ghost: border: 2px solid white; padding: 12px 36px; background: transparent;
-   - Underline CTA: text-decoration: underline; text-underline-offset: 6px; (with → arrow)
-   - Block bar: width: 70%; padding: 16px; background: accent-color; text-align: center;
+LAYOUT — choose one that MATCHES the brand personality:
+- Left-aligned editorial: text block on left 40%, product visible on right
+- Bottom-heavy: all text in lower 30-35% — great for hero product shots
+- Top headline + bottom CTA: classic split layout
+- Centered dramatic: large headline center with product on full frame
+- Bold statement: oversized headline filling most of frame
+- Magazine horizontal: text strip across image middle
+Do NOT default to centered for everything. Match layout to brand.
 
-9. COLORS: Do NOT default to white text every time. Choose colors matching brand personality (luxury = gold/cream, tech = blue/white, food = warm/green). Use accent color for CTA.
+SCRIM — choose one:
+- Top gradient: background: linear-gradient(to bottom, rgba(0,0,0,0.65) 0%, transparent 38%);
+- Bottom vignette: background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 42%);
+- Side gradient: background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, transparent 52%);
+- Frosted bar: backdrop-filter: blur(8px); background: rgba(0,0,0,0.25); border-radius: 8px;
+- Text shadow only (no overlay div) — for clean bright images
+Match scrim to layout approach.
 
-10. SIZE HIERARCHY:
-    - Headline: 52-80px (shorter headline = bigger font; if >5 words use ≤60px to avoid wrapping)
-    - Subheadline: 20-28px
-    - Body: 16-18px (omit if cleaner)
-    - CTA: 18-24px bold
-    - Add letter-spacing: 0.05em to 0.15em for uppercase headlines
+CTA STYLES — match brand personality:
+- Pill: border-radius: 50px; padding: 14px 40px; background: accent-color;
+- Square: border: 2px solid color; padding: 12px 36px; background: transparent;
+- Underline: border-bottom: 2px solid; padding-bottom: 4px; letter-spacing: 0.1em; (add → after text)
+- Block: width: 55%; margin: 0 auto; padding: 16px; text-align: center; background: accent-color;
+- Ghost: border: 1px solid rgba(255,255,255,0.5); backdrop-filter: blur(4px); padding: 12px 32px;
 
-11. DO NOT include any <img> tags, JavaScript, or external resources besides Google Fonts.
+COLORS — use color_scheme from the brief:
+- Luxury: gold (#C9A84C), cream (#F5F0E6), deep black backgrounds
+- Streetwear/Nike: white or red (#FF0000) on black or bold contrast
+- Tech: white, electric blue (#0066FF), silver accent
+- Food/natural: warm white, greens, earth tones
+- Beauty: rose gold (#B76E79), soft pink (#F5C6CB), cream
+- DO NOT default to white text every time
 
-12. The HTML must look like a real ad when overlaid on a product photo — professional agency quality."""
+NO: images, JavaScript, external resources besides Google Fonts, placeholder content."""
 
         response = self.openai_client.chat.completions.create(
             model="gpt-4o",
@@ -882,6 +951,7 @@ RULES FOR overlay_html — YOU MUST FOLLOW ALL OF THESE:
                         "You are a senior advertising art director who writes flawless, production-ready HTML/CSS. "
                         "Your typography overlays look like they came from a top creative agency. "
                         "You never repeat the same layout — every brand gets a unique visual treatment. "
+                        "Every spacing rule must be followed precisely to prevent text from overlapping. "
                         "Respond ONLY with valid JSON."
                     )
                 },
@@ -909,55 +979,63 @@ RULES FOR overlay_html — YOU MUST FOLLOW ALL OF THESE:
         if approach:
             self._used_styles.append(approach)
 
-        # Carry creative brief metadata forward
-        ad_data["tone"] = brief_tone
-        ad_data["visual_style"] = brief_visual
-        ad_data["conceptual_technique"] = technique
-        ad_data["emotion"] = emotion
+        # Carry ALL creative brief fields forward into result
+        ad_data["tone"]                 = cb_tone
+        ad_data["visual_style"]         = cb_visual_style
+        ad_data["conceptual_technique"] = cb_technique
+        ad_data["emotion"]              = cb_emotion
+        ad_data["typography_style"]     = cb_typography
+        ad_data["color_scheme"]         = cb_color
+        ad_data["visual_direction"]     = cb_visual_dir
 
         return ad_data
 
     def _generate_dalle_image(self, ad_data: Dict[str, Any],
                                creative_brief: Dict[str, Any],
                                brand_info: Dict[str, Any]) -> Image.Image:
-        """Generate a text-free DALL-E 3 product image guided by creative brief."""
+        """Generate a text-free DALL-E 3 product image.
+        The fine-tuned model's own words drive every visual direction field — no hardcoded mappings.
+        """
         import requests as _req
         from io import BytesIO
         from PIL import Image as PILImage
 
         product = brand_info.get('product', '')
-        brand = brand_info.get('brand', '')
-        visual_style = creative_brief.get('visual_style', 'professional photography')
-        technique = creative_brief.get('conceptual_technique', '')
-        color_scheme = ad_data.get('color_scheme', creative_brief.get('color_scheme', ''))
+        brand   = brand_info.get('brand', '')
+
+        # Use creative_brief fields verbatim — these are the fine-tuned model's own words
+        visual_style    = creative_brief.get('visual_style', '')
+        color_scheme    = creative_brief.get('color_scheme', '') or ad_data.get('color_scheme', '')
+        visual_dir      = creative_brief.get('visual_direction', '')
+        technique       = creative_brief.get('conceptual_technique', '')
+        emotion         = creative_brief.get('emotion', '')
+        ad_style        = creative_brief.get('ad_style', '')
 
         dalle_prompt = f"""Create a premium advertisement photograph for {brand} {product}.
 
-VISUAL DIRECTION:
-{visual_style}
+VISUAL STYLE: {visual_style}
+COLOR DIRECTION: {color_scheme}
+VISUAL DIRECTION: {visual_dir}
+CONCEPTUAL APPROACH: {technique}
+MOOD/EMOTION: {emotion}
+AD STYLE: {ad_style}
 
-COLOR DIRECTION:
-{color_scheme}
-
-CONCEPTUAL APPROACH:
-{technique}
-
-TECHNICAL REQUIREMENTS:
+TECHNICAL:
 - Professional studio-quality lighting
 - Shot on medium format camera with shallow depth of field
-- Product is the clear hero — prominently featured and recognizable
-- Clean composition with intentional negative space for text overlay
-- Leave the top 20% and bottom 25% slightly less busy (text will be added there)
-- Color grading should match the brand personality
-- Premium post-production quality
+- Product is the hero — prominently featured, recognizable
+- Leave top 20% and bottom 25% slightly clean for text overlay
+- Composition should have intentional negative space
 
-CRITICAL — DO NOT INCLUDE ANY TEXT:
-- No text, words, letters, numbers, or typography of any kind
-- No brand names, logos, or watermarks
-- No signs, labels, or printed text visible in the scene
-- The image must be completely free of any written content
+ABSOLUTE RULE: The image must contain ZERO text — no words, letters, numbers,
+brand names, logos, signs, labels, price tags, watermarks, or any form of writing anywhere.
+No readable text on the product itself — keep labels abstract or blurred.
+All text and branding will be added as a separate overlay."""
 
-Style: {visual_style}. Make it look like a real campaign photo from {brand}'s actual advertising."""
+        self.logger.info(
+            f"DALL-E prompt fields — visual_style: {visual_style[:60]!r}, "
+            f"color: {color_scheme[:40]!r}, emotion: {emotion!r}"
+        )
 
         response = self.openai_client.images.generate(
             model="dall-e-3",
@@ -968,7 +1046,7 @@ Style: {visual_style}. Make it look like a real campaign photo from {brand}'s ac
         )
 
         image_url = response.data[0].url
-        img_data = _req.get(image_url, timeout=30)
+        img_data  = _req.get(image_url, timeout=30)
         img = PILImage.open(BytesIO(img_data.content)).convert("RGB")
         self.logger.info(f"DALL-E 3 image generated: {img.size}")
         return img
@@ -1035,17 +1113,21 @@ Style: {visual_style}. Make it look like a real campaign photo from {brand}'s ac
         )
 
         # --- Merge result ---
+        # ad_data fields win over brand_analysis (fine-tuned model's words take priority)
         result = {
-            **ad_data,
             **brand_analysis,
+            **ad_data,
             'product':              brand_info['product'],
             'brand_name':           brand_info['brand'],
             'final_path':           final_path,
             'image_path':           final_path,
             'tone':                 ad_data.get('tone') or brand_analysis.get('tone', ''),
             'visual_style':         ad_data.get('visual_style') or brand_analysis.get('visual_direction', ''),
+            'visual_direction':     ad_data.get('visual_direction') or creative_brief.get('visual_direction', ''),
             'conceptual_technique': ad_data.get('conceptual_technique', ''),
             'emotion':              ad_data.get('emotion', ''),
+            'typography_style':     ad_data.get('typography_style') or brand_analysis.get('typography_style', ''),
+            'color_scheme':         ad_data.get('color_scheme') or brand_analysis.get('color_scheme', ''),
             'generation_time':      datetime.now().isoformat(),
         }
 
