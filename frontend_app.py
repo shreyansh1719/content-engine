@@ -1,16 +1,13 @@
 """
-AdCraft Pro — Streamlit Frontend
-Professional UI for AI-powered ad generation.
+AdCraft Pro — Premium Streamlit Frontend
+Dark luxury aesthetic inspired by Apple.com, Linear, Vercel.
 
 Run with:
     streamlit run frontend_app.py
 """
-import json
-import time
-from datetime import datetime
-from io import BytesIO
-
 import requests
+from datetime import datetime
+
 import streamlit as st
 
 # ---------------------------------------------------------------------------
@@ -18,7 +15,6 @@ import streamlit as st
 # ---------------------------------------------------------------------------
 
 BACKEND_URL = "http://localhost:8000"
-APP_VERSION = "1.0.0"
 
 # ---------------------------------------------------------------------------
 # Page config — must be the first Streamlit call
@@ -26,788 +22,834 @@ APP_VERSION = "1.0.0"
 
 st.set_page_config(
     page_title="AdCraft Pro",
-    page_icon="✦",
+    page_icon="◆",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 # ---------------------------------------------------------------------------
-# CSS — premium dark-compatible styling
+# CSS — complete override of Streamlit defaults
 # ---------------------------------------------------------------------------
 
 st.markdown("""
 <style>
 /* ── Google Fonts ── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,300;1,9..40,400&family=DM+Serif+Display&display=swap');
 
-/* ── Root tokens ── */
-:root {
-    --accent: #7C6AF7;
-    --accent-light: #9D8FF9;
-    --accent-dim: rgba(124, 106, 247, 0.15);
-    --success: #22c55e;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --surface: rgba(255,255,255,0.04);
-    --border: rgba(255,255,255,0.08);
-    --text-muted: rgba(255,255,255,0.45);
-    --radius: 12px;
-    --radius-sm: 8px;
+/* ── Global reset ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+.stApp {
+    background-color: #080808;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #E8E8E8;
 }
 
-/* ── Global type ── */
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif !important;
+/* Hide Streamlit chrome */
+#MainMenu, footer, header, [data-testid="stToolbar"],
+[data-testid="stDecoration"], .stDeployButton { display: none !important; }
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #080808; }
+::-webkit-scrollbar-thumb { background: #2A2A2A; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3A3A3A; }
+
+/* ── Sidebar ── */
+[data-testid="stSidebar"] {
+    background-color: #0D0D0D !important;
+    border-right: 1px solid rgba(255,255,255,0.05) !important;
 }
 
-/* ── Hide default Streamlit chrome ── */
-#MainMenu, footer, header { visibility: hidden; }
-.block-container { padding: 2rem 2.5rem 3rem !important; }
-
-/* ── App header ── */
-.app-header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 0 0 2rem 0;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 2rem;
-}
-.app-header-icon {
-    font-size: 2.2rem;
-    line-height: 1;
-}
-.app-header-title {
-    font-family: 'Playfair Display', serif !important;
-    font-size: 2rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, #fff 0%, var(--accent-light) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin: 0;
-    line-height: 1.2;
-}
-.app-header-sub {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin: 0;
-    font-weight: 500;
+[data-testid="stSidebar"] > div:first-child {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
 }
 
-/* ── Sidebar branding ── */
-.sidebar-brand {
-    text-align: center;
-    padding: 1.2rem 0.5rem 1.5rem;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 1.2rem;
-}
-.sidebar-brand-name {
-    font-family: 'Playfair Display', serif !important;
-    font-size: 1.35rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, #fff 0%, var(--accent-light) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-.sidebar-brand-tagline {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    font-weight: 500;
-}
-.sidebar-version {
-    font-size: 0.65rem;
-    color: var(--text-muted);
-    margin-top: 4px;
+/* Sidebar labels */
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] .stSelectbox label,
+[data-testid="stSidebar"] .stTextInput label,
+[data-testid="stSidebar"] .stTextArea label {
+    color: #555 !important;
+    font-size: 0.7rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.12em !important;
+    font-weight: 500 !important;
+    font-family: 'DM Sans', sans-serif !important;
 }
 
-/* ── Health indicator ── */
-.health-pill {
+/* Sidebar markdown section headers */
+[data-testid="stSidebar"] .stMarkdown h3 {
+    color: #333 !important;
+    font-size: 0.65rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.15em !important;
+    font-weight: 600 !important;
+    margin: 1.5rem 0 0.5rem 0 !important;
+    padding-bottom: 0.5rem !important;
+    border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+    font-family: 'DM Sans', sans-serif !important;
+}
+
+/* Input fields */
+[data-testid="stSidebar"] input,
+[data-testid="stSidebar"] textarea {
+    background-color: #151515 !important;
+    border: 1px solid rgba(255,255,255,0.07) !important;
+    border-radius: 8px !important;
+    color: #D0D0D0 !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.875rem !important;
+    transition: border-color 0.2s ease !important;
+}
+
+[data-testid="stSidebar"] input:focus,
+[data-testid="stSidebar"] textarea:focus {
+    border-color: rgba(255,255,255,0.18) !important;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.04) !important;
+    outline: none !important;
+}
+
+[data-testid="stSidebar"] input::placeholder,
+[data-testid="stSidebar"] textarea::placeholder {
+    color: #3A3A3A !important;
+}
+
+/* Selectbox */
+[data-testid="stSidebar"] [data-baseweb="select"] > div {
+    background-color: #151515 !important;
+    border: 1px solid rgba(255,255,255,0.07) !important;
+    border-radius: 8px !important;
+    color: #D0D0D0 !important;
+}
+
+[data-testid="stSidebar"] [data-baseweb="select"] span {
+    color: #D0D0D0 !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.875rem !important;
+}
+
+/* Dropdown list */
+[data-baseweb="popover"] { background: #1A1A1A !important; }
+[data-baseweb="menu"] { background: #1A1A1A !important; border: 1px solid rgba(255,255,255,0.08) !important; }
+[role="option"] { background: #1A1A1A !important; color: #C0C0C0 !important; }
+[role="option"]:hover { background: #222 !important; }
+
+/* Generate button */
+[data-testid="stSidebar"] .stButton > button {
+    width: 100%;
+    background: #FFFFFF !important;
+    color: #080808 !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 0.8rem 1.5rem !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    letter-spacing: 0.03em !important;
+    font-family: 'DM Sans', sans-serif !important;
+    cursor: pointer !important;
+    transition: all 0.25s ease !important;
+    margin-top: 0.75rem !important;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.1), 0 4px 16px rgba(255,255,255,0.06) !important;
+}
+
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: #E8E8E8 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 24px rgba(255,255,255,0.12) !important;
+}
+
+[data-testid="stSidebar"] .stButton > button:active {
+    transform: translateY(0) !important;
+}
+
+/* ── Main content ── */
+.main .block-container {
+    padding: 2.5rem 3rem 3rem 3rem;
+    max-width: 1100px;
+}
+
+/* ── Typography ── */
+.hero-title {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 2.6rem;
+    font-weight: 400;
+    color: #F0F0F0;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin: 0 0 0.4rem 0;
+}
+
+.hero-subtitle {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: #444;
+    font-weight: 300;
+    letter-spacing: 0.01em;
+    line-height: 1.5;
+}
+
+/* ── Status badge ── */
+.status-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     padding: 5px 12px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-}
-.health-ok   { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
-.health-warn { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
-.health-err  { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
-.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-.dot-ok   { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
-.dot-warn { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
-.dot-err  { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
-
-/* ── Section labels ── */
-.section-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
+    border-radius: 20px;
+    font-size: 0.68rem;
     text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 0.8rem;
-    margin-top: 1.4rem;
-}
-
-/* ── Form card ── */
-.form-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.8rem;
-    margin-bottom: 1.5rem;
-}
-.form-card-title {
-    font-size: 0.9rem;
+    letter-spacing: 0.1em;
     font-weight: 600;
-    color: rgba(255,255,255,0.85);
-    margin-bottom: 1.2rem;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.status-online {
+    background: rgba(52, 199, 89, 0.08);
+    color: #30D158;
+    border: 1px solid rgba(52, 199, 89, 0.18);
+}
+
+.status-devmode {
+    background: rgba(255, 159, 10, 0.08);
+    color: #FF9F0A;
+    border: 1px solid rgba(255, 159, 10, 0.18);
+}
+
+.status-offline {
+    background: rgba(255, 69, 58, 0.08);
+    color: #FF453A;
+    border: 1px solid rgba(255, 69, 58, 0.18);
+}
+
+/* ── Divider ── */
+.subtle-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.04);
+    margin: 2.5rem 0;
+    border: none;
+}
+
+/* ── Empty state ── */
+.empty-state {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 4rem 2rem;
 }
 
-/* ── Generate button ── */
-div[data-testid="stButton"] > button[kind="primary"] {
-    background: linear-gradient(135deg, var(--accent) 0%, #5b4de0 100%) !important;
-    border: none !important;
-    border-radius: var(--radius) !important;
-    padding: 0.75rem 2.5rem !important;
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.03em !important;
-    color: white !important;
-    transition: opacity 0.2s, transform 0.15s !important;
-    box-shadow: 0 4px 20px rgba(124, 106, 247, 0.4) !important;
-    width: 100% !important;
-}
-div[data-testid="stButton"] > button[kind="primary"]:hover {
-    opacity: 0.9 !important;
-    transform: translateY(-1px) !important;
+.empty-state-diamond {
+    font-size: 2.5rem;
+    color: #1E1E1E;
+    margin-bottom: 1.5rem;
+    line-height: 1;
 }
 
-/* ── Ad copy result card ── */
-.copy-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+.empty-state-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    color: #2A2A2A;
+    margin-bottom: 0.6rem;
+}
+
+.empty-state-text {
+    font-size: 0.85rem;
+    color: #383838;
+    max-width: 360px;
+    line-height: 1.65;
+}
+
+.empty-state-steps {
+    display: flex;
+    gap: 2rem;
+    margin-top: 2.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.empty-state-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100px;
+}
+
+.step-num {
+    width: 28px; height: 28px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem;
+    color: #3A3A3A;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.step-text {
+    font-size: 0.7rem;
+    color: #2E2E2E;
+    text-align: center;
+    line-height: 1.4;
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Ad result layout ── */
+.ad-image-wrapper {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+    background: #0D0D0D;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.ad-copy-card {
+    background: #0D0D0D;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
     padding: 2rem;
     height: 100%;
 }
-.copy-headline {
-    font-family: 'Playfair Display', serif !important;
-    font-size: 1.9rem;
-    font-weight: 700;
+
+.ad-headline-display {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 1.55rem;
+    color: #F0F0F0;
     line-height: 1.2;
-    color: #ffffff;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.01em;
 }
-.copy-subheadline {
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: var(--accent-light);
-    margin-bottom: 1.2rem;
-    line-height: 1.5;
-}
-.copy-body {
+
+.ad-subheadline-display {
+    font-family: 'DM Sans', sans-serif;
     font-size: 0.9rem;
-    color: rgba(255,255,255,0.7);
-    line-height: 1.7;
-    margin-bottom: 1.8rem;
-}
-.copy-divider {
-    height: 1px;
-    background: var(--border);
-    margin: 1.4rem 0;
-}
-.cta-button {
-    display: inline-block;
-    background: linear-gradient(135deg, var(--accent), #5b4de0);
-    color: white !important;
-    padding: 12px 28px;
-    border-radius: var(--radius-sm);
-    font-weight: 700;
-    font-size: 0.85rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    text-decoration: none;
-    box-shadow: 0 4px 16px rgba(124,106,247,0.4);
-}
-.copy-meta {
-    margin-top: 1.4rem;
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-.meta-tag {
-    background: var(--accent-dim);
-    color: var(--accent-light);
-    border: 1px solid rgba(124,106,247,0.25);
-    border-radius: 999px;
-    padding: 3px 10px;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-}
-
-/* ── Image result card ── */
-.image-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.2rem;
-    height: 100%;
-}
-.image-card-title {
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
+    color: #777;
+    font-style: italic;
     margin-bottom: 1rem;
+    line-height: 1.5;
+    font-weight: 300;
 }
 
-/* ── History item ── */
-.history-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 10px 12px;
-    margin-bottom: 8px;
-    cursor: pointer;
-    transition: border-color 0.2s;
-}
-.history-item:hover { border-color: var(--accent); }
-.history-headline {
+.ad-body-display {
+    font-family: 'DM Sans', sans-serif;
     font-size: 0.82rem;
-    font-weight: 600;
-    color: rgba(255,255,255,0.85);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.history-meta {
-    font-size: 0.68rem;
-    color: var(--text-muted);
-    margin-top: 2px;
-}
-
-/* ── Success banner ── */
-.success-banner {
-    background: rgba(34,197,94,0.12);
-    border: 1px solid rgba(34,197,94,0.3);
-    border-radius: var(--radius-sm);
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.85rem;
-    color: #22c55e;
-    font-weight: 500;
+    color: #555;
+    line-height: 1.7;
     margin-bottom: 1.5rem;
 }
 
-/* ── Error / warning banners ── */
-.warn-banner {
-    background: rgba(245,158,11,0.1);
-    border: 1px solid rgba(245,158,11,0.3);
-    border-radius: var(--radius-sm);
-    padding: 14px 18px;
-    font-size: 0.85rem;
-    color: #fbbf24;
-    margin-bottom: 1rem;
-}
-.err-banner {
-    background: rgba(239,68,68,0.1);
-    border: 1px solid rgba(239,68,68,0.3);
-    border-radius: var(--radius-sm);
-    padding: 14px 18px;
-    font-size: 0.85rem;
-    color: #f87171;
-    margin-bottom: 1rem;
+.ad-cta-pill {
+    display: inline-block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #E0E0E0;
+    padding: 7px 18px;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 6px;
 }
 
-/* ── Info box ── */
-.info-box {
-    background: rgba(124,106,247,0.08);
-    border: 1px solid rgba(124,106,247,0.25);
-    border-radius: var(--radius-sm);
-    padding: 14px 18px;
-    font-size: 0.83rem;
-    color: rgba(255,255,255,0.7);
-    line-height: 1.6;
-}
-.info-box code {
-    background: rgba(255,255,255,0.08);
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-size: 0.82rem;
-    color: var(--accent-light);
+/* ── Metadata pills ── */
+.metadata-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(255,255,255,0.04);
 }
 
-/* ── Streamlit widget overrides ── */
-.stTextInput > label, .stTextArea > label,
-.stSelectbox > label { font-size: 0.8rem !important; font-weight: 500 !important; color: rgba(255,255,255,0.65) !important; }
-
-div[data-testid="stExpander"] {
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius-sm) !important;
-    background: var(--surface) !important;
+.meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 5px;
+    font-size: 0.68rem;
+    font-family: 'DM Sans', sans-serif;
 }
+
+.meta-pill-key {
+    color: #3A3A3A;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+}
+
+.meta-pill-val {
+    color: #777;
+}
+
+/* ── Download button ── */
+.main .stDownloadButton > button {
+    background: transparent !important;
+    color: #666 !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 8px !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.04em !important;
+    padding: 0.55rem 1.25rem !important;
+    transition: all 0.2s ease !important;
+}
+
+.main .stDownloadButton > button:hover {
+    border-color: rgba(255,255,255,0.18) !important;
+    color: #999 !important;
+    background: rgba(255,255,255,0.03) !important;
+}
+
+/* ── Expander (feedback) ── */
+.streamlit-expanderHeader {
+    background: transparent !important;
+    color: #3A3A3A !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    border-radius: 8px !important;
+}
+
+.streamlit-expanderContent {
+    background: #0D0D0D !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    border-top: none !important;
+    border-radius: 0 0 8px 8px !important;
+    padding: 1rem !important;
+}
+
+/* Expander inner inputs */
+.streamlit-expanderContent input,
+.streamlit-expanderContent textarea {
+    background: #151515 !important;
+    border: 1px solid rgba(255,255,255,0.07) !important;
+    border-radius: 7px !important;
+    color: #C0C0C0 !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.85rem !important;
+}
+
+.streamlit-expanderContent .stButton > button {
+    background: transparent !important;
+    color: #555 !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 7px !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.05em !important;
+    transition: all 0.2s ease !important;
+}
+
+.streamlit-expanderContent .stButton > button:hover {
+    border-color: rgba(255,255,255,0.15) !important;
+    color: #888 !important;
+}
+
+/* Slider */
+.stSlider { filter: brightness(0.7) saturate(0.3); }
+
+/* ── History section ── */
+.history-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #2E2E2E;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.history-thumb-wrapper {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: border-color 0.25s ease;
+}
+
+.history-thumb-wrapper:hover { border-color: rgba(255,255,255,0.12); }
+
+.history-caption {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.68rem;
+    color: #333;
+    margin-top: 0.3rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Error / warning override ── */
+.stAlert {
+    background: rgba(255,69,58,0.06) !important;
+    border: 1px solid rgba(255,69,58,0.15) !important;
+    border-radius: 8px !important;
+    color: #FF6B6B !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.83rem !important;
+}
+
+.stSuccess {
+    background: rgba(52,199,89,0.06) !important;
+    border: 1px solid rgba(52,199,89,0.15) !important;
+    border-radius: 8px !important;
+    color: #4ADE80 !important;
+}
+
+/* Spinner */
+.stSpinner > div { border-top-color: #333 !important; }
+
+/* Columns gap */
+[data-testid="column"] { padding: 0 0.5rem; }
+[data-testid="column"]:first-child { padding-left: 0; }
+[data-testid="column"]:last-child { padding-right: 0; }
 </style>
 """, unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------------------
-# Session state initialisation
+# Session state
 # ---------------------------------------------------------------------------
 
+if "current_ad" not in st.session_state:
+    st.session_state.current_ad = None
 if "history" not in st.session_state:
-    st.session_state.history = []           # list of result dicts
-if "last_result" not in st.session_state:
-    st.session_state.last_result = None
-if "show_result" not in st.session_state:
-    st.session_state.show_result = False
-if "form_values" not in st.session_state:
-    st.session_state.form_values = {}
+    st.session_state.history = []
 
 
 # ---------------------------------------------------------------------------
-# Backend helpers
+# Header
 # ---------------------------------------------------------------------------
 
-def check_health() -> dict:
-    """Return health dict or None on connection failure."""
+col_title, col_status = st.columns([5, 1])
+
+with col_title:
+    st.markdown('<div class="hero-title">AdCraft Pro</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="hero-subtitle">AI-powered ad generation driven by fine-tuned creative intelligence</div>',
+        unsafe_allow_html=True,
+    )
+
+with col_status:
     try:
-        r = requests.get(f"{BACKEND_URL}/health", timeout=3)
-        if r.status_code == 200:
-            return r.json()
+        health = requests.get(f"{BACKEND_URL}/health", timeout=3).json()
+        if health.get("api_key_valid"):
+            badge_cls = "status-online"
+            badge_label = "● Production"
+        elif health.get("dev_mode"):
+            badge_cls = "status-devmode"
+            badge_label = "● Dev Mode"
+        else:
+            badge_cls = "status-offline"
+            badge_label = "● No Key"
     except Exception:
-        pass
-    return None
+        badge_cls = "status-offline"
+        badge_label = "● API Offline"
 
-
-def fetch_api_info() -> dict:
-    """Fetch dropdown options from the API. Falls back to hardcoded defaults."""
-    try:
-        r = requests.get(f"{BACKEND_URL}/api-info", timeout=3)
-        if r.status_code == 200:
-            return r.json()
-    except Exception:
-        pass
-    return {
-        "industries": ["Technology","Fashion","Beauty","Automotive","Luxury",
-                        "Food & Beverage","Fitness","Home & Living","Healthcare",
-                        "Entertainment","Finance","Education"],
-        "platforms":  ["Instagram","Facebook","LinkedIn","Twitter/X","Pinterest",
-                        "Google Ads","TikTok","YouTube"],
-        "tones":      ["Professional","Playful","Luxurious","Bold","Minimalist",
-                        "Emotional","Urgent","Inspirational"],
-        "visual_styles": ["Modern Minimal","Bold & Vibrant","Luxury & Elegant",
-                          "Tech-Forward","Natural & Organic","Urban & Street",
-                          "Classic & Timeless"],
-        "principles": ["Simple","Unexpected","Concrete","Credible","Emotional","Story-driven"],
-    }
-
-
-def download_image_bytes(image_url: str) -> bytes | None:
-    """Fetch image bytes from a URL for the download button."""
-    try:
-        url = image_url if image_url.startswith("http") else f"{BACKEND_URL}{image_url}"
-        r = requests.get(url, timeout=15)
-        if r.status_code == 200:
-            return r.content
-    except Exception:
-        pass
-    return None
+    st.markdown(
+        f'<div style="text-align:right; padding-top:0.6rem;">'
+        f'<div class="status-badge {badge_cls}">{badge_label}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 
 # ---------------------------------------------------------------------------
-# Sidebar
+# Sidebar — input form
 # ---------------------------------------------------------------------------
 
 with st.sidebar:
-    # Brand block
-    st.markdown("""
-    <div class="sidebar-brand">
-        <div style="font-size:2rem;margin-bottom:6px;">✦</div>
-        <div class="sidebar-brand-name">AdCraft Pro</div>
-        <div class="sidebar-brand-tagline">AI-Powered Ad Engine</div>
-        <div class="sidebar-version">v""" + APP_VERSION + """</div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        '<div style="font-family:\'DM Serif Display\',serif;font-size:1.15rem;'
+        'color:#E8E8E8;letter-spacing:-0.01em;margin-bottom:0.25rem;">New Ad</div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div style="font-size:0.72rem;color:#333;margin-bottom:1.5rem;">Fill in the brief, then generate.</div>',
+        unsafe_allow_html=True,
+    )
 
-    # Health check
-    st.markdown('<div class="section-label">System Status</div>', unsafe_allow_html=True)
-    health = check_health()
-    if health is None:
-        st.markdown("""
-        <div class="health-pill health-err">
-            <span class="dot dot-err"></span> API Offline
-        </div>""", unsafe_allow_html=True)
-        st.markdown("""
-        <div class="warn-banner" style="margin-top:10px;">
-            ⚠ Backend not reachable.<br>
-            Run <code style="font-size:0.8rem;background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;">run.bat</code>
-            to start both services.
-        </div>""", unsafe_allow_html=True)
-    elif not health.get("api_key_configured"):
-        st.markdown("""
-        <div class="health-pill health-warn">
-            <span class="dot dot-warn"></span> DEV MODE
-        </div>""", unsafe_allow_html=True)
-        st.markdown("""
-        <div class="warn-banner" style="margin-top:10px;">
-            ⚠ <strong>DEV MODE</strong> — Using mock data.<br>
-            Add <code style="font-size:0.8rem;background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;">OPENAI_API_KEY</code>
-            to your <code style="font-size:0.8rem;background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;">.env</code>
-            file and restart the API for live generation.
-        </div>""", unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <div class="health-pill health-ok">
-            <span class="dot dot-ok"></span> API Ready
-        </div>""", unsafe_allow_html=True)
+    st.markdown("### Brand")
+    brand_name = st.text_input("Brand Name", placeholder="Apple", key="brand")
+    product_name = st.text_input("Product Name", placeholder="AirPods Pro 3", key="product")
 
-    # Generation history
-    st.markdown('<div class="section-label">Recent Generations</div>', unsafe_allow_html=True)
+    st.markdown("### Product")
+    product_desc = st.text_area(
+        "Description",
+        placeholder="What makes this product special...",
+        height=75,
+        key="desc",
+    )
+    key_benefit = st.text_input("Key Benefit", placeholder="Spatial audio with hearing health", key="benefit")
 
-    if not st.session_state.history:
-        st.markdown('<div style="font-size:0.78rem;color:rgba(255,255,255,0.3);padding:6px 0;">No ads generated yet.</div>',
-                    unsafe_allow_html=True)
-    else:
-        for i, item in enumerate(reversed(st.session_state.history[-8:])):
-            headline_short = (item["headline"][:34] + "…") if len(item["headline"]) > 35 else item["headline"]
-            st.markdown(f"""
-            <div class="history-item">
-                <div class="history-headline">{headline_short}</div>
-                <div class="history-meta">{item['brand']} · {item['timestamp']}</div>
-            </div>""", unsafe_allow_html=True)
-
-    st.markdown("---")
-    st.markdown(f'<div style="font-size:0.65rem;color:rgba(255,255,255,0.25);text-align:center;">© 2025 AdCraft Pro</div>',
-                unsafe_allow_html=True)
-
-
-# ---------------------------------------------------------------------------
-# Fetch API options (cached for the session)
-# ---------------------------------------------------------------------------
-
-if "api_info" not in st.session_state:
-    st.session_state.api_info = fetch_api_info()
-
-api_info = st.session_state.api_info
-
-
-# ---------------------------------------------------------------------------
-# Page header
-# ---------------------------------------------------------------------------
-
-st.markdown("""
-<div class="app-header">
-    <div class="app-header-icon">✦</div>
-    <div>
-        <p class="app-header-title">AdCraft Pro</p>
-        <p class="app-header-sub">Craft Premium Ads with AI Precision</p>
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-
-# ---------------------------------------------------------------------------
-# Results view (shown after a successful generation)
-# ---------------------------------------------------------------------------
-
-if st.session_state.show_result and st.session_state.last_result:
-    result = st.session_state.last_result
-
-    st.markdown("""
-    <div class="success-banner">
-        ✓ &nbsp;Ad generated successfully!
-    </div>""", unsafe_allow_html=True)
-
-    col_copy, col_img = st.columns([1, 1], gap="large")
-
-    # ── Left: ad copy ────────────────────────────────────────────────────────
-    with col_copy:
-        st.markdown(f"""
-        <div class="copy-card">
-            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.14em;
-                        text-transform:uppercase;color:rgba(255,255,255,0.3);
-                        margin-bottom:1.2rem;">Ad Copy</div>
-
-            <div class="copy-headline">{result.get('headline', '')}</div>
-            <div class="copy-subheadline">{result.get('subheadline', '')}</div>
-            <div class="copy-divider"></div>
-            <div class="copy-body">{result.get('body_text', '')}</div>
-
-            <a class="cta-button">{result.get('cta', 'SHOP NOW')}</a>
-
-            <div class="copy-meta">
-                <span class="meta-tag">{result.get('industry', '')}</span>
-                <span class="meta-tag">{result.get('brand_name', '')}</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # ── Right: generated image ────────────────────────────────────────────────
-    with col_img:
-        st.markdown('<div class="image-card">', unsafe_allow_html=True)
-        st.markdown('<div class="image-card-title">Generated Visual</div>', unsafe_allow_html=True)
-
-        image_url = result.get("image_url", "")
-        if image_url:
-            full_url = image_url if image_url.startswith("http") else f"{BACKEND_URL}{image_url}"
-            st.image(full_url, use_container_width=True)
-
-            img_bytes = download_image_bytes(image_url)
-            if img_bytes:
-                fname = f"adcraft_{result.get('brand_name','ad').lower().replace(' ','_')}.png"
-                st.download_button(
-                    label="⬇ Download Image",
-                    data=img_bytes,
-                    file_name=fname,
-                    mime="image/png",
-                    use_container_width=True,
-                )
-        else:
-            st.markdown('<div style="color:rgba(255,255,255,0.3);font-size:0.85rem;'
-                        'padding:3rem 0;text-align:center;">No image generated.</div>',
-                        unsafe_allow_html=True)
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-    # ── Debug expander ────────────────────────────────────────────────────────
-    with st.expander("🔍 Full API Response (debug)"):
-        st.code(json.dumps(result, indent=2), language="json")
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("✦ Generate Another Ad", type="primary"):
-        st.session_state.show_result = False
-        st.rerun()
-
-    st.stop()
-
-
-# ---------------------------------------------------------------------------
-# Form view
-# ---------------------------------------------------------------------------
-
-# API offline banner above form
-if health is None:
-    st.markdown("""
-    <div class="err-banner">
-        ✗ &nbsp;Cannot reach the backend API at <strong>localhost:8000</strong>.
-        Run <code>run.bat</code> to start both services, then refresh this page.
-    </div>""", unsafe_allow_html=True)
-elif not health.get("api_key_configured"):
-    st.markdown("""
-    <div class="warn-banner">
-        ⚠ &nbsp;<strong>DEV MODE</strong> — No OPENAI_API_KEY configured.
-        Ads will use mock data (placeholder image + template copy).
-        Add <code>OPENAI_API_KEY</code> to your <code>.env</code> and restart the API for live generation.
-    </div>""", unsafe_allow_html=True)
-
-with st.form("ad_form", clear_on_submit=False):
-
-    # ── Product block ─────────────────────────────────────────────────────────
-    st.markdown('<div class="section-label">📦 Product Details</div>', unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    with c1:
-        product_name = st.text_input(
-            "Product Name *",
-            value=st.session_state.form_values.get("product_name", ""),
-            placeholder="e.g., Bombay Musk Coolwater Perfume",
+    st.markdown("### Creative Direction")
+    col1, col2 = st.columns(2)
+    with col1:
+        industry = st.selectbox(
+            "Industry",
+            ["Technology", "Luxury", "Fashion", "Food & Beverage", "Beauty",
+             "Automotive", "Gaming", "Health & Fitness", "Finance", "Other"],
+            key="industry",
         )
-    with c2:
-        brand_name = st.text_input(
-            "Brand Name *",
-            value=st.session_state.form_values.get("brand_name", ""),
-            placeholder="e.g., Bombay Musk",
+        tone = st.selectbox(
+            "Tone",
+            ["Premium", "Bold", "Playful", "Minimalist", "Emotional",
+             "Technical", "Raw", "Cinematic", "Direct"],
+            key="tone",
+        )
+    with col2:
+        platform = st.selectbox(
+            "Platform",
+            ["Instagram", "Facebook", "LinkedIn", "TikTok",
+             "Pinterest", "YouTube", "Google", "Other"],
+            key="platform",
+        )
+        visual_style = st.selectbox(
+            "Visual Style",
+            ["Dramatic Lighting", "Minimalist", "Vibrant", "Vintage",
+             "3D Render", "Monochrome", "Pastel", "Editorial", "Flat Lay"],
+            key="vstyle",
         )
 
-    product_description = st.text_area(
-        "Product Description *",
-        value=st.session_state.form_values.get("product_description", ""),
-        placeholder="Describe your product, its features, materials, and what makes it unique...",
-        height=100,
+    audience = st.text_input(
+        "Target Audience", placeholder="Tech-savvy professionals 25–45", key="audience"
     )
 
-    # ── Targeting block ───────────────────────────────────────────────────────
-    st.markdown('<div class="section-label">🎯 Targeting</div>', unsafe_allow_html=True)
-    c3, c4 = st.columns(2)
-    with c3:
-        industry_opts = api_info.get("industries", [])
-        saved_industry = st.session_state.form_values.get("industry", industry_opts[0] if industry_opts else "")
-        industry_idx = industry_opts.index(saved_industry) if saved_industry in industry_opts else 0
-        industry = st.selectbox("Industry *", industry_opts, index=industry_idx)
+    generate = st.button("Generate Ad", use_container_width=True, key="gen_btn")
 
-    with c4:
-        platform_opts = api_info.get("platforms", [])
-        saved_platform = st.session_state.form_values.get("platform", platform_opts[0] if platform_opts else "")
-        platform_idx = platform_opts.index(saved_platform) if saved_platform in platform_opts else 0
-        platform = st.selectbox("Target Platform *", platform_opts, index=platform_idx)
-
-    key_benefit = st.text_input(
-        "Key Benefit",
-        value=st.session_state.form_values.get("key_benefit", ""),
-        placeholder="e.g., Long-lasting scent that stays for 12 hours",
+    # Sidebar footer
+    st.markdown(
+        '<div style="margin-top:3rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.04);">'
+        '<div style="font-size:0.65rem;color:#222;line-height:1.7;">'
+        'AdCraft Pro uses a fine-tuned GPT-4o-mini for creative briefs, '
+        'GPT-4o for HTML/CSS overlays, and DALL-E 3 for product imagery.</div>'
+        '</div>',
+        unsafe_allow_html=True,
     )
-    audience_desc = st.text_input(
-        "Target Audience",
-        value=st.session_state.form_values.get("audience_desc", ""),
-        placeholder="e.g., Style-conscious professionals aged 25–40",
-    )
-
-    # ── Creative direction block ───────────────────────────────────────────────
-    st.markdown('<div class="section-label">🎨 Creative Direction</div>', unsafe_allow_html=True)
-    c5, c6, c7 = st.columns(3)
-    with c5:
-        tone_opts = api_info.get("tones", [])
-        saved_tone = st.session_state.form_values.get("tone", tone_opts[0] if tone_opts else "")
-        tone_idx = tone_opts.index(saved_tone) if saved_tone in tone_opts else 0
-        tone = st.selectbox("Tone", tone_opts, index=tone_idx)
-
-    with c6:
-        style_opts = api_info.get("visual_styles", [])
-        saved_style = st.session_state.form_values.get("visual_style", style_opts[0] if style_opts else "")
-        style_idx = style_opts.index(saved_style) if saved_style in style_opts else 0
-        visual_style = st.selectbox("Visual Style", style_opts, index=style_idx)
-
-    with c7:
-        principle_opts = api_info.get("principles", [])
-        saved_principle = st.session_state.form_values.get("principle", principle_opts[0] if principle_opts else "")
-        principle_idx = principle_opts.index(saved_principle) if saved_principle in principle_opts else 0
-        principle = st.selectbox("Made to Stick Principle", principle_opts, index=principle_idx)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-    submitted = st.form_submit_button("✦  Generate Ad", type="primary", use_container_width=True)
 
 
 # ---------------------------------------------------------------------------
-# Form submission
+# Generation logic
 # ---------------------------------------------------------------------------
 
-if submitted:
-    # Persist values to session state
-    st.session_state.form_values = {
-        "product_name": product_name,
-        "brand_name": brand_name,
-        "product_description": product_description,
-        "industry": industry,
-        "platform": platform,
-        "key_benefit": key_benefit,
-        "audience_desc": audience_desc,
-        "tone": tone,
-        "visual_style": visual_style,
-        "principle": principle,
-    }
+if generate:
+    if not brand_name or not product_name:
+        st.error("Brand name and product name are required.")
+    else:
+        payload = {
+            "product_name": product_name,
+            "brand_name": brand_name,
+            "product_description": product_desc or "",
+            "key_benefit": key_benefit or "",
+            "tone": tone,
+            "visual_style": visual_style,
+            "principle": "Emotional",
+            "industry": industry,
+            "platform": platform,
+            "audience_desc": audience or "",
+        }
 
-    # Validation
-    missing = []
-    if not product_name.strip():
-        missing.append("Product Name")
-    if not brand_name.strip():
-        missing.append("Brand Name")
-    if not product_description.strip():
-        missing.append("Product Description")
-
-    if missing:
-        st.markdown(f"""
-        <div class="err-banner">
-            ✗ &nbsp;Please fill in the required fields: <strong>{", ".join(missing)}</strong>
-        </div>""", unsafe_allow_html=True)
-        st.stop()
-
-    if health is None:
-        st.markdown("""
-        <div class="err-banner">
-            ✗ &nbsp;Cannot connect to the backend. Start it with <code>run.bat</code> then try again.
-        </div>""", unsafe_allow_html=True)
-        st.stop()
-
-    payload = {
-        "product_name": product_name.strip(),
-        "brand_name": brand_name.strip(),
-        "product_description": product_description.strip(),
-        "industry": industry,
-        "platform": platform,
-        "tone": tone,
-        "visual_style": visual_style,
-        "principle": principle,
-        "key_benefit": key_benefit.strip(),
-        "audience_desc": audience_desc.strip(),
-    }
-
-    with st.spinner("✦  Generating your ad — this takes ~30–60 seconds…"):
-        try:
-            response = requests.post(
-                f"{BACKEND_URL}/generate_ad",
-                json=payload,
-                timeout=120,
+        with st.spinner(""):
+            st.markdown(
+                '<div style="text-align:center;padding:3rem 1rem;">'
+                '<div style="font-family:\'DM Sans\',sans-serif;font-size:0.85rem;color:#333;">'
+                'Generating your ad…'
+                '</div>'
+                '<div style="font-size:0.72rem;color:#222;margin-top:0.5rem;line-height:1.8;">'
+                'Fine-tuned model&nbsp;→&nbsp;Creative brief&nbsp;→&nbsp;'
+                'Copy + HTML/CSS&nbsp;→&nbsp;DALL-E image&nbsp;→&nbsp;Composite'
+                '</div>'
+                '</div>',
+                unsafe_allow_html=True,
             )
+            try:
+                resp = requests.post(
+                    f"{BACKEND_URL}/generate_ad",
+                    json=payload,
+                    timeout=180,
+                )
+                if resp.status_code == 200:
+                    ad = resp.json()
+                    st.session_state.current_ad = ad
+                    st.session_state.history.insert(0, {
+                        "ad": ad,
+                        "brand": brand_name,
+                        "product": product_name,
+                        "timestamp": datetime.now().strftime("%H:%M"),
+                    })
+                    st.session_state.history = st.session_state.history[:8]
+                    st.rerun()
+                else:
+                    detail = resp.json().get("detail", resp.text) if resp.headers.get("content-type", "").startswith("application/json") else resp.text
+                    st.error(f"Generation failed ({resp.status_code}): {detail}")
+            except requests.exceptions.Timeout:
+                st.error("Request timed out. The pipeline takes ~30–60 s — the server may still be working. Refresh after a minute.")
+            except requests.exceptions.ConnectionError:
+                st.error("Cannot reach the API. Start it with: uvicorn api:app --port 8000")
+            except Exception as exc:
+                st.error(f"Unexpected error: {exc}")
 
-            if response.status_code == 200:
-                result = response.json()
-                st.session_state.last_result = result
-                st.session_state.show_result = True
 
-                # Save to history
-                st.session_state.history.append({
-                    "headline":  result.get("headline", ""),
-                    "brand":     result.get("brand_name", brand_name),
-                    "timestamp": datetime.now().strftime("%H:%M"),
-                })
+# ---------------------------------------------------------------------------
+# Main display area
+# ---------------------------------------------------------------------------
 
-                st.rerun()
+if st.session_state.current_ad:
+    ad = st.session_state.current_ad
 
-            elif response.status_code == 503:
-                detail = response.json().get("detail", "Service unavailable.")
-                st.markdown(f"""
-                <div class="err-banner">
-                    ✗ &nbsp;<strong>API key not configured:</strong> {detail}
-                </div>""", unsafe_allow_html=True)
+    image_url = ad.get("image_url", "")
+    full_url = f"{BACKEND_URL}{image_url}" if image_url.startswith("/") else image_url
 
-            elif response.status_code == 422:
-                detail = response.json().get("detail", "Validation error.")
-                st.markdown(f"""
-                <div class="err-banner">
-                    ✗ &nbsp;<strong>Validation error:</strong> {detail}
-                </div>""", unsafe_allow_html=True)
+    # ── Two-column layout: image left, copy right ──
+    img_col, copy_col = st.columns([5, 4], gap="large")
 
-            else:
-                detail = ""
+    with img_col:
+        if full_url:
+            st.markdown('<div class="ad-image-wrapper">', unsafe_allow_html=True)
+            try:
+                st.image(full_url, use_container_width=True)
+            except Exception:
+                st.markdown(
+                    '<div style="height:400px;display:flex;align-items:center;'
+                    'justify-content:center;color:#2A2A2A;font-size:0.8rem;">'
+                    'Image unavailable</div>',
+                    unsafe_allow_html=True,
+                )
+            st.markdown('</div>', unsafe_allow_html=True)
+
+            # Download button under the image
+            try:
+                img_bytes = requests.get(full_url, timeout=30)
+                if img_bytes.status_code == 200:
+                    safe_brand = (brand_name or "ad").replace(" ", "_").lower()
+                    safe_product = (product_name or "image").replace(" ", "_").lower()
+                    st.download_button(
+                        "↓  Download Image",
+                        data=img_bytes.content,
+                        file_name=f"adcraft_{safe_brand}_{safe_product}.png",
+                        mime="image/png",
+                    )
+            except Exception:
+                pass
+
+    with copy_col:
+        headline = ad.get("headline", "")
+        subheadline = ad.get("subheadline", "")
+        body_text = ad.get("body_text", "")
+        cta = ad.get("call_to_action", "")
+        tone_val = ad.get("tone", "")
+        style_val = ad.get("visual_style", "")
+        design_val = ad.get("design_approach", "")
+
+        st.markdown(
+            f'<div class="ad-copy-card">'
+            f'<div class="ad-headline-display">{headline}</div>'
+            f'<div class="ad-subheadline-display">{subheadline}</div>'
+            f'{"<div class=ad-body-display>" + body_text + "</div>" if body_text else ""}'
+            f'<div class="ad-cta-pill">{cta}</div>'
+            f'<div class="metadata-row">'
+            f'<div class="meta-pill"><span class="meta-pill-key">Tone</span><span class="meta-pill-val">{tone_val or "—"}</span></div>'
+            f'<div class="meta-pill"><span class="meta-pill-key">Style</span><span class="meta-pill-val">{style_val or "—"}</span></div>'
+            f'<div class="meta-pill"><span class="meta-pill-key">Layout</span><span class="meta-pill-val">{design_val or "—"}</span></div>'
+            f'<div class="meta-pill"><span class="meta-pill-key">Platform</span><span class="meta-pill-val">{platform}</span></div>'
+            f'</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    # ── Feedback expander ──
+    st.markdown('<div style="margin-top:1.5rem;"></div>', unsafe_allow_html=True)
+    with st.expander("Submit Feedback"):
+        fb_col1, fb_col2 = st.columns([1, 3])
+        with fb_col1:
+            rating = st.slider("Rating", 1, 5, 4, key="fb_rating")
+        with fb_col2:
+            fb_text = st.text_area(
+                "Comments",
+                placeholder="What worked well? What could be improved?",
+                height=68,
+                key="fb_text",
+                label_visibility="collapsed",
+            )
+        if st.button("Submit Feedback", key="fb_submit"):
+            try:
+                fb_resp = requests.post(
+                    f"{BACKEND_URL}/submit_feedback",
+                    json={
+                        "ad_id": ad.get("ad_id", "unknown"),
+                        "headline": headline,
+                        "rating": rating,
+                        "strengths": fb_text if rating >= 4 else "",
+                        "weaknesses": fb_text if rating < 4 else "",
+                    },
+                    timeout=10,
+                )
+                if fb_resp.status_code == 200:
+                    st.success("Feedback saved — thank you.")
+                else:
+                    st.error("Could not save feedback.")
+            except Exception:
+                st.error("Could not reach the feedback endpoint.")
+
+else:
+    # ── Empty state ──
+    st.markdown(
+        '<div class="empty-state">'
+        '<div class="empty-state-diamond">◆</div>'
+        '<div class="empty-state-title">Create your first ad</div>'
+        '<div class="empty-state-text">'
+        'Enter your brand and product details in the sidebar, choose your creative direction, '
+        'and let the AI pipeline craft a production-ready advertisement.'
+        '</div>'
+        '<div class="empty-state-steps">'
+        '<div class="empty-state-step"><div class="step-num">1</div><div class="step-text">Brand & product</div></div>'
+        '<div class="empty-state-step"><div class="step-num">2</div><div class="step-text">Creative brief</div></div>'
+        '<div class="empty-state-step"><div class="step-num">3</div><div class="step-text">Generate</div></div>'
+        '<div class="empty-state-step"><div class="step-num">4</div><div class="step-text">Download</div></div>'
+        '</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+
+# ---------------------------------------------------------------------------
+# History strip
+# ---------------------------------------------------------------------------
+
+if st.session_state.history:
+    st.markdown('<hr class="subtle-divider">', unsafe_allow_html=True)
+    st.markdown('<div class="history-label">Recent</div>', unsafe_allow_html=True)
+
+    visible = st.session_state.history[:6]
+    cols = st.columns(len(visible))
+
+    for i, item in enumerate(visible):
+        with cols[i]:
+            hist_url = item["ad"].get("image_url", "")
+            if hist_url:
+                full_hist = f"{BACKEND_URL}{hist_url}" if hist_url.startswith("/") else hist_url
                 try:
-                    detail = response.json().get("detail", response.text)
+                    st.markdown('<div class="history-thumb-wrapper">', unsafe_allow_html=True)
+                    st.image(full_hist, use_container_width=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
                 except Exception:
-                    detail = response.text
-                st.markdown(f"""
-                <div class="err-banner">
-                    ✗ &nbsp;<strong>Generation failed (HTTP {response.status_code}):</strong><br>
-                    {detail}
-                </div>""", unsafe_allow_html=True)
-
-        except requests.exceptions.ConnectionError:
-            st.markdown("""
-            <div class="err-banner">
-                ✗ &nbsp;Lost connection to the backend. Make sure <code>run.bat</code> is running.
-            </div>""", unsafe_allow_html=True)
-
-        except requests.exceptions.Timeout:
-            st.markdown("""
-            <div class="err-banner">
-                ✗ &nbsp;Request timed out after 120 seconds. The API may be overloaded — please try again.
-            </div>""", unsafe_allow_html=True)
-
-        except Exception as exc:
-            st.markdown(f"""
-            <div class="err-banner">
-                ✗ &nbsp;<strong>Unexpected error:</strong> {exc}
-            </div>""", unsafe_allow_html=True)
+                    st.markdown(
+                        '<div style="height:80px;border:1px solid rgba(255,255,255,0.05);'
+                        'border-radius:8px;"></div>',
+                        unsafe_allow_html=True,
+                    )
+            st.markdown(
+                f'<div class="history-caption">{item["brand"]} · {item["timestamp"]}</div>',
+                unsafe_allow_html=True,
+            )

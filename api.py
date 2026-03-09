@@ -136,17 +136,22 @@ class AdResponse(BaseModel):
     headline: str
     subheadline: str
     body_text: str
-    cta: str
+    call_to_action: str
     image_url: str
     brand_name: str
     product: str
     industry: str
+    tone: str
+    visual_style: str
+    design_approach: str
     generation_time: str
+    ad_id: str
 
 
 class HealthResponse(BaseModel):
     status: str
     api_key_configured: bool
+    api_key_valid: bool
     dev_mode: bool = False
 
 
@@ -265,6 +270,7 @@ def health():
     return HealthResponse(
         status="ok",
         api_key_configured=api_key_valid,
+        api_key_valid=api_key_valid,
         dev_mode=not api_key_valid,
     )
 
@@ -323,16 +329,23 @@ def generate_ad(req: AdRequest):
     image_path = ad_data.get("final_path") or ad_data.get("image_path") or ""
     image_url = _local_path_to_url(image_path)
 
+    from datetime import datetime as _dt
+    ad_id = f"{req.brand_name}_{req.product_name}_{_dt.now().strftime('%Y%m%d_%H%M%S')}".replace(" ", "_")
+
     return AdResponse(
         headline=ad_data.get("headline", ""),
         subheadline=ad_data.get("subheadline", ""),
         body_text=ad_data.get("body_text", ""),
-        cta=ad_data.get("call_to_action", ""),
+        call_to_action=ad_data.get("call_to_action", ""),
         image_url=image_url,
         brand_name=req.brand_name,
         product=req.product_name,
         industry=req.industry,
-        generation_time=ad_data.get("generation_time", ""),
+        tone=ad_data.get("tone", req.tone or ""),
+        visual_style=ad_data.get("visual_style", req.visual_style or ""),
+        design_approach=ad_data.get("design_approach", ""),
+        generation_time=ad_data.get("generation_time", _dt.now().isoformat()),
+        ad_id=ad_id,
     )
 
 
