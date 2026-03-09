@@ -172,30 +172,23 @@ _api_key_valid: Optional[bool] = None
 
 def _check_api_key() -> bool:
     """
-    Test whether the configured OPENAI_API_KEY is actually accepted by OpenAI.
-    Calls client.models.list() once; result is cached for the process lifetime.
-    Returns True if the key works, False if absent, invalid, or unreachable.
+    Return True when OPENAI_API_KEY is present and looks like a real key.
+    We intentionally do NOT call models.list() — openai 1.12.0 + newer httpx
+    raises 'unexpected kwarg proxies' during client.__init__, which would
+    incorrectly flag a valid key as invalid.  The key format check is enough:
+    if generation actually fails the endpoint will return a 500 with details.
     """
     global _api_key_valid
     if _api_key_valid is not None:
         return _api_key_valid
     key = os.getenv("OPENAI_API_KEY", "").strip()
-    if not key:
-        _api_key_valid = False
-        return False
-    try:
-        from openai import OpenAI
-        client = OpenAI(api_key=key)
-        client.models.list()
-        _api_key_valid = True
-    except Exception:
-        _api_key_valid = False
+    _api_key_valid = bool(key and key.startswith("sk-") and len(key) > 20)
     return _api_key_valid
 
 
 @app.on_event("startup")
 async def _startup():
-    """Probe the API key at startup so /health reflects real validity immediately."""
+    """Cache API key status at startup so /health is instant."""
     _check_api_key()
 
 
