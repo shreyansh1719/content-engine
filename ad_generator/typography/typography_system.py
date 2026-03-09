@@ -6,6 +6,12 @@ import os
 import logging
 from typing import Dict, List, Any, Optional, Tuple, Union
 from PIL import Image, ImageDraw, ImageFont
+try:
+    import numpy as np
+    from collections import Counter as _Counter
+    _NUMPY_OK = True
+except ImportError:
+    _NUMPY_OK = False
 
 from .brand_typography import BrandTypographyManager
 from .typography_effects import TypographyEffectsEngine
@@ -309,105 +315,545 @@ class TypographySystem:
             draw.rectangle([0, y_start, width, y_end], fill=bg_color)
     
     # ──────────────────────────────────────────────────────────────────────────
-    # apply_typography — corrected pipeline (fixes bugs 1-5)
+    # apply_typography — professional rendering pipeline
     # ──────────────────────────────────────────────────────────────────────────
 
     def apply_typography(self, image: Image.Image, ad_copy: Dict[str, str],
                          layout: Optional[Dict[str, Any]] = None) -> Image.Image:
         """
-        Apply dynamic zone-based typography using a GPT-4o-designed layout dict.
-
-        layout keys (all optional, sensible defaults provided):
-          style            — left_column | bottom_banner | centered | top_bottom |
-                             split_horizontal | bold_statement | diagonal | floating_cards
-          text_color       — hex string, default #FFFFFF
-          accent_color     — hex string, default #FFFFFF
-          overlay_type     — gradient_top_bottom | gradient_left | vignette_bottom |
-                             frosted_strip | shadow_only | solid_bar
-          overlay_opacity  — float 0.2-1.0, default 0.7
-          headline_position— top_center | top_left | center | bottom_left
-          headline_size    — large | xlarge | medium
-          cta_style        — pill_button | square_button | text_underline | block_inverted
-          cta_color        — hex string, default #FFFFFF
-          show_body_text   — bool, default True
+        Apply professional typography: image-aware colors, weight hierarchy,
+        tracked headlines, zone-scrim overlays, and polished CTA buttons.
         """
         if not ad_copy:
             raise ValueError("ad_copy must be a non-empty dict")
 
         layout = layout or {}
 
-        # --- Parse layout params ---
-        style         = layout.get('style', 'top_bottom')
-        text_color    = self._parse_color(layout.get('text_color',  '#FFFFFF'))
-        accent_color  = self._parse_color(layout.get('accent_color','#FFFFFF'))
-        overlay_type  = layout.get('overlay_type',  'gradient_top_bottom')
+        # ── Parse layout params ──────────────────────────────────────────────
+        style         = layout.get('style',            'top_bottom')
+        overlay_type  = layout.get('overlay_type',     'gradient_top_bottom')
         opacity       = float(layout.get('overlay_opacity', 0.7))
-        headline_pos  = layout.get('headline_position', 'top_center')
-        headline_size = layout.get('headline_size',  'large')
-        cta_style     = layout.get('cta_style',      'pill_button')
-        cta_color     = self._parse_color(layout.get('cta_color', '#FFFFFF'))
-        show_body     = layout.get('show_body_text', True)
+        headline_pos  = layout.get('headline_position','top_center')
+        headline_size = layout.get('headline_size',    'large')
+        cta_style     = layout.get('cta_style',        'pill_button')
+        show_body     = layout.get('show_body_text',   True)
+        mood          = layout.get('mood',             '')
 
         width, height = image.size
-        base = image.convert('RGBA')
 
-        # --- Overlay ---
-        base = self._apply_overlay(base, overlay_type, opacity, accent_color)
+        # ── 1. Extract palette from the DALL-E image ─────────────────────────
+        palette = self._extract_palette(image)
 
-        # --- Font sizes ---
+        # ── 2. Smart color selection (image-derived, not always white) ────────
+        text_color   = self._choose_text_color(palette, layout)
+        accent_color = self._choose_accent_color(palette, layout)
+        is_dark      = palette['is_dark_image']
+
+        # ── 3. Dramatic font-size hierarchy (≥2:1 headline:sub ratio) ─────────
         if headline_size == 'xlarge':
-            h_px = max(48, width // 12)
+            h_px = max(64, width // 8)
+            s_px = max(24, width // 28)
+            b_px = max(18, width // 36)
+            c_px = max(30, width // 24)
         elif headline_size == 'medium':
-            h_px = max(28, width // 20)
-        else:
-            h_px = max(36, width // 16)
-        s_px = max(24, int(h_px * 0.60))
-        b_px = max(18, int(h_px * 0.45))
-        c_px = max(20, int(h_px * 0.55))
-        fonts = self._load_sized_fonts(h_px, s_px, b_px, c_px)
+            h_px = max(38, width // 16)
+            s_px = max(20, width // 30)
+            b_px = max(16, width // 38)
+            c_px = max(22, width // 26)
+        else:  # large (default)
+            h_px = max(52, width // 12)
+            s_px = max(22, width // 26)
+            b_px = max(18, width // 34)
+            c_px = max(26, width // 22)
 
-        # --- Zones + alignment ---
+        # ── 4. Load fonts with weight contrast ────────────────────────────────
+        fonts = self._load_weight_fonts(h_px, s_px, b_px, c_px)
+
+        # ── 5. Calculate zones ───────────────────────────────────────────────
         zones, alignment, tx_start, tx_w = self._calculate_zones(
             style, headline_pos, width, height
         )
 
-        pad = max(int(width * 0.05), 20)
+        # ── 6. Headline case transform ────────────────────────────────────────
+        hl = ad_copy.get('headline', '').strip()
+        playful_signals = ('playful', 'casual', 'fun', 'friendly', 'irreverent')
+        is_playful = any(s in mood.lower() for s in playful_signals)
+        if hl and not is_playful:
+            hl = hl.upper()
 
+        # ── 7. Scrim overlay (only behind text zones, not full image) ─────────
+        active_zones = {k: v for k, v in zones.items() if v is not None}
+        base = image.convert('RGBA')
+        base = self._apply_scrim_to_zones(
+            base, active_zones, opacity, overlay_type, accent_color,
+            tx_start, tx_w
+        )
+
+        # ── 8. Render text ────────────────────────────────────────────────────
         text_layer = Image.new('RGBA', base.size, (0, 0, 0, 0))
         draw       = ImageDraw.Draw(text_layer)
+        pad = max(int(width * 0.05), 24)
+
+        hl_tracking = max(1, h_px // 24)    # tracking ~4% of font size
+        sh_tracking = max(0, s_px // 45)   # minimal on subheadline
 
         # Headline
-        hl = ad_copy.get('headline', '').strip()
         if hl and zones.get('headline'):
-            self._draw_zoned_text(draw, hl, fonts['headline'], zones['headline'],
-                                  width, tx_w, tx_start, pad, text_color, alignment)
+            self._draw_element_in_zone(
+                draw, hl, fonts['headline'], zones['headline'],
+                width, tx_w, tx_start, pad, text_color, alignment,
+                tracking=hl_tracking, line_height_mult=1.20, is_headline=True
+            )
 
         # Subheadline
         sh = ad_copy.get('subheadline', '').strip()
         if sh and zones.get('subheadline'):
-            sub_c = (text_color[0], text_color[1], text_color[2], min(text_color[3], 220))
-            self._draw_zoned_text(draw, sh, fonts['subheadline'], zones['subheadline'],
-                                  width, tx_w, tx_start, pad, sub_c, alignment)
+            sub_c = (text_color[0], text_color[1], text_color[2],
+                     min(text_color[3], 220))
+            self._draw_element_in_zone(
+                draw, sh, fonts['subheadline'], zones['subheadline'],
+                width, tx_w, tx_start, pad, sub_c, alignment,
+                tracking=sh_tracking, line_height_mult=1.40
+            )
 
-        # Body text (only if zone exists and show_body_text is True)
+        # Body text
         if show_body:
             body = ad_copy.get('body_text', '').strip()
             if body and zones.get('body'):
-                body_c = (text_color[0], text_color[1], text_color[2], min(text_color[3], 200))
-                self._draw_zoned_text(draw, body, fonts['body'], zones['body'],
-                                      width, tx_w, tx_start, pad, body_c, alignment)
+                body_c = (text_color[0], text_color[1], text_color[2],
+                          min(text_color[3], 200))
+                self._draw_element_in_zone(
+                    draw, body, fonts['body'], zones['body'],
+                    width, tx_w, tx_start, pad, body_c, alignment,
+                    tracking=0, line_height_mult=1.45
+                )
 
         # CTA
         cta = ad_copy.get('call_to_action', '').strip()
         if cta and zones.get('cta'):
-            self._draw_cta_styled(draw, cta, fonts['cta'], zones['cta'],
-                                  width, tx_start, tx_w,
-                                  cta_style, cta_color, accent_color, alignment)
+            self._draw_cta_v2(
+                draw, cta, fonts['cta'], zones['cta'],
+                width, tx_start, tx_w,
+                cta_style, text_color, accent_color, alignment,
+                is_dark_image=is_dark
+            )
 
         result = Image.alpha_composite(base, text_layer)
         return result.convert('RGB')
 
-    # ── Layout helpers ────────────────────────────────────────────────────────
+    # ── Color extraction & selection ──────────────────────────────────────────
+
+    def _extract_palette(self, img: Image.Image) -> Dict[str, Any]:
+        """Extract dominant colors and light/dark character from image."""
+        try:
+            if not _NUMPY_OK:
+                raise ImportError("numpy unavailable")
+            small  = img.resize((100, 100)).convert('RGB')
+            pixels = np.array(small).reshape(-1, 3)
+            quant  = (pixels // 32) * 32
+            counts = _Counter(map(tuple, quant.tolist()))
+            dominant = [c for c, _ in counts.most_common(8)]
+            avg_brightness = float(np.mean(pixels))
+        except Exception:
+            dominant       = [(200, 200, 200)]
+            avg_brightness = 80.0
+
+        is_dark = avg_brightness < 128
+        sorted_by_lum = sorted(dominant, key=lambda c: 0.299*c[0] + 0.587*c[1] + 0.114*c[2])
+        return {
+            'dominant':       dominant,
+            'lightest':       sorted_by_lum[-1],
+            'darkest':        sorted_by_lum[0],
+            'is_dark_image':  is_dark,
+            'avg_brightness': avg_brightness,
+            'accent':         dominant[1] if len(dominant) > 1 else dominant[0],
+        }
+
+    def _choose_text_color(self, palette: Dict, layout: Dict) -> Tuple:
+        """Return text color that contrasts with the image."""
+        layout_hex = layout.get('text_color', '#FFFFFF')
+        # Only trust GPT's suggestion when it chose something other than pure white
+        if layout_hex and layout_hex.upper() not in ('#FFFFFF', '#FFF', ''):
+            return self._parse_color(layout_hex)
+        if palette['is_dark_image']:
+            return (255, 255, 255, 255)
+        # Light image → dark text
+        d = palette['darkest']
+        return (d[0], d[1], d[2], 255) if sum(d) < 300 else (15, 15, 15, 255)
+
+    def _choose_accent_color(self, palette: Dict, layout: Dict) -> Tuple:
+        """Return accent color from image palette for CTA/highlights."""
+        layout_hex = layout.get('accent_color', '#FFFFFF')
+        if layout_hex and layout_hex.upper() not in ('#FFFFFF', '#FFF', ''):
+            return self._parse_color(layout_hex)
+        accent = palette.get('accent', (200, 200, 200))
+        brightness = (accent[0] + accent[1] + accent[2]) / 3
+        if palette['is_dark_image'] and brightness < 60:
+            return (230, 210, 170, 255)   # warm gold fallback
+        if not palette['is_dark_image'] and brightness > 210:
+            return (40, 40, 80, 255)      # dark navy fallback
+        return (accent[0], accent[1], accent[2], 255)
+
+    # ── Overlay / scrim ───────────────────────────────────────────────────────
+
+    def _apply_scrim_to_zones(self, base: Image.Image, active_zones: Dict,
+                               opacity: float, overlay_type: str,
+                               accent_color: Tuple,
+                               tx_start: int, tx_w: int) -> Image.Image:
+        """
+        Scrim overlay: darken only behind actual text zones, not the whole image.
+        For frosted_strip / solid_bar / shadow_only: delegate to legacy overlay.
+        For gradient_left: column-aware fade.
+        For all others: feathered band behind each text cluster.
+        """
+        if overlay_type in ('frosted_strip', 'solid_bar', 'shadow_only'):
+            return self._apply_overlay(base, overlay_type, opacity, accent_color)
+
+        width, height = base.size
+        ov    = Image.new('RGBA', base.size, (0, 0, 0, 0))
+        d     = ImageDraw.Draw(ov)
+        max_a = int(195 * max(0.2, min(1.0, opacity)))
+
+        if overlay_type == 'gradient_left':
+            fade = int(width * 0.50)
+            for x in range(fade):
+                p = x / fade
+                d.line([(x, 0), (x, height - 1)],
+                       fill=(0, 0, 0, int(max_a * (1 - p ** 0.7))))
+            return Image.alpha_composite(base, ov)
+
+        # --- Zone-scrim: group zones into clusters, feather at edges ---
+        zone_list = sorted(active_zones.values())   # list of (top, bot)
+        feather   = max(24, int(height * 0.04))
+
+        # Merge overlapping / nearby zones
+        merged: List[List[int]] = []
+        for z_top, z_bot in zone_list:
+            if merged and z_top <= merged[-1][1] + feather:
+                merged[-1][1] = max(merged[-1][1], z_bot)
+            else:
+                merged.append([z_top, z_bot])
+
+        # Horizontal bounds for the scrim (full-width vs column)
+        if tx_w > 0 and tx_w < width:
+            x0_scrim, x1_scrim = tx_start, tx_start + tx_w
+        else:
+            x0_scrim, x1_scrim = 0, width
+
+        for z_top, z_bot in merged:
+            pad_top = max(0, z_top - feather)
+            pad_bot = min(height, z_bot + feather)
+            for y in range(pad_top, pad_bot):
+                if y < z_top:
+                    alpha = int(max_a * (1 - (z_top - y) / feather))
+                elif y > z_bot:
+                    alpha = int(max_a * (1 - (y - z_bot) / feather))
+                else:
+                    alpha = max_a
+                alpha = max(0, min(255, alpha))
+                d.line([(x0_scrim, y), (x1_scrim - 1, y)], fill=(0, 0, 0, alpha))
+
+        return Image.alpha_composite(base, ov)
+
+    def _apply_overlay(self, base: Image.Image, overlay_type: str,
+                       opacity: float, accent_color: Tuple) -> Image.Image:
+        """Legacy full-image overlay (kept for frosted_strip / solid_bar / shadow_only)."""
+        width, height = base.size
+        ov  = Image.new('RGBA', base.size, (0, 0, 0, 0))
+        d   = ImageDraw.Draw(ov)
+        max_a = int(220 * max(0.2, min(1.0, opacity)))
+
+        if overlay_type == 'frosted_strip':
+            alpha = int(max_a * 0.88)
+            d.rectangle([0, int(height*0.60), width, height],
+                        fill=(15, 15, 25, alpha))
+            d.rectangle([0, 0, width, int(height*0.38)],
+                        fill=(15, 15, 25, int(alpha * 0.90)))
+        elif overlay_type == 'shadow_only':
+            d.rectangle([0, 0, width, height], fill=(0, 0, 0, 28))
+        elif overlay_type == 'solid_bar':
+            r, g, b = accent_color[:3]
+            bar_a   = min(255, int(max_a * 1.1))
+            d.rectangle([0, 0, width, int(height*0.22)],         fill=(r, g, b, bar_a))
+            d.rectangle([0, int(height*0.70), width, height],    fill=(r, g, b, bar_a))
+        else:  # gradient_top_bottom fallback
+            depth = int(height * 0.32)
+            for y in range(depth):
+                p = y / depth
+                d.line([(0, y),           (width-1, y)],
+                       fill=(0, 0, 0, int(max_a * (1 - p))))
+                d.line([(0, height-1-y),  (width-1, height-1-y)],
+                       fill=(0, 0, 0, int(min(255, max_a * (1 - p) * 1.1))))
+
+        return Image.alpha_composite(base, ov)
+
+    # ── Font loading ──────────────────────────────────────────────────────────
+
+    def _load_weight_fonts(self, headline_px: int, sub_px: int,
+                            body_px: int, cta_px: int
+                            ) -> Dict[str, ImageFont.FreeTypeFont]:
+        """
+        Load fonts with strong weight contrast:
+          headline    → ExtraBold / Bold   (maximum impact)
+          subheadline → Light              (elegance through contrast)
+          body        → Light              (reads small)
+          cta         → Bold               (readable at medium size)
+        """
+        module_dir   = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(os.path.dirname(module_dir))
+        fr           = os.path.join(project_root, 'fonts')
+
+        candidates: Dict[str, List[str]] = {
+            'headline': [
+                os.path.join(fr, 'display', 'Montserrat-ExtraBold.ttf'),
+                os.path.join(fr, 'display', 'Montserrat-Bold.ttf'),
+                os.path.join(fr, 'display', 'Oswald-Bold.ttf'),
+                'C:/Windows/Fonts/arialbd.ttf',
+            ],
+            'subheadline': [
+                os.path.join(fr, 'display', 'Montserrat-Light.ttf'),
+                os.path.join(fr, 'display', 'Montserrat-Regular.ttf'),
+                os.path.join(fr, 'sans',    'OpenSans-Light.ttf'),
+                os.path.join(fr, 'sans',    'OpenSans-Regular.ttf'),
+                'C:/Windows/Fonts/arial.ttf',
+            ],
+            'body': [
+                os.path.join(fr, 'sans', 'OpenSans-Light.ttf'),
+                os.path.join(fr, 'sans', 'Roboto-Light.ttf'),
+                os.path.join(fr, 'sans', 'OpenSans-Regular.ttf'),
+                os.path.join(fr, 'sans', 'Roboto-Regular.ttf'),
+                'C:/Windows/Fonts/arial.ttf',
+            ],
+            'cta': [
+                os.path.join(fr, 'display', 'Montserrat-Bold.ttf'),
+                os.path.join(fr, 'display', 'Montserrat-SemiBold.ttf'),
+                os.path.join(fr, 'display', 'Oswald-Bold.ttf'),
+                'C:/Windows/Fonts/arialbd.ttf',
+            ],
+        }
+        sizes = {
+            'headline': headline_px, 'subheadline': sub_px,
+            'body': body_px, 'cta': cta_px,
+        }
+
+        loaded: Dict[str, ImageFont.FreeTypeFont] = {}
+        for key, paths in candidates.items():
+            font = None
+            for path in paths:
+                try:
+                    font = ImageFont.truetype(path, sizes[key])
+                    break
+                except (IOError, OSError):
+                    pass
+            if font is None:
+                self.logger.error("All font candidates failed for '%s', using default", key)
+                font = ImageFont.load_default()
+            loaded[key] = font
+        return loaded
+
+    # ── Text drawing ──────────────────────────────────────────────────────────
+
+    def _measure_tracked_text(self, text: str, font: ImageFont.FreeTypeFont,
+                               tracking: int) -> int:
+        """Return pixel width of text with tracking applied."""
+        total = 0
+        for i, char in enumerate(text):
+            try:
+                w = font.getbbox(char)[2] - font.getbbox(char)[0]
+            except Exception:
+                w = 10
+            total += w + (tracking if i < len(text) - 1 else 0)
+        return total
+
+    def _draw_tracked_text(self, draw: ImageDraw.Draw, x: int, y: int,
+                            text: str, font: ImageFont.FreeTypeFont,
+                            fill: Tuple, tracking: int = 0) -> int:
+        """Draw text character-by-character with letter spacing. Returns width."""
+        cur_x = x
+        for char in text:
+            draw.text((cur_x, y), char, font=font, fill=fill)
+            try:
+                w = font.getbbox(char)[2] - font.getbbox(char)[0]
+            except Exception:
+                w = draw.textbbox((0, 0), char, font=font)[2]
+            cur_x += w + tracking
+        return cur_x - x
+
+    def _shrink_font_to_fit(self, font: ImageFont.FreeTypeFont,
+                             text: str, avail_w: int, zone_h: int,
+                             lh_mult: float, min_size: int = 14
+                             ) -> ImageFont.FreeTypeFont:
+        """Reduce font size until wrapped text fits inside zone_h. Returns fitted font."""
+        try:
+            path = font.path
+            size = int(font.size)
+        except AttributeError:
+            return font  # bitmap / default font — cannot resize
+
+        tmp_img  = Image.new('L', (10, 10))
+        tmp_draw = ImageDraw.Draw(tmp_img)
+
+        while size >= min_size:
+            try:
+                f = ImageFont.truetype(path, size)
+            except (IOError, OSError):
+                break
+            lines  = self._wrap_text(tmp_draw, text, f, avail_w)
+            bbox   = tmp_draw.textbbox((0, 0), 'Ag', font=f)
+            lh     = bbox[3] - bbox[1]
+            needed = len(lines) * int(lh * lh_mult)
+            if needed <= zone_h:
+                return f
+            size -= 3   # step down in 3px increments for speed
+        return font   # last resort: return original
+
+    def _draw_element_in_zone(self, draw: ImageDraw.Draw, text: str,
+                               font: ImageFont.FreeTypeFont,
+                               zone: Optional[Tuple[int, int]],
+                               total_w: int, area_w: int, area_left: int,
+                               pad: int, color: Tuple, alignment: str,
+                               tracking: int = 0,
+                               line_height_mult: float = 1.35,
+                               is_headline: bool = False) -> None:
+        """Draw text in zone with tracking, auto-shrink, proper vertical rhythm."""
+        if zone is None:
+            return
+        z_top, z_bot = zone
+        z_h   = z_bot - z_top
+        avail = (area_w if area_w > 0 else total_w) - 2 * pad
+
+        # Auto-shrink font if text won't fit at current size
+        font  = self._shrink_font_to_fit(font, text, avail, z_h, line_height_mult)
+        lines = self._wrap_text(draw, text, font, avail)
+
+        bbox  = draw.textbbox((0, 0), 'Ag', font=font)
+        lh    = bbox[3] - bbox[1]
+        step  = int(lh * line_height_mult)
+        total_h = step * len(lines)
+        start_y = z_top + max(0, (z_h - total_h) // 2)
+
+        shadow_off = max(2, lh // 18) if is_headline else max(1, lh // 22)
+        shadow_a   = 190 if is_headline else 150
+
+        for i, line in enumerate(lines):
+            y = start_y + i * step
+            if y + lh > z_bot:
+                break   # never overflow zone
+
+            lw = self._measure_tracked_text(line, font, tracking)
+
+            if alignment == 'left':
+                x = area_left + pad
+            elif alignment == 'right':
+                x = area_left + (area_w if area_w else total_w) - lw - pad
+            else:  # center
+                avail_w = area_w if area_w < total_w else total_w
+                x = area_left + max(pad, (avail_w - lw) // 2)
+
+            # Shadow pass
+            self._draw_tracked_text(draw, x + shadow_off, y + shadow_off,
+                                    line, font, (0, 0, 0, shadow_a), tracking)
+            # Main pass
+            self._draw_tracked_text(draw, x, y, line, font, color, tracking)
+
+    def _draw_cta_v2(self, draw: ImageDraw.Draw, text: str,
+                      font: ImageFont.FreeTypeFont,
+                      zone: Tuple[int, int],
+                      total_w: int, area_left: int, area_w: int,
+                      cta_style: str, text_color: Tuple,
+                      accent_color: Tuple, alignment: str,
+                      is_dark_image: bool = True) -> None:
+        """Render CTA with polished visual quality: shadows, accent colors, arrow."""
+        z_top, z_bot = zone
+        z_h   = z_bot - z_top
+        text_up = text.upper()
+
+        bbox    = draw.textbbox((0, 0), text_up, font=font)
+        tw, th  = bbox[2] - bbox[0], bbox[3] - bbox[1]
+
+        # Resolve accent RGB — must contrast against expected background
+        ar, ag, ab = accent_color[:3]
+        acc_lum = 0.299*ar + 0.587*ag + 0.114*ab
+        if is_dark_image and acc_lum < 55:
+            ar, ag, ab = 230, 210, 170   # warm gold on dark
+        elif not is_dark_image and acc_lum > 210:
+            ar, ag, ab = 30, 30, 70      # dark navy on light
+
+        # Inner text color: contrast against button fill
+        inner_lum = 0.299*ar + 0.587*ag + 0.114*ab
+        inner_tc  = (10, 10, 10, 255) if inner_lum > 160 else (255, 255, 255, 255)
+
+        if alignment == 'left':
+            cx = area_left + min(int(total_w * 0.22), (area_w or total_w) // 2)
+        else:
+            cx = total_w // 2
+        cy = z_top + z_h // 2
+
+        if cta_style == 'text_underline':
+            text_arrow = text_up + "  →"
+            ab2  = draw.textbbox((0, 0), text_arrow, font=font)
+            atw  = ab2[2] - ab2[0]
+            x    = (area_left + int(total_w*0.05)
+                    if alignment == 'left'
+                    else max(int(total_w*0.05), (total_w - atw) // 2))
+            ty   = cy - th // 2
+            tc   = (ar, ag, ab, 255)
+            draw.text((x+2, ty+2), text_arrow, font=font, fill=(0, 0, 0, 120))
+            draw.text((x,   ty),   text_arrow, font=font, fill=tc)
+            draw.line([(x, ty+th+5), (x+atw, ty+th+5)], fill=tc, width=3)
+            draw.line([(x, ty+th+8), (x+atw, ty+th+8)], fill=(ar, ag, ab, 100), width=1)
+
+        elif cta_style == 'square_button':
+            px = max(20, int(tw * 0.35));  py = max(10, int(th * 0.45))
+            bw, bh = tw + 2*px, th + 2*py
+            x0, y0 = cx - bw//2, cy - bh//2
+            x1, y1 = cx + bw//2, cy + bh//2
+            draw.rectangle([x0, y0, x1, y1],
+                           fill=(ar, ag, ab, 40), outline=(ar, ag, ab, 240), width=3)
+            draw.text((cx-tw//2+2, cy-th//2+2), text_up, font=font, fill=(0, 0, 0, 120))
+            draw.text((cx-tw//2,   cy-th//2),   text_up, font=font, fill=(ar, ag, ab, 255))
+
+        elif cta_style == 'block_inverted':
+            margin = max(20, int(total_w * 0.15))
+            bt = z_top + int(z_h * 0.10)
+            bb = z_bot - int(z_h * 0.10)
+            draw.rectangle([margin, bt, total_w - margin, bb], fill=(ar, ag, ab, 225))
+            bh_block = bb - bt
+            draw.text(((total_w - tw) // 2, bt + (bh_block - th) // 2),
+                      text_up, font=font, fill=inner_tc)
+
+        else:  # pill_button (default) — true pill + multi-layer shadow
+            tracking_cta = 2
+            tw_t = self._measure_tracked_text(text_up, font, tracking_cta)
+            px   = max(30, int(tw_t * 0.50));  py = max(14, int(th * 0.60))
+            bw, bh = tw_t + 2*px, th + 2*py
+            x0, y0 = cx - bw//2, cy - bh//2
+            x1, y1 = cx + bw//2, cy + bh//2
+            r = bh // 2   # true pill shape
+
+            # Soft shadow layers
+            for off in range(5, 0, -1):
+                sh_a = int(55 * (6 - off) / 5)
+                try:
+                    draw.rounded_rectangle(
+                        [x0+off, y0+off+2, x1+off, y1+off+2],
+                        radius=r, fill=(0, 0, 0, sh_a)
+                    )
+                except (AttributeError, TypeError):
+                    pass
+
+            # Button fill
+            try:
+                draw.rounded_rectangle([x0, y0, x1, y1], radius=r,
+                                       fill=(ar, ag, ab, 235),
+                                       outline=(255, 255, 255, 160), width=2)
+            except (AttributeError, TypeError):
+                draw.rectangle([x0, y0, x1, y1], fill=(ar, ag, ab, 235),
+                                outline=(255, 255, 255, 160), width=2)
+
+            tx_off = cx - tw_t // 2
+            self._draw_tracked_text(draw, tx_off, cy - th//2,
+                                    text_up, font, inner_tc, tracking_cta)
 
     def _parse_color(self, hex_color: Any, alpha: int = 255) -> Tuple[int, int, int, int]:
         """Parse a hex color string to an RGBA tuple."""
@@ -418,59 +864,6 @@ class TypographySystem:
         except (ValueError, AttributeError):
             pass
         return (255, 255, 255, alpha)
-
-    def _apply_overlay(self, base: Image.Image, overlay_type: str,
-                       opacity: float, accent_color: Tuple) -> Image.Image:
-        """Apply the specified readability overlay to the base RGBA image."""
-        width, height = base.size
-        ov  = Image.new('RGBA', base.size, (0, 0, 0, 0))
-        d   = ImageDraw.Draw(ov)
-        max_a = int(220 * max(0.2, min(1.0, opacity)))
-
-        if overlay_type == 'gradient_top_bottom':
-            depth = int(height * 0.32)
-            for y in range(depth):
-                p = y / depth
-                d.line([(0, y),           (width-1, y)],           fill=(0, 0, 0, int(max_a*(1-p))))
-                d.line([(0, height-1-y),  (width-1, height-1-y)],  fill=(0, 0, 0, int(min(255, max_a*(1-p)*1.1))))
-
-        elif overlay_type == 'gradient_left':
-            fade = int(width * 0.55)
-            for x in range(fade):
-                p = x / fade
-                d.line([(x, 0), (x, height-1)], fill=(0, 0, 0, int(max_a * (1 - p**0.7))))
-
-        elif overlay_type == 'vignette_bottom':
-            depth = int(height * 0.52)
-            for y in range(depth):
-                p = y / depth
-                d.line([(0, height-1-y), (width-1, height-1-y)], fill=(0, 0, 0, int(max_a * p**0.6)))
-            for y in range(int(height * 0.15)):
-                p = y / (height * 0.15)
-                d.line([(0, y), (width-1, y)], fill=(0, 0, 0, int(60 * (1-p))))
-
-        elif overlay_type == 'frosted_strip':
-            alpha = int(max_a * 0.88)
-            d.rectangle([0, int(height*0.60), width, height],    fill=(15, 15, 25, alpha))
-            d.rectangle([0, 0, width, int(height*0.38)],          fill=(15, 15, 25, int(alpha*0.90)))
-
-        elif overlay_type == 'shadow_only':
-            d.rectangle([0, 0, width, height], fill=(0, 0, 0, 28))
-
-        elif overlay_type == 'solid_bar':
-            r, g, b = accent_color[:3] if len(accent_color) >= 3 else (0, 0, 0)
-            bar_a   = min(255, int(max_a * 1.1))
-            d.rectangle([0, 0, width, int(height*0.22)],               fill=(r, g, b, bar_a))
-            d.rectangle([0, int(height*0.70), width, height],           fill=(r, g, b, bar_a))
-
-        else:  # fallback: gradient_top_bottom
-            depth = int(height * 0.32)
-            for y in range(depth):
-                p = y / depth
-                d.line([(0, y),          (width-1, y)],          fill=(0, 0, 0, int(175*(1-p))))
-                d.line([(0, height-1-y), (width-1, height-1-y)], fill=(0, 0, 0, int(190*(1-p))))
-
-        return Image.alpha_composite(base, ov)
 
     def _calculate_zones(self, style: str, headline_pos: str,
                           width: int, height: int) -> Tuple[Dict, str, int, int]:
