@@ -626,6 +626,14 @@ with st.sidebar:
         "Target Audience", placeholder="Tech-savvy professionals 25–45", key="audience"
     )
 
+    st.markdown("### Product Image (Optional)")
+    product_image = st.file_uploader(
+        "Upload your product photo for a custom ad",
+        type=["png", "jpg", "jpeg", "webp"],
+        key="product_img",
+        help="Upload a real product photo. gpt-image-1 will place it in a professional ad scene.",
+    )
+
     generate = st.button("Generate Ad", use_container_width=True, key="gen_btn")
 
     # Sidebar footer
@@ -633,7 +641,7 @@ with st.sidebar:
         '<div style="margin-top:3rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.04);">'
         '<div style="font-size:0.65rem;color:#222;line-height:1.7;">'
         'AdCraft Pro uses a fine-tuned GPT-4o-mini for creative briefs, '
-        'GPT-4o for HTML/CSS overlays, and DALL-E 3 for product imagery.</div>'
+        'GPT-4o for HTML/CSS overlays, and gpt-image-1 for product imagery.</div>'
         '</div>',
         unsafe_allow_html=True,
     )
@@ -647,19 +655,6 @@ if generate:
     if not brand_name or not product_name:
         st.error("Brand name and product name are required.")
     else:
-        payload = {
-            "product_name": product_name,
-            "brand_name": brand_name,
-            "product_description": product_desc or "",
-            "key_benefit": key_benefit or "",
-            "tone": tone,
-            "visual_style": visual_style,
-            "principle": "Emotional",
-            "industry": industry,
-            "platform": platform,
-            "audience_desc": audience or "",
-        }
-
         with st.spinner(""):
             st.markdown(
                 '<div style="text-align:center;padding:3rem 1rem;">'
@@ -668,17 +663,59 @@ if generate:
                 '</div>'
                 '<div style="font-size:0.72rem;color:#222;margin-top:0.5rem;line-height:1.8;">'
                 'Fine-tuned model&nbsp;→&nbsp;Creative brief&nbsp;→&nbsp;'
-                'Copy + HTML/CSS&nbsp;→&nbsp;DALL-E image&nbsp;→&nbsp;Composite'
+                'Copy + HTML/CSS&nbsp;→&nbsp;gpt-image-1&nbsp;→&nbsp;Composite'
                 '</div>'
                 '</div>',
                 unsafe_allow_html=True,
             )
             try:
-                resp = requests.post(
-                    f"{BACKEND_URL}/generate_ad",
-                    json=payload,
-                    timeout=180,
-                )
+                if product_image:
+                    # Multipart form with file → /generate_ad_with_image
+                    form_data = {
+                        "product_name": product_name,
+                        "brand_name": brand_name,
+                        "product_description": product_desc or "",
+                        "key_benefit": key_benefit or "",
+                        "tone": tone,
+                        "visual_style": visual_style,
+                        "principle": "Emotional",
+                        "industry": industry,
+                        "platform": platform,
+                        "audience_desc": audience or "",
+                    }
+                    files = {
+                        "product_image": (
+                            product_image.name,
+                            product_image.getvalue(),
+                            product_image.type,
+                        )
+                    }
+                    resp = requests.post(
+                        f"{BACKEND_URL}/generate_ad_with_image",
+                        data=form_data,
+                        files=files,
+                        timeout=180,
+                    )
+                else:
+                    # JSON request without file → /generate_ad
+                    payload = {
+                        "product_name": product_name,
+                        "brand_name": brand_name,
+                        "product_description": product_desc or "",
+                        "key_benefit": key_benefit or "",
+                        "tone": tone,
+                        "visual_style": visual_style,
+                        "principle": "Emotional",
+                        "industry": industry,
+                        "platform": platform,
+                        "audience_desc": audience or "",
+                    }
+                    resp = requests.post(
+                        f"{BACKEND_URL}/generate_ad",
+                        json=payload,
+                        timeout=180,
+                    )
+
                 if resp.status_code == 200:
                     ad = resp.json()
                     st.session_state.current_ad = ad

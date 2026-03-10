@@ -852,7 +852,7 @@ Use the emotion to guide the overall mood of the typography treatment.
 
 Create compelling ad copy AND a complete HTML/CSS overlay for a 1024×1024 pixel ad image.
 
-The overlay will be composited onto a DALL-E 3 product photograph. The HTML background MUST be fully transparent.
+The overlay will be composited onto a gpt-image-1 product photograph. The HTML background MUST be fully transparent.
 
 Respond ONLY with JSON:
 {{
@@ -885,22 +885,32 @@ GOOGLE FONTS:
 READABILITY — every text element needs:
   text-shadow: 0 2px 8px rgba(0,0,0,0.7), 0 0 20px rgba(0,0,0,0.3);
 
-SPACING — CRITICAL (prevent overlapping text):
-- Headline line-height: 1.05 to 1.15
-- Subheadline line-height: 1.3
-- Minimum 24px gap between headline and subheadline
-- Minimum 32px gap between last text element and CTA
-- CTA must be at least 40px from bottom edge
-- PREFER flexbox with gap: display: flex; flex-direction: column; gap: 20px;
-- AVOID absolute positioning for stacked text — use flexbox instead; absolute causes overlaps
-- If headline might wrap to 2+ lines, give subheadline enough room below it
+SPACING — THESE ARE ABSOLUTE RULES, NOT SUGGESTIONS:
+- Use FLEXBOX for layout, not absolute positioning. Flexbox prevents overlap automatically:
+  display: flex; flex-direction: column; justify-content: space-between; height: 100%;
+- gap: 20px minimum between flex children
+- Headline container: padding-top: 60px (keeps text away from top edge)
+- CTA container: padding-bottom: 50px (keeps CTA away from bottom edge)
+- If you use absolute positioning for ANY element, you MUST manually calculate that elements don't overlap
+- Product zone (center 35-70% of image height) should have NO text elements
+- Maximum headline font-size: 80px. If the headline is more than 5 words, use max 60px
+- Subheadline must be at least 30px below the headline's bottom edge
+- Body text must be at least 20px below the subheadline
+- NEVER stack more than 3 text elements (headline + sub + CTA is enough. Skip body text on the image)
+- Prefer 2-element designs: headline + CTA. These always look cleaner than cramming everything on the image.
+
+DESIGN PHILOSOPHY:
+- Less is more. The best ads have a massive headline and a small CTA. That's it.
+- The product image does the heavy lifting. Typography just frames it.
+- If in doubt, OMIT body text from the overlay. Body text on ads is often unreadable anyway.
+- White space is a design element. Don't fill every zone with text.
 
 SIZE HIERARCHY:
-- Headline 1-3 words → 72-90px
-- Headline 4-6 words → 52-68px
+- Headline 1-3 words → 72-80px
+- Headline 4-6 words → 52-65px
 - Headline 7+ words → 40-52px
 - Subheadline: 18-26px
-- Body: 14-18px (or omit for cleaner design)
+- Body: 14-18px (or omit — STRONGLY PREFERRED)
 - CTA: 16-22px bold
 
 HEADLINE TREATMENT:
@@ -990,65 +1000,130 @@ NO: images, JavaScript, external resources besides Google Fonts, placeholder con
 
         return ad_data
 
-    def _generate_dalle_image(self, ad_data: Dict[str, Any],
-                               creative_brief: Dict[str, Any],
-                               brand_info: Dict[str, Any]) -> Image.Image:
-        """Generate a text-free DALL-E 3 product image.
-        The fine-tuned model's own words drive every visual direction field — no hardcoded mappings.
+    def _generate_image(self, ad_data: Dict[str, Any],
+                        creative_brief: Dict[str, Any],
+                        brand_info: Dict[str, Any],
+                        product_image_path: str = None):
         """
-        import requests as _req
-        from io import BytesIO
-        from PIL import Image as PILImage
+        Generate ad image using gpt-image-1.
 
+        Two modes:
+        - Without product image: generates full product scene from text prompt
+        - With product image: uses the uploaded photo as reference, generates professional ad scene around it
+        """
         product = brand_info.get('product', '')
         brand   = brand_info.get('brand', '')
 
-        # Use creative_brief fields verbatim — these are the fine-tuned model's own words
-        visual_style    = creative_brief.get('visual_style', '')
-        color_scheme    = creative_brief.get('color_scheme', '') or ad_data.get('color_scheme', '')
-        visual_dir      = creative_brief.get('visual_direction', '')
-        technique       = creative_brief.get('conceptual_technique', '')
-        emotion         = creative_brief.get('emotion', '')
-        ad_style        = creative_brief.get('ad_style', '')
+        visual_style  = creative_brief.get('visual_style', '')
+        color_scheme  = creative_brief.get('color_scheme', '') or ad_data.get('color_scheme', '')
+        visual_dir    = creative_brief.get('visual_direction', '')
+        technique     = creative_brief.get('conceptual_technique', '')
+        emotion       = creative_brief.get('emotion', '')
+        ad_style      = creative_brief.get('ad_style', '')
 
-        dalle_prompt = f"""Create a premium advertisement photograph for {brand} {product}.
+        if product_image_path:
+            return self._generate_image_with_product_photo(
+                product, brand, product_image_path,
+                visual_style, color_scheme, visual_dir, technique, emotion, ad_style
+            )
+        else:
+            return self._generate_image_from_text(
+                product, brand,
+                visual_style, color_scheme, visual_dir, technique, emotion, ad_style
+            )
+
+    def _generate_image_from_text(self, product, brand, visual_style, color_scheme,
+                                   visual_direction, technique, emotion, ad_style):
+        """Generate a product image from text only using gpt-image-1."""
+        import base64
+        from io import BytesIO
+        from PIL import Image as PILImage
+
+        prompt = f"""Create a premium advertisement photograph for {brand} {product}.
 
 VISUAL STYLE: {visual_style}
 COLOR DIRECTION: {color_scheme}
-VISUAL DIRECTION: {visual_dir}
+VISUAL DIRECTION: {visual_direction}
 CONCEPTUAL APPROACH: {technique}
 MOOD/EMOTION: {emotion}
 AD STYLE: {ad_style}
 
-TECHNICAL:
-- Professional studio-quality lighting
-- Shot on medium format camera with shallow depth of field
-- Product is the hero — prominently featured, recognizable
-- Leave top 20% and bottom 25% slightly clean for text overlay
-- Composition should have intentional negative space
+TECHNICAL REQUIREMENTS:
+- Professional studio-quality photograph
+- The product must be the clear hero of the image
+- Clean composition with intentional negative space
+- Leave the top 20% and bottom 25% of the image slightly less busy for text overlay
+- Premium post-production quality matching {brand}'s actual advertising style
 
-ABSOLUTE RULE: The image must contain ZERO text — no words, letters, numbers,
-brand names, logos, signs, labels, price tags, watermarks, or any form of writing anywhere.
-No readable text on the product itself — keep labels abstract or blurred.
-All text and branding will be added as a separate overlay."""
+ABSOLUTE RULE: The image must contain ZERO text of any kind.
+No words, letters, numbers, brand names, logos, signs, labels, price tags, or watermarks.
+No readable text on the product itself. Keep all labels abstract or blurred.
+All text and branding will be added separately as an overlay."""
 
         self.logger.info(
-            f"DALL-E prompt fields — visual_style: {visual_style[:60]!r}, "
+            f"gpt-image-1 text-only — visual_style: {visual_style[:60]!r}, "
             f"color: {color_scheme[:40]!r}, emotion: {emotion!r}"
         )
 
-        response = self.openai_client.images.generate(
-            model="dall-e-3",
-            prompt=dalle_prompt,
+        result = self.openai_client.images.generate(
+            model="gpt-image-1",
+            prompt=prompt,
             size="1024x1024",
-            quality="hd",
-            n=1
+            quality="high"
         )
 
-        image_url = response.data[0].url
-        img_data  = _req.get(image_url, timeout=30)
-        img = PILImage.open(BytesIO(img_data.content)).convert("RGB")
-        self.logger.info(f"DALL-E 3 image generated: {img.size}")
+        image_base64 = result.data[0].b64_json
+        image_bytes  = base64.b64decode(image_base64)
+        img = PILImage.open(BytesIO(image_bytes)).convert("RGB")
+        self.logger.info(f"gpt-image-1 image generated: {img.size}")
+        return img
+
+    def _generate_image_with_product_photo(self, product, brand, product_image_path,
+                                            visual_style, color_scheme, visual_direction,
+                                            technique, emotion, ad_style):
+        """Generate an ad scene using the user's actual product photo as input."""
+        import base64
+        from io import BytesIO
+        from PIL import Image as PILImage
+
+        prompt = f"""Create a professional advertisement scene for {brand} {product}.
+
+USE THE PROVIDED PRODUCT IMAGE as the hero product in the scene.
+Keep the product EXACTLY as it appears in the input image — same shape, colors, labels, and design.
+Place it in a premium, professionally lit advertising scene that matches this direction:
+
+VISUAL STYLE: {visual_style}
+COLOR DIRECTION: {color_scheme}
+VISUAL DIRECTION: {visual_direction}
+MOOD/EMOTION: {emotion}
+
+SCENE REQUIREMENTS:
+- The product from the input image is the centerpiece
+- Professional lighting that makes the product look its best
+- Background and environment match the brand's premium positioning
+- Clean composition with space for text overlay (top 20% and bottom 25% less busy)
+- The overall image should look like it belongs in {brand}'s actual ad campaign
+- Studio-quality, commercially viable photograph
+
+ABSOLUTE RULE: No additional text, words, logos, or watermarks in the scene.
+All text will be added as a separate overlay."""
+
+        self.logger.info(
+            f"gpt-image-1 edit with product photo: {product_image_path}"
+        )
+
+        result = self.openai_client.images.edit(
+            model="gpt-image-1",
+            image=[open(product_image_path, "rb")],
+            prompt=prompt,
+            size="1024x1024",
+            quality="high"
+        )
+
+        image_base64 = result.data[0].b64_json
+        image_bytes  = base64.b64decode(image_base64)
+        img = PILImage.open(BytesIO(image_bytes)).convert("RGB")
+        self.logger.info(f"gpt-image-1 edit image generated: {img.size}")
         return img
 
     def create_ad(self, prompt: str, product_image_path: str = None,
@@ -1057,9 +1132,9 @@ All text and branding will be added as a separate overlay."""
         HTML/CSS pipeline:
           1. Fine-tuned model → creative brief (tone, visual_style, technique, draft headline)
           2. GPT-4o          → ad copy + complete HTML/CSS overlay document
-          3. DALL-E 3        → text-free product image (improved prompts)
+          3. gpt-image-1     → text-free product image (text-only or edit with uploaded photo)
           4. Playwright      → renders HTML/CSS overlay to transparent 1024x1024 PNG
-          5. Pillow          → composites overlay onto DALL-E image
+          5. Pillow          → composites overlay onto product image
         """
         self.logger.info(f"Starting ad generation for: {prompt}")
 
@@ -1081,16 +1156,14 @@ All text and branding will be added as a separate overlay."""
         )
         overlay_html = ad_data.pop("overlay_html")
 
-        # --- Step 3: DALL-E 3 text-free product image ---
-        if product_image_path:
-            if not os.path.exists(product_image_path):
-                raise FileNotFoundError(f"Product image not found: {product_image_path}")
-            from PIL import Image as PILImage
-            base_image = PILImage.open(product_image_path).convert("RGB")
-            base_image = base_image.resize((1024, 1024), PILImage.LANCZOS)
-        else:
-            self.logger.info("Generating DALL-E 3 product image (text-free, HD)")
-            base_image = self._generate_dalle_image(ad_data, creative_brief, brand_info)
+        # --- Step 3: gpt-image-1 product image ---
+        if product_image_path and not os.path.exists(product_image_path):
+            raise FileNotFoundError(f"Product image not found: {product_image_path}")
+        self.logger.info(
+            "Generating gpt-image-1 product image%s",
+            " (with uploaded photo)" if product_image_path else " (text-only)"
+        )
+        base_image = self._generate_image(ad_data, creative_brief, brand_info, product_image_path)
 
         # --- Step 4: render HTML/CSS overlay with Playwright ---
         if self._html_renderer is None:

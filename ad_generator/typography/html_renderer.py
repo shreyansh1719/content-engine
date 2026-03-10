@@ -1,15 +1,24 @@
 """
 HTML/CSS Typography Renderer
 Renders ad text overlays using Playwright headless Chromium for production-quality typography.
+
+Playwright is invoked via a subprocess to avoid conflicts with asyncio event loops
+(e.g. when called from FastAPI/uvicorn context).
 """
-import os
+import json
 import logging
+import os
+import subprocess
+import sys
 import tempfile
 from pathlib import Path
+
 from PIL import Image
-from playwright.sync_api import sync_playwright
 
 logger = logging.getLogger(__name__)
+
+# Path to the standalone renderer script (same directory as this file)
+_RENDER_SCRIPT = Path(__file__).parent / "render_subprocess.py"
 
 
 class HTMLTypographyRenderer:
@@ -18,9 +27,15 @@ class HTMLTypographyRenderer:
     def __init__(self):
         """Initialize renderer. Raises if Playwright/Chromium not available."""
         try:
-            with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
-                browser.close()
+            result = subprocess.run(
+                [sys.executable, "-c",
+                 "from playwright.sync_api import sync_playwright; "
+                 "p = sync_playwright().start(); b = p.chromium.launch(headless=True); "
+                 "b.close(); p.stop(); print('ok')"],
+                capture_output=True, text=True, timeout=30,
+            )
+            if result.returncode != 0 or "ok" not in result.stdout:
+                raise RuntimeError(result.stderr or result.stdout)
             logger.info("HTMLTypographyRenderer initialized — Playwright + Chromium ready")
         except Exception as e:
             raise RuntimeError(
@@ -30,7 +45,10 @@ class HTMLTypographyRenderer:
 
     def render_overlay(self, html_content: str, width: int = 1024, height: int = 1024) -> Image.Image:
         """
-        Render an HTML document to a transparent PNG.
+        Render an HTML document to a transparent PNG via a subprocess.
+
+        Using a subprocess guarantees no asyncio event loop conflicts when called
+        from FastAPI/uvicorn (e.g. in multipart-upload endpoints).
 
         Args:
             html_content: Complete HTML document (<!DOCTYPE html>...) with transparent background
@@ -45,41 +63,44 @@ class HTMLTypographyRenderer:
             RuntimeError: If rendering fails
         """
         if not html_content or (
-            '<!DOCTYPE' not in html_content.upper() and '<html' not in html_content.lower()
+            "<!DOCTYPE" not in html_content.upper() and "<html" not in html_content.lower()
         ):
             raise ValueError(
                 f"Invalid HTML content: must be a complete HTML document. Got: {html_content[:100]}..."
             )
 
-        tmp_dir = tempfile.mkdtemp(prefix="adcraft_")
-        html_path = os.path.join(tmp_dir, "overlay.html")
-        png_path = os.path.join(tmp_dir, "overlay.png")
+        # Create a temp PNG output path
+        tmp_fd, png_path = tempfile.mkstemp(prefix="adcraft_overlay_", suffix=".png")
+        os.close(tmp_fd)
 
         try:
-            with open(html_path, 'w', encoding='utf-8') as f:
-                f.write(html_content)
+            payload = json.dumps({
+                "html":   html_content,
+                "width":  width,
+                "height": height,
+                "output": png_path,
+            })
 
-            with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
-                page = browser.new_page(
-                    viewport={"width": width, "height": height},
-                    device_scale_factor=1
+            result = subprocess.run(
+                [sys.executable, str(_RENDER_SCRIPT)],
+                input=payload,
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+
+            if result.returncode != 0:
+                raise RuntimeError(
+                    f"Render subprocess exited {result.returncode}: {result.stderr or result.stdout}"
                 )
 
-                # Use file:// URI with forward slashes
-                page.goto(f"file:///{Path(html_path).as_posix()}")
+            try:
+                output = json.loads(result.stdout.strip())
+            except json.JSONDecodeError:
+                raise RuntimeError(f"Unexpected subprocess output: {result.stdout[:200]}")
 
-                # Wait for Google Fonts
-                page.wait_for_load_state("networkidle")
-                page.wait_for_timeout(2000)
-
-                page.screenshot(
-                    path=png_path,
-                    omit_background=True,
-                    type="png"
-                )
-
-                browser.close()
+            if not output.get("success"):
+                raise RuntimeError(f"Playwright render failed: {output.get('error', 'unknown')}")
 
             overlay = Image.open(png_path).convert("RGBA")
 
@@ -92,26 +113,24 @@ class HTMLTypographyRenderer:
             logger.info(f"HTML overlay rendered successfully: {overlay.size}")
             return overlay
 
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("Playwright rendering timed out after 120 s")
+        except RuntimeError:
+            raise
         except Exception as e:
-            logger.error(f"HTML rendering failed: {e}")
             raise RuntimeError(f"Failed to render HTML overlay: {e}") from e
         finally:
-            for path in [html_path, png_path]:
-                try:
-                    os.unlink(path)
-                except OSError:
-                    pass
             try:
-                os.rmdir(tmp_dir)
+                os.unlink(png_path)
             except OSError:
                 pass
 
     def composite_overlay(self, base_image: Image.Image, overlay: Image.Image) -> Image.Image:
         """
-        Composite the transparent HTML overlay onto the DALL-E base image.
+        Composite the transparent HTML overlay onto the product base image.
 
         Args:
-            base_image: The DALL-E generated product image (RGB or RGBA)
+            base_image: The gpt-image-1 generated product image (RGB or RGBA)
             overlay: The rendered HTML typography overlay (RGBA with transparency)
 
         Returns:
@@ -120,8 +139,8 @@ class HTMLTypographyRenderer:
         if base_image.size != overlay.size:
             overlay = overlay.resize(base_image.size, Image.LANCZOS)
 
-        if base_image.mode != 'RGBA':
-            base_image = base_image.convert('RGBA')
+        if base_image.mode != "RGBA":
+            base_image = base_image.convert("RGBA")
 
         result = Image.alpha_composite(base_image, overlay)
-        return result.convert('RGB')
+        return result.convert("RGB")

@@ -8,10 +8,12 @@ or:
     python api.py
 """
 import os
+import shutil
+import tempfile
 from pathlib import Path
 from typing import Optional, List
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -146,6 +148,7 @@ class AdResponse(BaseModel):
     design_approach: str
     generation_time: str
     ad_id: str
+    used_product_image: bool = False
 
 
 class HealthResponse(BaseModel):
@@ -340,6 +343,109 @@ def generate_ad(req: AdRequest):
         generation_time=ad_data.get("generation_time", _dt.now().isoformat()),
         ad_id=ad_id,
     )
+
+
+@app.post("/generate_ad_with_image", response_model=AdResponse, tags=["Generation"])
+def generate_ad_with_image(
+    product_name: str = Form(...),
+    brand_name: str = Form(...),
+    product_description: str = Form(""),
+    key_benefit: str = Form(""),
+    tone: str = Form("Premium"),
+    visual_style: str = Form("Dramatic Lighting"),
+    principle: str = Form("Emotional"),
+    industry: str = Form(""),
+    platform: str = Form("Instagram"),
+    audience_desc: str = Form(""),
+    product_image: Optional[UploadFile] = File(None),
+):
+    """
+    Generate a complete ad using an uploaded product photo.
+
+    Accepts multipart/form-data. The product_image file is passed to gpt-image-1's
+    edit endpoint so the real product appears in a professional ad scene.
+    Falls back to text-only generation if no file is provided.
+    """
+    if not product_name.strip() or not brand_name.strip():
+        raise HTTPException(
+            status_code=422,
+            detail="product_name and brand_name are required and cannot be blank.",
+        )
+
+    product_image_path = None
+    try:
+        if product_image and product_image.filename:
+            suffix = os.path.splitext(product_image.filename)[1] or ".png"
+            Path("output/images").mkdir(parents=True, exist_ok=True)
+            tmp = tempfile.NamedTemporaryFile(
+                delete=False, suffix=suffix, dir="output/images"
+            )
+            shutil.copyfileobj(product_image.file, tmp)
+            tmp.close()
+            product_image_path = tmp.name
+
+        # Build prompt from form fields (same helper logic as JSON endpoint)
+        parts = [f"{product_name} by {brand_name}"]
+        if product_description:
+            parts.append(product_description)
+        if key_benefit:
+            parts.append(f"Key benefit: {key_benefit}")
+        if audience_desc:
+            parts.append(f"Target audience: {audience_desc}")
+        if tone:
+            parts.append(f"Tone: {tone}")
+        if visual_style:
+            parts.append(f"Visual style: {visual_style}")
+        if principle:
+            parts.append(f"Made to Stick principle: {principle}")
+        if industry:
+            parts.append(f"Industry: {industry}")
+        if platform:
+            parts.append(f"Platform: {platform}")
+        prompt = ". ".join(parts)
+
+        generator = get_generator()
+        try:
+            ad_data = generator.create_ad(
+                prompt,
+                product_image_path=product_image_path,
+                tone=tone or None,
+                visual_style=visual_style or None,
+            )
+        except Exception as exc:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Ad generation failed: {exc}",
+            )
+
+        image_path = ad_data.get("final_path") or ad_data.get("image_path") or ""
+        image_url  = _local_path_to_url(image_path)
+
+        from datetime import datetime as _dt
+        ad_id = f"{brand_name}_{product_name}_{_dt.now().strftime('%Y%m%d_%H%M%S')}".replace(" ", "_")
+
+        return AdResponse(
+            headline=ad_data.get("headline", ""),
+            subheadline=ad_data.get("subheadline", ""),
+            body_text=ad_data.get("body_text", ""),
+            call_to_action=ad_data.get("call_to_action", ""),
+            image_url=image_url,
+            brand_name=brand_name,
+            product=product_name,
+            industry=industry,
+            tone=ad_data.get("tone", tone or ""),
+            visual_style=ad_data.get("visual_style", visual_style or ""),
+            design_approach=ad_data.get("design_approach", ""),
+            generation_time=ad_data.get("generation_time", _dt.now().isoformat()),
+            ad_id=ad_id,
+            used_product_image=product_image_path is not None,
+        )
+    finally:
+        if product_image_path and os.path.exists(product_image_path):
+            try:
+                os.unlink(product_image_path)
+            except Exception:
+                pass
 
 
 # ---------------------------------------------------------------------------
