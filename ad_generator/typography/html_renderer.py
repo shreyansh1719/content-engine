@@ -43,9 +43,44 @@ class HTMLTypographyRenderer:
                 f"Run: pip install playwright && playwright install chromium"
             ) from e
 
+    @staticmethod
+    def _sanitize_html(html: str) -> str:
+        """
+        Fix common GPT-4o HTML generation issues before rendering.
+
+        Problems fixed:
+        1. @import statements outside <style> — moves them to start of first <style> block.
+        2. Stray text between </style> and </head> — strips it (causes visible artifacts).
+        3. Missing transparent background on <body>.
+        """
+        import re
+
+        # 1. Collect all @import statements from anywhere in the document
+        import_re = re.compile(r"@import\s+url\([^)]+\)\s*;?", re.IGNORECASE)
+        imports   = import_re.findall(html)
+
+        if imports:
+            # Remove every occurrence wherever it lives
+            for imp in imports:
+                html = html.replace(imp, "")
+            # Re-insert as the very first line inside <style>
+            import_block = "\n".join(imp.strip().rstrip(";") + ";" for imp in imports)
+            html = re.sub(r"(<style[^>]*>)", r"\1\n" + import_block + "\n", html, count=1,
+                          flags=re.IGNORECASE)
+
+        # 2. Remove stray text nodes between </style> and </head>
+        html = re.sub(r"(</style>)\s*[^<]+\s*(</head>)", r"\1\2", html, flags=re.IGNORECASE)
+
+        # 3. Ensure body has transparent background (belt-and-suspenders)
+        if "background: transparent" not in html and "background:transparent" not in html:
+            html = re.sub(r"(<body\b)", r'<body style="background:transparent"', html,
+                          count=1, flags=re.IGNORECASE)
+
+        return html
+
     def render_overlay(self, html_content: str, width: int = 1024, height: int = 1024) -> Image.Image:
         """
-        Render an HTML document to a transparent PNG via a subprocess.
+        Sanitise, then render an HTML document to a transparent PNG via a subprocess.
 
         Using a subprocess guarantees no asyncio event loop conflicts when called
         from FastAPI/uvicorn (e.g. in multipart-upload endpoints).
@@ -68,6 +103,10 @@ class HTMLTypographyRenderer:
             raise ValueError(
                 f"Invalid HTML content: must be a complete HTML document. Got: {html_content[:100]}..."
             )
+
+        # Fix common GPT-4o HTML issues before handing to Playwright
+        html_content = self._sanitize_html(html_content)
+        logger.debug("HTML sanitised, passing to render subprocess")
 
         # Create a temp PNG output path
         tmp_fd, png_path = tempfile.mkstemp(prefix="adcraft_overlay_", suffix=".png")

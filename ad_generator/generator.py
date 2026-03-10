@@ -1000,7 +1000,7 @@ NO: images, JavaScript, external resources besides Google Fonts, placeholder con
 
         return ad_data
 
-    def _generate_image(self, ad_data: Dict[str, Any],
+    def _generate_image(self, ad_data: Any,
                         creative_brief: Dict[str, Any],
                         brand_info: Dict[str, Any],
                         product_image_path: str = None):
@@ -1010,12 +1010,17 @@ NO: images, JavaScript, external resources besides Google Fonts, placeholder con
         Two modes:
         - Without product image: generates full product scene from text prompt
         - With product image: uses the uploaded photo as reference, generates professional ad scene around it
+
+        ad_data may be None when called in the two-pass flow (image generated before copy).
         """
         product = brand_info.get('product', '')
         brand   = brand_info.get('brand', '')
 
+        # Creative brief fields drive the image — ad_data is optional
         visual_style  = creative_brief.get('visual_style', '')
-        color_scheme  = creative_brief.get('color_scheme', '') or ad_data.get('color_scheme', '')
+        color_scheme  = creative_brief.get('color_scheme', '')
+        if not color_scheme and ad_data:
+            color_scheme = ad_data.get('color_scheme', '')
         visual_dir    = creative_brief.get('visual_direction', '')
         technique     = creative_brief.get('conceptual_technique', '')
         emotion       = creative_brief.get('emotion', '')
@@ -1126,15 +1131,318 @@ All text will be added as a separate overlay."""
         self.logger.info(f"gpt-image-1 edit image generated: {img.size}")
         return img
 
+    # ── Two-pass image-aware typography ──────────────────────────────────────
+
+    def _analyze_image_for_typography(self, image) -> Dict[str, Any]:
+        """
+        Analyze the generated product image to determine optimal text placement.
+        Divides image into a 3×3 grid and scores each zone for brightness/complexity.
+        Returns a dict GPT-4o uses to place text in clean zones away from the product.
+        """
+        import numpy as np
+        from collections import Counter
+
+        img_array = np.array(image)
+        height, width = img_array.shape[:2]
+        h3, w3 = height // 3, width // 3
+
+        zone_defs = [
+            ("top_left",     0, 0), ("top_center",    0, 1), ("top_right",     0, 2),
+            ("middle_left",  1, 0), ("middle_center", 1, 1), ("middle_right",  1, 2),
+            ("bottom_left",  2, 0), ("bottom_center", 2, 1), ("bottom_right",  2, 2),
+        ]
+
+        zones: Dict[str, Any] = {}
+        for name, row, col in zone_defs:
+            region = img_array[row*h3:(row+1)*h3, col*w3:(col+1)*w3]
+            brightness  = float(np.mean(region))
+            complexity  = float(np.std(region))
+            avg_color   = tuple(int(x) for x in np.mean(region, axis=(0, 1)))
+            zones[name] = {
+                "brightness":   round(brightness, 1),
+                "complexity":   round(complexity, 1),
+                "is_dark":      brightness < 100,
+                "is_light":     brightness > 160,
+                "is_clean":     complexity < 40,
+                "is_busy":      complexity > 60,
+                "avg_color_rgb": avg_color[:3],
+            }
+
+        clean_zones = sorted(zones.items(), key=lambda x: x[1]["complexity"])
+
+        best_headline_candidates = [z for z in clean_zones if z[0] != "middle_center"]
+        best_headline_zone = best_headline_candidates[0][0] if best_headline_candidates else "top_center"
+
+        bottom_zones = sorted(
+            [(n, d) for n, d in zones.items() if n.startswith("bottom")],
+            key=lambda x: x[1]["complexity"]
+        )
+        best_cta_zone = bottom_zones[0][0] if bottom_zones else "bottom_center"
+
+        overall_brightness = float(np.mean(img_array))
+        if overall_brightness < 120:
+            recommended_text_color = "#FFFFFF"
+            recommended_shadow     = "dark"
+        else:
+            recommended_text_color = "#1A1A1A"
+            recommended_shadow     = "light"
+
+        # Dominant colors via quantisation
+        small  = image.resize((50, 50))
+        pixels = np.array(small).reshape(-1, 3)
+        quant  = ((pixels // 48) * 48).tolist()
+        color_counts = Counter(tuple(c) for c in quant)
+        top_colors = [
+            {"rgb": list(c), "hex": "#{:02x}{:02x}{:02x}".format(*c)}
+            for c, _ in color_counts.most_common(5)
+        ]
+
+        return {
+            "zones":                   zones,
+            "best_headline_zone":      best_headline_zone,
+            "best_cta_zone":           best_cta_zone,
+            "overall_brightness":      round(overall_brightness, 1),
+            "is_overall_dark":         overall_brightness < 120,
+            "recommended_text_color":  recommended_text_color,
+            "recommended_shadow_style": recommended_shadow,
+            "dominant_colors":         top_colors,
+            "product_likely_in":       "middle_center",
+            "avoid_text_zones":        [n for n, d in zones.items()
+                                        if d["is_busy"] or n == "middle_center"],
+            "clean_text_zones":        [n for n, d in zones.items()
+                                        if d["is_clean"] and n != "middle_center"],
+        }
+
+    def _generate_copy_and_overlay(self, creative_brief: Dict[str, Any],
+                                    brand_info: Dict[str, Any],
+                                    brand_analysis: Dict[str, Any],
+                                    image_analysis: Dict[str, Any],
+                                    tone: str = None,
+                                    visual_style: str = None) -> Dict[str, Any]:
+        """
+        GPT-4o writes ad copy + HTML/CSS overlay with full knowledge of:
+          - the creative brief from the fine-tuned model
+          - the image zone analysis (where to place text, what colors exist)
+        """
+        product = brand_info.get('product', '')
+        brand   = brand_info.get('brand', '')
+
+        cb_tone        = tone         or creative_brief.get('tone')         or brand_analysis.get('tone', '')
+        cb_visual      = visual_style or creative_brief.get('visual_style') or brand_analysis.get('visual_direction', '')
+        cb_technique   = creative_brief.get('conceptual_technique')         or brand_analysis.get('ad_style', '')
+        cb_emotion     = creative_brief.get('emotion', '')
+        cb_typography  = creative_brief.get('typography_style')             or brand_analysis.get('typography_style', '')
+        cb_color       = creative_brief.get('color_scheme')                 or brand_analysis.get('color_scheme', '')
+        cb_cta         = creative_brief.get('call_to_action', '')
+        cb_headline    = creative_brief.get('headline', '')
+
+        zones           = image_analysis.get('zones', {})
+        clean_zones     = image_analysis.get('clean_text_zones', [])
+        avoid_zones     = image_analysis.get('avoid_text_zones', [])
+        best_headline   = image_analysis.get('best_headline_zone', 'top_center')
+        best_cta        = image_analysis.get('best_cta_zone', 'bottom_center')
+        text_color      = image_analysis.get('recommended_text_color', '#FFFFFF')
+        shadow_style    = image_analysis.get('recommended_shadow_style', 'dark')
+        dominant_colors = image_analysis.get('dominant_colors', [])
+        is_dark         = image_analysis.get('is_overall_dark', True)
+
+        # Zone descriptions
+        zone_lines = []
+        for name, data in zones.items():
+            status     = "CLEAN — good for text" if data['is_clean'] else ("BUSY — avoid text" if data['is_busy'] else "mid-complexity")
+            brightness = "dark" if data['is_dark'] else ("light" if data['is_light'] else "mid-tone")
+            zone_lines.append(f"  {name}: {status}, {brightness}, complexity={data['complexity']}")
+
+        image_desc = f"""
+IMAGE ANALYSIS (actual generated product image — 3×3 zone grid):
+Overall: {'DARK image' if is_dark else 'LIGHT image'}, brightness={image_analysis['overall_brightness']}/255
+Product is in: middle_center zone (keep this zone COMPLETELY EMPTY of text)
+
+{chr(10).join(zone_lines)}
+
+CLEAN zones available for text: {', '.join(clean_zones) if clean_zones else 'none — all zones busy, use strong shadows'}
+AVOID zones (busy or contains product): {', '.join(avoid_zones)}
+Best headline zone: {best_headline}
+Best CTA zone: {best_cta}
+Recommended text color: {text_color}
+Dominant image colors (hex): {', '.join(c['hex'] for c in dominant_colors[:4])}
+Shadow style: {'dark shadow on light text (image is dark)' if shadow_style == 'dark' else 'light shadow on dark text (image is light)'}"""
+
+        avoid_msg = ""
+        if self._used_styles:
+            avoid_msg = f"\nDo NOT reuse these recent approaches: {', '.join(self._used_styles[-3:])}"
+
+        prompt_text = f"""You are a senior advertising art director writing production-ready HTML/CSS.
+
+BRAND: {brand}
+PRODUCT: {product}
+
+CREATIVE BRIEF (from trained AI model):
+- Tone: {cb_tone}
+- Visual style: {cb_visual}
+- Conceptual technique: {cb_technique}
+- Emotion to evoke: {cb_emotion}
+- Typography recommendation: {cb_typography}
+- Color scheme: {cb_color}
+- Headline direction: {cb_headline}
+- CTA direction: {cb_cta}
+{avoid_msg}
+{image_desc}
+
+Write ad copy + a complete 1024×1024 HTML/CSS overlay that composites onto this specific image.
+
+Respond ONLY with JSON:
+{{
+  "headline": "3-6 word headline",
+  "subheadline": "8-12 word subheadline",
+  "body_text": "",
+  "call_to_action": "2-3 word CTA",
+  "design_approach": "5-word layout description",
+  "overlay_html": "COMPLETE HTML DOCUMENT"
+}}
+
+═══════════════════════════════════════
+OVERLAY HTML — EVERY RULE IS MANDATORY
+═══════════════════════════════════════
+
+DOCUMENT STRUCTURE (copy exactly, fill in FONTNAME):
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=FONTNAME:wght@300;400;700;900&display=swap');
+html, body {{
+  margin: 0; padding: 0;
+  width: 1024px; height: 1024px;
+  overflow: hidden;
+  background: transparent;
+}}
+</style>
+</head>
+<body>
+<!-- TEXT ELEMENTS HERE -->
+</body>
+</html>
+
+CRITICAL — @import MUST be the FIRST line inside <style>. No text outside tags. No content between </style> and </head>.
+
+TEXT PLACEMENT — FOLLOW THE IMAGE ANALYSIS ABOVE:
+- Headline goes in zone: {best_headline}
+- CTA goes in zone: {best_cta}
+- NEVER put any text in these zones: {', '.join(avoid_zones)}
+- The middle_center zone is the product — leave it empty
+
+CSS pixel positions for zones (use these exactly):
+  top_left:      position:absolute; top:60px;  left:60px;   text-align:left;
+  top_center:    position:absolute; top:60px;  left:50%;    transform:translateX(-50%); text-align:center;
+  top_right:     position:absolute; top:60px;  right:60px;  text-align:right;
+  bottom_left:   position:absolute; bottom:60px; left:60px; text-align:left;
+  bottom_center: position:absolute; bottom:60px; left:50%;  transform:translateX(-50%); text-align:center;
+  bottom_right:  position:absolute; bottom:60px; right:60px; text-align:right;
+  middle_left:   position:absolute; top:38%;   left:60px;   text-align:left;
+  middle_right:  position:absolute; top:38%;   right:60px;  text-align:right;
+
+TEXT COLOR:
+- Base text: {text_color}
+- For CTA button: pick one of these image colors as accent: {', '.join(c['hex'] for c in dominant_colors[:3])} (or a strong complementary color)
+- Do NOT default to white if the image is light
+
+TEXT SHADOW — MANDATORY on every text element:
+{'  text-shadow: 0 2px 16px rgba(0,0,0,0.95), 0 0 40px rgba(0,0,0,0.6);' if shadow_style == 'dark' else '  text-shadow: 0 2px 8px rgba(255,255,255,0.95), 0 1px 4px rgba(0,0,0,0.4);'}
+
+FONT — from typography recommendation:
+- Use {cb_typography if cb_typography else 'a professional Google Font matching the brand tone'}
+- Import weights 400 and 700 minimum
+- Headline: font-weight 700 or 900
+- Subheadline: font-weight 300 or 400, font-style italic
+- CTA: font-weight 700, letter-spacing 0.08em
+
+SIZES:
+- Headline 3 words or fewer: 72-78px
+- Headline 4-5 words: 58-68px
+- Headline 6+ words: 48-56px
+- Subheadline: 20-26px
+- CTA: 16-20px
+- line-height on headline: 1.05-1.12
+
+SPACING between elements:
+- At least 28px gap between headline bottom and subheadline top
+- At least 36px gap between subheadline and CTA
+- CTA at least 60px from the image edge it's near
+
+DESIGN RULES:
+- body_text MUST be empty string — no body copy on the image
+- Max 3 elements: headline + subheadline + CTA (or just headline + CTA if image is busy)
+- The product zone (middle_center) must be completely free of any HTML element
+- Be consistent: if headline is left-aligned, CTA must also be left-aligned
+
+CTA BUTTON STYLE (choose one):
+- Pill: display:inline-block; border-radius:50px; padding:12px 36px; background:ACCENT_COLOR;
+- Ghost: display:inline-block; border:1.5px solid {text_color}; padding:10px 32px; background:transparent;
+- Underline: border-bottom:2px solid {text_color}; padding-bottom:4px; (append " →" to CTA text)
+
+Google Font suggestions by tone:
+  Luxury/Elegant: Cormorant Garamond, Playfair Display, Cinzel, DM Serif Display
+  Bold/Urban/Sport: Oswald, Anton, Bebas Neue, Archivo Black
+  Clean/Tech/Modern: Inter, Space Grotesk, DM Sans, Outfit
+  Playful/Lifestyle: Poppins, Nunito, Quicksand
+  Editorial/Fashion: Libre Baskerville, EB Garamond, Lora"""
+
+        response = self.openai_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You write pixel-perfect, production-ready HTML/CSS for advertising overlays. "
+                        "You always follow image analysis data precisely — placing text exactly where instructed. "
+                        "Your code has zero rendering artifacts: no stray text, no @import leaks. "
+                        "You respond ONLY with valid JSON."
+                    )
+                },
+                {"role": "user", "content": prompt_text}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.88,
+        )
+
+        ad_data = json.loads(response.choices[0].message.content)
+
+        # Normalise alternate key names
+        if "body" in ad_data and "body_text" not in ad_data:
+            ad_data["body_text"] = ad_data.pop("body")
+        if "cta" in ad_data and "call_to_action" not in ad_data:
+            ad_data["call_to_action"] = ad_data.pop("cta")
+
+        overlay_html = ad_data.get("overlay_html", "")
+        if not overlay_html or "<html" not in overlay_html.lower():
+            raise ValueError(f"GPT-4o did not return valid overlay_html. Got: {overlay_html[:200]}")
+
+        approach = ad_data.get("design_approach", "")
+        if approach:
+            self._used_styles.append(approach)
+
+        # Carry creative brief metadata forward
+        ad_data["tone"]                 = cb_tone
+        ad_data["visual_style"]         = cb_visual
+        ad_data["conceptual_technique"] = cb_technique
+        ad_data["emotion"]              = cb_emotion
+        ad_data["typography_style"]     = cb_typography
+        ad_data["color_scheme"]         = cb_color
+        ad_data["image_analysis"]       = image_analysis
+
+        return ad_data
+
     def create_ad(self, prompt: str, product_image_path: str = None,
                   tone: str = None, visual_style: str = None) -> Dict[str, Any]:
         """
-        HTML/CSS pipeline:
-          1. Fine-tuned model → creative brief (tone, visual_style, technique, draft headline)
-          2. GPT-4o          → ad copy + complete HTML/CSS overlay document
-          3. gpt-image-1     → text-free product image (text-only or edit with uploaded photo)
-          4. Playwright      → renders HTML/CSS overlay to transparent 1024x1024 PNG
-          5. Pillow          → composites overlay onto product image
+        Two-pass image-aware pipeline:
+          1. Fine-tuned model → creative brief
+          2. gpt-image-1      → product image (driven by creative brief alone)
+          3. Image analyzer   → zone map (brightness/complexity per 3×3 grid)
+          4. GPT-4o           → ad copy + HTML/CSS overlay using brief + zone map
+          5. Playwright       → renders overlay to transparent PNG
+          6. Pillow           → composites overlay onto product image
         """
         self.logger.info(f"Starting ad generation for: {prompt}")
 
@@ -1142,30 +1450,40 @@ All text will be added as a separate overlay."""
             self.logger.warning("DEV MODE active — returning mock ad (no OPENAI_API_KEY set)")
             return self._generate_mock_ad(prompt)
 
-        # --- Step 0: extract brand/product ---
+        # --- Step 0: extract brand/product and brand analysis ---
         brand_info     = self.extract_brand_info(prompt)
         brand_analysis = self.analyze_brand(brand_info)
 
         # --- Step 1: creative brief from fine-tuned model ---
         creative_brief = self.generate_creative_brief(brand_info, brand_analysis)
 
-        # --- Step 2: ad copy + HTML/CSS overlay from GPT-4o ---
-        ad_data = self._expand_brief_to_full_ad(
-            creative_brief, brand_info, brand_analysis,
-            tone=tone, visual_style=visual_style
-        )
-        overlay_html = ad_data.pop("overlay_html")
-
-        # --- Step 3: gpt-image-1 product image ---
+        # --- Step 2: generate product image FIRST (creative brief drives it) ---
         if product_image_path and not os.path.exists(product_image_path):
             raise FileNotFoundError(f"Product image not found: {product_image_path}")
         self.logger.info(
             "Generating gpt-image-1 product image%s",
             " (with uploaded photo)" if product_image_path else " (text-only)"
         )
-        base_image = self._generate_image(ad_data, creative_brief, brand_info, product_image_path)
+        base_image = self._generate_image(None, creative_brief, brand_info, product_image_path)
 
-        # --- Step 4: render HTML/CSS overlay with Playwright ---
+        # --- Step 3: analyze the actual image for typography placement ---
+        self.logger.info("Analyzing image zones for typography placement")
+        image_analysis = self._analyze_image_for_typography(base_image)
+        self.logger.info(
+            "Image analysis — headline zone: %s, CTA zone: %s, clean zones: %s",
+            image_analysis['best_headline_zone'],
+            image_analysis['best_cta_zone'],
+            image_analysis['clean_text_zones'],
+        )
+
+        # --- Step 4: GPT-4o copy + HTML/CSS overlay using creative brief + image analysis ---
+        ad_data = self._generate_copy_and_overlay(
+            creative_brief, brand_info, brand_analysis, image_analysis,
+            tone=tone, visual_style=visual_style
+        )
+        overlay_html = ad_data.pop("overlay_html")
+
+        # --- Step 5: render HTML/CSS overlay with Playwright ---
         if self._html_renderer is None:
             from .typography.html_renderer import HTMLTypographyRenderer
             self._html_renderer = HTMLTypographyRenderer()
@@ -1173,7 +1491,7 @@ All text will be added as a separate overlay."""
         self.logger.info("Rendering HTML/CSS typography overlay via Playwright")
         overlay_image = self._html_renderer.render_overlay(overlay_html, width=1024, height=1024)
 
-        # --- Step 5: composite overlay onto base image ---
+        # --- Step 6: composite overlay onto base image ---
         final_image = self._html_renderer.composite_overlay(base_image, overlay_image)
 
         # --- Save final image ---
@@ -1186,7 +1504,6 @@ All text will be added as a separate overlay."""
         )
 
         # --- Merge result ---
-        # ad_data fields win over brand_analysis (fine-tuned model's words take priority)
         result = {
             **brand_analysis,
             **ad_data,
@@ -1196,7 +1513,7 @@ All text will be added as a separate overlay."""
             'image_path':           final_path,
             'tone':                 ad_data.get('tone') or brand_analysis.get('tone', ''),
             'visual_style':         ad_data.get('visual_style') or brand_analysis.get('visual_direction', ''),
-            'visual_direction':     ad_data.get('visual_direction') or creative_brief.get('visual_direction', ''),
+            'visual_direction':     creative_brief.get('visual_direction', ''),
             'conceptual_technique': ad_data.get('conceptual_technique', ''),
             'emotion':              ad_data.get('emotion', ''),
             'typography_style':     ad_data.get('typography_style') or brand_analysis.get('typography_style', ''),

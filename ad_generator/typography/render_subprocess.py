@@ -39,8 +39,12 @@ def main():
                 device_scale_factor=1,
             )
             page.goto(f"file:///{Path(html_path).as_posix()}")
+            # Wait for network (Google Fonts CDN) to finish loading
             page.wait_for_load_state("networkidle")
-            page.wait_for_timeout(2000)
+            # Extra wait for font rendering — prevents @import text leaking into screenshot
+            page.wait_for_timeout(3000)
+            # Force a layout reflow so all CSS is applied before screenshot
+            page.evaluate("document.body.offsetHeight")
             page.screenshot(path=output_path, omit_background=True, type="png")
             browser.close()
 
