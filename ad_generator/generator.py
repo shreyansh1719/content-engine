@@ -1519,6 +1519,9 @@ Google Font suggestions by tone:
             'typography_style':     ad_data.get('typography_style') or brand_analysis.get('typography_style', ''),
             'color_scheme':         ad_data.get('color_scheme') or brand_analysis.get('color_scheme', ''),
             'generation_time':      datetime.now().isoformat(),
+            # Private PIL objects for downstream quality scoring; stripped before JSON serialisation
+            '_base_image':    base_image,
+            '_overlay_image': overlay_image,
         }
 
         self.logger.info("Ad generation completed successfully")
@@ -1531,7 +1534,7 @@ Google Font suggestions by tone:
             return
         try:
             meta_path = image_path.replace('.png', '_metadata.json').replace('.jpg', '_metadata.json')
-            safe = {k: v for k, v in result.items() if k != 'image'}
+            safe = {k: v for k, v in result.items() if not k.startswith('_') and k != 'image'}
             with open(meta_path, 'w', encoding='utf-8') as f:
                 json.dump(safe, f, indent=2, default=str)
             self.logger.info(f"Metadata saved to {meta_path}")

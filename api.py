@@ -149,6 +149,7 @@ class AdResponse(BaseModel):
     generation_time: str
     ad_id: str
     used_product_image: bool = False
+    quality_report: Optional[dict] = None
 
 
 class HealthResponse(BaseModel):
@@ -200,6 +201,7 @@ async def _startup():
 # ---------------------------------------------------------------------------
 
 _generator = None
+_scorer = None
 
 
 def get_generator():
@@ -210,6 +212,17 @@ def get_generator():
         api_key = os.getenv("OPENAI_API_KEY", "").strip() or None
         _generator = AdGenerator(openai_api_key=api_key)
     return _generator
+
+
+def get_scorer():
+    """Return singleton AdQualityScorer, sharing the generator's OpenAI client."""
+    global _scorer
+    if _scorer is None:
+        from ad_generator.quality_scorer import AdQualityScorer
+        gen = get_generator()
+        client = getattr(gen, "openai_client", None)
+        _scorer = AdQualityScorer(client=client)
+    return _scorer
 
 
 # ---------------------------------------------------------------------------
@@ -328,6 +341,16 @@ def generate_ad(req: AdRequest):
     from datetime import datetime as _dt
     ad_id = f"{req.brand_name}_{req.product_name}_{_dt.now().strftime('%Y%m%d_%H%M%S')}".replace(" ", "_")
 
+    # Quality scoring (uses PIL images stored privately in ad_data)
+    quality_report = None
+    base_img = ad_data.get("_base_image")
+    overlay_img = ad_data.get("_overlay_image")
+    if base_img is not None and overlay_img is not None:
+        try:
+            _, quality_report = get_scorer().score_ad(base_img, overlay_img, ad_data)
+        except Exception as _qe:
+            quality_report = {"error": str(_qe)}
+
     return AdResponse(
         headline=ad_data.get("headline", ""),
         subheadline=ad_data.get("subheadline", ""),
@@ -342,6 +365,7 @@ def generate_ad(req: AdRequest):
         design_approach=ad_data.get("design_approach", ""),
         generation_time=ad_data.get("generation_time", _dt.now().isoformat()),
         ad_id=ad_id,
+        quality_report=quality_report,
     )
 
 
@@ -424,6 +448,16 @@ def generate_ad_with_image(
         from datetime import datetime as _dt
         ad_id = f"{brand_name}_{product_name}_{_dt.now().strftime('%Y%m%d_%H%M%S')}".replace(" ", "_")
 
+        # Quality scoring
+        quality_report = None
+        base_img = ad_data.get("_base_image")
+        overlay_img = ad_data.get("_overlay_image")
+        if base_img is not None and overlay_img is not None:
+            try:
+                _, quality_report = get_scorer().score_ad(base_img, overlay_img, ad_data)
+            except Exception as _qe:
+                quality_report = {"error": str(_qe)}
+
         return AdResponse(
             headline=ad_data.get("headline", ""),
             subheadline=ad_data.get("subheadline", ""),
@@ -439,7 +473,99 @@ def generate_ad_with_image(
             generation_time=ad_data.get("generation_time", _dt.now().isoformat()),
             ad_id=ad_id,
             used_product_image=product_image_path is not None,
+            quality_report=quality_report,
         )
+    finally:
+        if product_image_path and os.path.exists(product_image_path):
+            try:
+                os.unlink(product_image_path)
+            except Exception:
+                pass
+
+
+# ---------------------------------------------------------------------------
+# A/B Test endpoint
+# ---------------------------------------------------------------------------
+
+@app.post("/generate_ab_test", tags=["Generation"])
+def generate_ab_test(
+    product_name: str = Form(...),
+    brand_name: str = Form(...),
+    product_description: str = Form(""),
+    key_benefit: str = Form(""),
+    tone: str = Form("Premium"),
+    visual_style: str = Form("Dramatic Lighting"),
+    principle: str = Form("Emotional"),
+    industry: str = Form(""),
+    platform: str = Form("Instagram"),
+    audience_desc: str = Form(""),
+    num_variants: int = Form(3),
+    product_image: Optional[UploadFile] = File(None),
+):
+    """
+    Generate N ad variants, score each with the quality engine, and return
+    ranked results with per-variant quality reports and a winner recommendation.
+
+    Each variant goes through the full pipeline independently so creative direction,
+    copy, and visual treatment vary naturally between variants.
+    """
+    if not product_name.strip() or not brand_name.strip():
+        raise HTTPException(
+            status_code=422,
+            detail="product_name and brand_name are required and cannot be blank.",
+        )
+
+    product_image_path = None
+    try:
+        if product_image and product_image.filename:
+            suffix = os.path.splitext(product_image.filename)[1] or ".png"
+            Path("output/images").mkdir(parents=True, exist_ok=True)
+            tmp = tempfile.NamedTemporaryFile(
+                delete=False, suffix=suffix, dir="output/images"
+            )
+            shutil.copyfileobj(product_image.file, tmp)
+            tmp.close()
+            product_image_path = tmp.name
+
+        # Build prompt (same logic as other endpoints)
+        parts = [f"{product_name} by {brand_name}"]
+        for label, val in [
+            ("", product_description),
+            ("Key benefit", key_benefit),
+            ("Target audience", audience_desc),
+            ("Tone", tone),
+            ("Visual style", visual_style),
+            ("Made to Stick principle", principle),
+            ("Industry", industry),
+            ("Platform", platform),
+        ]:
+            if val:
+                parts.append(f"{label}: {val}" if label else val)
+        prompt = ". ".join(parts)
+
+        generator = get_generator()
+        scorer = get_scorer()
+
+        from ad_generator.ab_testing import ABTestEngine
+        ab_engine = ABTestEngine(generator=generator, scorer=scorer)
+
+        test_result = ab_engine.run_test(
+            prompt,
+            num_variants=max(2, min(int(num_variants), 4)),
+            product_image_path=product_image_path,
+            tone=tone or None,
+            visual_style=visual_style or None,
+        )
+
+        # Convert local image paths to static URLs for the frontend
+        for variant in test_result.get("variants", []):
+            local_path = variant.get("image_path", "")
+            variant["image_url"] = _local_path_to_url(local_path)
+
+        return test_result
+
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"A/B test failed: {exc}")
     finally:
         if product_image_path and os.path.exists(product_image_path):
             try:

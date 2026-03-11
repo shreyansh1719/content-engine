@@ -526,6 +526,8 @@ if "current_ad" not in st.session_state:
     st.session_state.current_ad = None
 if "history" not in st.session_state:
     st.session_state.history = []
+if "ab_result" not in st.session_state:
+    st.session_state.ab_result = None
 
 
 # ---------------------------------------------------------------------------
@@ -634,7 +636,11 @@ with st.sidebar:
         help="Upload a real product photo. gpt-image-1 will place it in a professional ad scene.",
     )
 
-    generate = st.button("Generate Ad", use_container_width=True, key="gen_btn")
+    col_gen, col_ab = st.columns(2)
+    with col_gen:
+        generate = st.button("Generate Ad", use_container_width=True, key="gen_btn")
+    with col_ab:
+        ab_test = st.button("A/B Test ×3", use_container_width=True, key="ab_btn")
 
     # Sidebar footer
     st.markdown(
@@ -739,10 +745,221 @@ if generate:
 
 
 # ---------------------------------------------------------------------------
+# A/B Test generation logic
+# ---------------------------------------------------------------------------
+
+if ab_test:
+    if not brand_name or not product_name:
+        st.error("Brand name and product name are required.")
+    else:
+        with st.spinner(""):
+            st.markdown(
+                '<div style="text-align:center;padding:3rem 1rem;">'
+                '<div style="font-family:\'DM Sans\',sans-serif;font-size:0.85rem;color:#333;">'
+                'Generating 3 variants &amp; scoring each…'
+                '</div>'
+                '<div style="font-size:0.72rem;color:#222;margin-top:0.5rem;line-height:1.8;">'
+                'Each variant: Fine-tuned model&nbsp;→&nbsp;gpt-image-1&nbsp;→&nbsp;'
+                'Overlay&nbsp;→&nbsp;WCAG + composition scoring'
+                '</div>'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+            try:
+                form_data = {
+                    "product_name": product_name,
+                    "brand_name": brand_name,
+                    "product_description": product_desc or "",
+                    "key_benefit": key_benefit or "",
+                    "tone": tone,
+                    "visual_style": visual_style,
+                    "principle": "Emotional",
+                    "industry": industry,
+                    "platform": platform,
+                    "audience_desc": audience or "",
+                    "num_variants": 3,
+                }
+                files = {}
+                if product_image:
+                    files["product_image"] = (
+                        product_image.name,
+                        product_image.getvalue(),
+                        product_image.type,
+                    )
+
+                resp = requests.post(
+                    f"{BACKEND_URL}/generate_ab_test",
+                    data=form_data,
+                    files=files if files else None,
+                    timeout=600,
+                )
+
+                if resp.status_code == 200:
+                    st.session_state.ab_result = resp.json()
+                    st.session_state.current_ad = None   # clear single-ad view
+                    st.rerun()
+                else:
+                    detail = (
+                        resp.json().get("detail", resp.text)
+                        if resp.headers.get("content-type", "").startswith("application/json")
+                        else resp.text
+                    )
+                    st.error(f"A/B test failed ({resp.status_code}): {detail}")
+            except requests.exceptions.Timeout:
+                st.error(
+                    "Request timed out. A/B testing generates 3 full ads (~3-4 min). "
+                    "The server may still be processing — check back shortly."
+                )
+            except requests.exceptions.ConnectionError:
+                st.error("Cannot reach the API. Start it with: uvicorn api:app --port 8000")
+            except Exception as exc:
+                st.error(f"Unexpected error: {exc}")
+
+
+# ---------------------------------------------------------------------------
 # Main display area
 # ---------------------------------------------------------------------------
 
-if st.session_state.current_ad:
+if st.session_state.ab_result:
+    ab = st.session_state.ab_result
+    winner_id = ab.get("winner", {}).get("variant_id", "")
+    variants = ab.get("variants", [])
+    comparison = ab.get("comparison", {})
+
+    st.markdown(
+        '<div style="margin-bottom:1rem;">'
+        '<span style="font-family:\'DM Serif Display\',serif;font-size:1.4rem;'
+        'color:#E8E8E8;letter-spacing:-0.02em;">A/B Test Results</span>'
+        f'&nbsp;&nbsp;<span style="font-size:0.72rem;color:#444;">'
+        f'Score range {comparison.get("score_range", ["—","—"])[0]}–'
+        f'{comparison.get("score_range", ["—","—"])[1]} · '
+        f'avg {comparison.get("avg_score","—")}'
+        f'</span>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    cols = st.columns(len(variants), gap="medium")
+
+    for i, (variant, col) in enumerate(zip(variants, cols)):
+        with col:
+            is_winner = variant["variant_id"] == winner_id
+            score = variant.get("composite_score", 0)
+            grade = variant.get("grade", "?")
+            ad_copy = variant.get("ad_data", {})
+            img_url = variant.get("image_url", "")
+            full_url = f"{BACKEND_URL}{img_url}" if img_url.startswith("/") else img_url
+
+            # Winner border
+            border = "2px solid rgba(201,168,76,0.7)" if is_winner else "1px solid rgba(255,255,255,0.07)"
+            winner_badge = (
+                '<div style="font-size:0.62rem;color:#C9A84C;text-transform:uppercase;'
+                'letter-spacing:0.12em;font-weight:600;margin-bottom:0.4rem;">★ Winner</div>'
+                if is_winner else
+                f'<div style="font-size:0.62rem;color:#333;margin-bottom:0.4rem;">Variant {i+1}</div>'
+            )
+
+            st.markdown(
+                f'<div style="border:{border};border-radius:12px;padding:0.75rem;'
+                'background:#0D0D0D;">'
+                f'{winner_badge}',
+                unsafe_allow_html=True,
+            )
+
+            if full_url:
+                try:
+                    st.image(full_url, use_container_width=True)
+                except Exception:
+                    st.markdown(
+                        '<div style="height:200px;display:flex;align-items:center;'
+                        'justify-content:center;color:#2A2A2A;font-size:0.75rem;">'
+                        'Image unavailable</div>',
+                        unsafe_allow_html=True,
+                    )
+
+            # Score badge
+            grade_color = {"A+": "#4CAF50", "A": "#4CAF50", "A-": "#8BC34A",
+                           "B+": "#8BC34A", "B": "#CDDC39", "B-": "#CDDC39",
+                           "C+": "#FFC107", "C": "#FFC107", "C-": "#FF9800",
+                           "D": "#FF5722", "F": "#F44336"}.get(grade, "#888")
+            st.markdown(
+                f'<div style="display:flex;align-items:baseline;gap:0.5rem;margin-top:0.6rem;">'
+                f'<span style="font-size:2rem;font-weight:700;color:{grade_color};'
+                f'font-family:\'DM Sans\',sans-serif;line-height:1;">{score:.0f}</span>'
+                f'<span style="font-size:0.7rem;color:#555;">/100</span>'
+                f'<span style="font-size:1.1rem;font-weight:600;color:{grade_color};'
+                f'margin-left:0.25rem;">{grade}</span>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+            headline = ad_copy.get("headline", "—")
+            st.markdown(
+                f'<div style="font-size:0.8rem;color:#AAA;margin-top:0.35rem;'
+                'font-style:italic;line-height:1.3;">'
+                f'"{headline}"</div>',
+                unsafe_allow_html=True,
+            )
+
+            # Per-metric mini bars
+            metrics = variant.get("quality_report", {}).get("metrics", {})
+            metric_labels = {
+                "readability": "Readability",
+                "placement": "Placement",
+                "composition": "Composition",
+                "harmony": "Harmony",
+                "copy": "Copy",
+            }
+            for key, label in metric_labels.items():
+                m_score = metrics.get(key, {}).get("score", 0)
+                st.progress(
+                    int(m_score) / 100,
+                    text=f"{label}: {m_score:.0f}",
+                )
+
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    # Expandable full scoring breakdown
+    with st.expander("Full scoring breakdown"):
+        metric_labels = ["Readability", "Placement", "Composition", "Harmony", "Copy"]
+        metric_keys = ["readability", "placement", "composition", "harmony", "copy"]
+
+        # Header row
+        header_cols = st.columns([2] + [1] * len(variants))
+        with header_cols[0]:
+            st.markdown("**Metric**")
+        for j, v in enumerate(variants):
+            with header_cols[j + 1]:
+                is_w = v["variant_id"] == winner_id
+                st.markdown(f"**{'★ ' if is_w else ''}V{j+1}**")
+
+        # Data rows
+        mc = comparison.get("metric_comparison", {})
+        for label, key in zip(metric_labels, metric_keys):
+            row_cols = st.columns([2] + [1] * len(variants))
+            with row_cols[0]:
+                st.markdown(label)
+            scores_for_metric = mc.get(key, [0] * len(variants))
+            best_val = max(scores_for_metric) if scores_for_metric else 0
+            for j, ms in enumerate(scores_for_metric):
+                with row_cols[j + 1]:
+                    color = "#4CAF50" if ms == best_val else "#888"
+                    st.markdown(
+                        f'<span style="color:{color};font-weight:{"600" if ms==best_val else "400"};">'
+                        f'{ms:.0f}</span>',
+                        unsafe_allow_html=True,
+                    )
+
+        # Strengths / weaknesses for winner
+        winner_data = next((v for v in variants if v["variant_id"] == winner_id), None)
+        if winner_data:
+            qr = winner_data.get("quality_report", {})
+            if qr.get("strengths"):
+                st.markdown("**Winner strengths:** " + " · ".join(qr["strengths"]))
+            if qr.get("recommendations"):
+                st.markdown("**Recommendations:** " + " · ".join(qr["recommendations"]))
+
+elif st.session_state.current_ad:
     ad = st.session_state.current_ad
 
     image_url = ad.get("image_url", "")
@@ -805,6 +1022,59 @@ if st.session_state.current_ad:
             unsafe_allow_html=True,
         )
 
+        # ── Quality score panel ──
+        quality_report = ad.get("quality_report")
+        if quality_report and "composite_score" in quality_report:
+            comp = quality_report["composite_score"]
+            grade = quality_report.get("grade", "?")
+            grade_color = {"A+": "#4CAF50", "A": "#4CAF50", "A-": "#8BC34A",
+                           "B+": "#8BC34A", "B": "#CDDC39", "B-": "#CDDC39",
+                           "C+": "#FFC107", "C": "#FFC107", "C-": "#FF9800",
+                           "D": "#FF5722", "F": "#F44336"}.get(grade, "#888")
+            st.markdown(
+                f'<div style="background:#0D0D0D;border:1px solid rgba(255,255,255,0.06);'
+                'border-radius:12px;padding:1rem 1.25rem;margin-top:1rem;">'
+                '<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;'
+                'color:#444;margin-bottom:0.6rem;">Quality Score</div>'
+                f'<div style="display:flex;align-items:baseline;gap:0.5rem;margin-bottom:1rem;">'
+                f'<span style="font-size:2.8rem;font-weight:700;color:{grade_color};'
+                f'font-family:\'DM Sans\',sans-serif;line-height:1;">{comp:.0f}</span>'
+                f'<span style="font-size:0.8rem;color:#444;">/100</span>'
+                f'<span style="font-size:1.4rem;font-weight:600;color:{grade_color};'
+                f'margin-left:0.25rem;">{grade}</span>'
+                f'</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+            metrics = quality_report.get("metrics", {})
+            metric_labels = {
+                "readability": "Text Readability",
+                "placement":   "Text Placement",
+                "composition": "Composition",
+                "harmony":     "Color Harmony",
+                "copy":        "Copy Quality",
+            }
+            for key, label in metric_labels.items():
+                m_score = metrics.get(key, {}).get("score", 0)
+                st.progress(int(m_score) / 100, text=f"{label}: {m_score:.0f}/100")
+
+            strengths = quality_report.get("strengths", [])
+            recs = quality_report.get("recommendations", [])
+            if strengths:
+                st.markdown(
+                    '<span style="font-size:0.72rem;color:#444;">Strengths: </span>'
+                    f'<span style="font-size:0.72rem;color:#666;">'
+                    + " &nbsp;·&nbsp; ".join(strengths) + "</span>",
+                    unsafe_allow_html=True,
+                )
+            if recs:
+                st.markdown(
+                    '<span style="font-size:0.72rem;color:#444;">Improve: </span>'
+                    f'<span style="font-size:0.72rem;color:#666;">'
+                    + " &nbsp;·&nbsp; ".join(recs) + "</span>",
+                    unsafe_allow_html=True,
+                )
+
     # ── Feedback expander ──
     st.markdown('<div style="margin-top:1.5rem;"></div>', unsafe_allow_html=True)
     with st.expander("Submit Feedback"):
@@ -839,8 +1109,8 @@ if st.session_state.current_ad:
             except Exception:
                 st.error("Could not reach the feedback endpoint.")
 
-else:
-    # ── Empty state ──
+elif not st.session_state.ab_result:
+    # ── Empty state ── (shown only when no ad and no A/B result)
     st.markdown(
         '<div class="empty-state">'
         '<div class="empty-state-diamond">◆</div>'
