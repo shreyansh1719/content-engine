@@ -1,10 +1,10 @@
 """
 ImprovedAdGenerator — fine-tuned model + A/B testing wrapper.
 
-Uses the fine-tuned GPT-3.5 model for ad copy generation and wraps
-AdGenerator for image generation. Supports A/B variant generation.
+Uses the fine-tuned model for ad copy generation and wraps AdGenerator for
+image generation. Supports A/B variant generation.
 
-Fine-tuned model: ft:gpt-3.5-turbo-0125:shreyansh::BLDyTfqs
+Active model is read from FINE_TUNED_MODEL_ID env var (set in .env).
 """
 import os
 import json
@@ -19,7 +19,7 @@ except ImportError:
 
 from ad_generator.generator import AdGenerator, DEV_MODE
 
-FINE_TUNED_MODEL = os.getenv("FINE_TUNED_MODEL", "ft:gpt-3.5-turbo-0125:shreyansh::BLDyTfqs")
+FINE_TUNED_MODEL = os.getenv("FINE_TUNED_MODEL_ID", "")
 
 
 class ImprovedAdGenerator(AdGenerator):

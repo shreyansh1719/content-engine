@@ -23,6 +23,8 @@ import logging
 from typing import Dict, List, Any, Tuple
 from datetime import datetime
 
+from .prompts import CREATIVE_BRIEF_SYSTEM_PROMPT
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,13 +39,8 @@ class DPODatasetBuilder:
     - Minimum 20 pairs recommended, 50+ for meaningful improvement
     """
 
-    # This MUST match the system prompt used in generator.py's _get_creative_brief()
-    SYSTEM_PROMPT = (
-        "You are an expert advertising creative director. "
-        "Given a brand and product, output a complete creative brief as JSON with keys: "
-        "headline, caption, tone, visual_style, conceptual_technique, "
-        "call_to_action, emotion."
-    )
+    # Single source of truth — imported from prompts.py, matches training data exactly
+    SYSTEM_PROMPT = CREATIVE_BRIEF_SYSTEM_PROMPT
 
     def __init__(self, feedback_loop):
         """

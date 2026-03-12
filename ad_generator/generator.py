@@ -22,6 +22,7 @@ except ImportError:
     OpenAI = None
 
 from .image_maker import ModernStudioImageGenerator
+from .prompts import CREATIVE_BRIEF_SYSTEM_PROMPT
 
 # Dev mode: enabled automatically when OPENAI_API_KEY is absent
 DEV_MODE = not bool(os.getenv('OPENAI_API_KEY', '').strip())
@@ -56,11 +57,8 @@ class AdGenerator:
         os.makedirs("output/images", exist_ok=True)
         os.makedirs("output/data", exist_ok=True)
         
-        # Fine-tuned model ID (creative brief step)
-        self.fine_tuned_model_id = os.getenv(
-            'FINE_TUNED_MODEL_ID',
-            'ft:gpt-4o-mini-2024-07-18:shreyansh::DHRbE3oW'
-        )
+        # Fine-tuned model ID (creative brief step) — no hardcoded fallback
+        self.fine_tuned_model_id = os.getenv('FINE_TUNED_MODEL_ID', '')
 
         # Layout variety tracking — avoids repeating same layout in one session
         self._used_layouts: List[str] = []
@@ -520,11 +518,7 @@ Respond with a JSON object with EXACTLY these keys:
             messages = [
                 {
                     "role": "system",
-                    "content": (
-                        "You are an expert advertising creative director. Given a brand and product, "
-                        "generate a complete ad creative brief including copy and visual direction. "
-                        "Respond only in JSON."
-                    ),
+                    "content": CREATIVE_BRIEF_SYSTEM_PROMPT,
                 },
                 {
                     "role": "user",
