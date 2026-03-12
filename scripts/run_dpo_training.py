@@ -15,6 +15,9 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+# Ensure project root is on sys.path when running as script
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -111,7 +114,7 @@ def main():
         sys.exit(1)
 
     num_examples = result["num_examples"]
-    print(f"  DPO examples written: {num_examples} → {DPO_OUTPUT_PATH}")
+    print(f"  DPO examples written: {num_examples} -> {DPO_OUTPUT_PATH}")
 
     if num_examples == 0:
         print("  ERROR: No DPO examples produced. Check preference pairs.")
@@ -152,7 +155,7 @@ def main():
             print(f"    {e}")
         sys.exit(1)
 
-    print(f"  {valid_count} entries valid, system prompts all match ✓")
+    print(f"  {valid_count} entries valid, system prompts all match [OK]")
 
     # ── 3. Upload DPO dataset ──
     print(f"\n[upload] Uploading DPO dataset ...")
@@ -247,7 +250,7 @@ def main():
         if missing:
             print(f"  WARN: missing fields: {missing}")
         else:
-            print(f"  All required fields present ✓")
+            print(f"  All required fields present [OK]")
     except Exception as e:
         print(f"  Smoke test error: {e}")
 

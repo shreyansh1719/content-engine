@@ -15,6 +15,9 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# Ensure project root is on sys.path when running as script
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -123,7 +126,7 @@ def main():
         if src and Path(src).exists():
             shutil.copy(src, dst)
             ad["sample_path"] = str(dst)
-            logger.info(f"  Copied {src} → {dst}  (score={ad['composite_score']:.1f})")
+            logger.info(f"  Copied {src} -> {dst}  (score={ad['composite_score']:.1f})")
         else:
             logger.warning(f"  Image not found for {ad['slug']}: {src}")
 

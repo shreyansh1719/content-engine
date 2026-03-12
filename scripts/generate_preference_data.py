@@ -1,7 +1,7 @@
 """
 Step 2: Generate preference pairs via batch A/B testing.
 
-Runs 10 products × 3 variants each through the full pipeline and collects
+Runs 10 products x 3 variants each through the full pipeline and collects
 preference pairs via FeedbackLoop.
 
 Usage:
@@ -17,6 +17,9 @@ import time
 import traceback
 from datetime import datetime
 from pathlib import Path
+
+# Ensure project root is on sys.path when running as script
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 try:
     from dotenv import load_dotenv
@@ -168,11 +171,11 @@ def main():
     if args.dry_run:
         products = PRODUCTS[:2]
         num_variants = 2
-        logger.info("DRY RUN mode: 2 products × 2 variants")
+        logger.info("DRY RUN mode: 2 products x 2 variants")
     else:
         products = PRODUCTS
         num_variants = 3
-        logger.info(f"FULL RUN: {len(products)} products × {num_variants} variants")
+        logger.info(f"FULL RUN: {len(products)} products x {num_variants} variants")
 
     logger.info("Initializing pipeline ...")
     ab_engine, feedback_loop = setup_pipeline()
@@ -258,8 +261,8 @@ def main():
         if total_pairs == 0:
             print("  WARN: 0 preference pairs collected — check score gaps and pipeline")
         else:
-            print(f"  {total_pairs} pairs collected ✓")
-            print(f"  Dry run PASSED — safe to run full batch")
+            print(f"  {total_pairs} pairs collected [OK]")
+            print(f"  Dry run PASSED -- safe to run full batch")
 
     logger.info("Done.")
 
