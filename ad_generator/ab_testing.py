@@ -44,6 +44,7 @@ class ABTestEngine:
         """
         self.generator = generator
         self.scorer = scorer
+        self.feedback_loop = None  # Set externally to enable preference pair collection
 
     def run_test(
         self,
@@ -205,7 +206,7 @@ class ABTestEngine:
             margin,
         )
 
-        return {
+        result = {
             "test_id": test_id,
             "product": prompt,
             "num_variants": len(variants),
@@ -224,3 +225,13 @@ class ABTestEngine:
                 "metric_comparison": metric_comparison,
             },
         }
+
+        # Feed preference pairs into feedback loop if wired in
+        if self.feedback_loop is not None:
+            try:
+                new_pairs = self.feedback_loop.collect_from_ab_test(result)
+                logger.info(f"Collected {len(new_pairs)} preference pairs from A/B test {test_id}")
+            except Exception as _fe:
+                logger.warning(f"Feedback loop collection failed: {_fe}")
+
+        return result

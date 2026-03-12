@@ -1131,6 +1131,33 @@ elif not st.session_state.ab_result:
 
 
 # ---------------------------------------------------------------------------
+# Model Performance & Feedback Loop
+# ---------------------------------------------------------------------------
+
+with st.expander("Model Performance & Feedback Loop"):
+    try:
+        stats = requests.get(f"{BACKEND_URL}/feedback_stats", timeout=3).json()
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Preference Pairs", stats.get("total_preference_pairs", 0))
+        with col2:
+            st.metric("User Feedback", stats.get("raw_feedback_entries", 0))
+        with col3:
+            ready = stats.get("ready_for_dpo", False)
+            pairs_needed = stats.get("recommended_min_pairs", 50) - stats.get("total_preference_pairs", 0)
+            st.metric("DPO Ready", "Yes" if ready else f"Need {max(pairs_needed, 0)} more")
+
+        if stats.get("total_preference_pairs", 0) > 0:
+            st.caption(
+                f"AB test pairs: {stats.get('ab_test_pairs', 0)}  ·  "
+                f"User feedback pairs: {stats.get('user_feedback_pairs', 0)}  ·  "
+                f"Avg score difference: {stats.get('avg_score_difference', 0)} pts"
+            )
+    except Exception:
+        st.caption("Connect to API to see feedback stats")
+
+# ---------------------------------------------------------------------------
 # History strip
 # ---------------------------------------------------------------------------
 

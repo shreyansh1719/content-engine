@@ -202,6 +202,7 @@ async def _startup():
 
 _generator = None
 _scorer = None
+_feedback_loop = None
 
 
 def get_generator():
@@ -223,6 +224,15 @@ def get_scorer():
         client = getattr(gen, "openai_client", None)
         _scorer = AdQualityScorer(client=client)
     return _scorer
+
+
+def get_feedback_loop():
+    """Return singleton FeedbackLoop."""
+    global _feedback_loop
+    if _feedback_loop is None:
+        from ad_generator.feedback_loop import FeedbackLoop
+        _feedback_loop = FeedbackLoop()
+    return _feedback_loop
 
 
 # ---------------------------------------------------------------------------
@@ -548,6 +558,7 @@ def generate_ab_test(
 
         from ad_generator.ab_testing import ABTestEngine
         ab_engine = ABTestEngine(generator=generator, scorer=scorer)
+        ab_engine.feedback_loop = get_feedback_loop()
 
         test_result = ab_engine.run_test(
             prompt,
@@ -606,7 +617,42 @@ def submit_feedback(req: FeedbackRequest):
     fname = feedback_dir / f"feedback_{_dt.now().strftime('%Y%m%d_%H%M%S_%f')}.json"
     fname.write_text(_json.dumps(record, indent=2))
 
+    # Feed into feedback loop for preference pair collection
+    try:
+        feedback_text = req.strengths if req.rating >= 4 else req.weaknesses
+        get_feedback_loop().collect_from_user_feedback(
+            ad_data={
+                "product": req.headline or req.ad_id or "",
+                "headline": req.headline or "",
+            },
+            rating=req.rating,
+            feedback_text=feedback_text or "",
+        )
+    except Exception as _fle:
+        pass  # Never let feedback loop errors break the response
+
     return {"status": "ok", "saved_to": str(fname)}
+
+
+# ---------------------------------------------------------------------------
+# Feedback loop + evaluation endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/feedback_stats", tags=["Feedback"])
+def feedback_stats():
+    """Return feedback loop statistics (pairs collected, DPO readiness)."""
+    try:
+        return get_feedback_loop().get_stats()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get("/evaluation_reports", tags=["Evaluation"])
+def evaluation_reports():
+    """List available model evaluation reports."""
+    import glob as _glob
+    reports = _glob.glob("data/evaluations/*.json")
+    return {"reports": [os.path.basename(r) for r in sorted(reports)]}
 
 
 # ---------------------------------------------------------------------------
