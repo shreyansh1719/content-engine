@@ -113,7 +113,7 @@ def validate_training_file(path: str) -> tuple[bool, dict]:
     else:
         actual = list(system_prompts)[0]
         if actual == CREATIVE_BRIEF_SYSTEM_PROMPT:
-            print(f"  System prompt: MATCHES prompts.py ✓")
+            print(f"  System prompt: MATCHES prompts.py [OK]")
         else:
             print(f"  WARNING: Training data prompt does NOT match CREATIVE_BRIEF_SYSTEM_PROMPT")
             print(f"  Training data: {repr(actual)}")
@@ -170,7 +170,7 @@ def smoke_test_model(client: OpenAI, model_id: str) -> bool:
         if missing:
             print(f"\n  WARN: Missing/empty fields: {missing}")
         else:
-            print(f"\n  All {len(required_fields)} required fields present ✓")
+            print(f"\n  All {len(required_fields)} required fields present [OK]")
 
         return len(missing) == 0
 
@@ -230,6 +230,11 @@ def backup_and_update_env(new_model_id: str):
 # ---------------------------------------------------------------------------
 
 def main():
+    import argparse as _ap
+    parser = _ap.ArgumentParser()
+    parser.add_argument("--resume-job", default="", help="Resume polling an existing job ID")
+    args = parser.parse_args()
+
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
         print("ERROR: OPENAI_API_KEY not set")
@@ -237,37 +242,41 @@ def main():
 
     client = OpenAI(api_key=api_key)
 
-    # ── 1. Validate training data ──
-    if not Path(TRAINING_FILE).exists():
-        print(f"ERROR: Training file not found: {TRAINING_FILE}")
-        sys.exit(1)
+    if args.resume_job:
+        job_id = args.resume_job
+        print(f"\n[resume] Resuming polling for job {job_id}")
+    else:
+        # ── 1. Validate training data ──
+        if not Path(TRAINING_FILE).exists():
+            print(f"ERROR: Training file not found: {TRAINING_FILE}")
+            sys.exit(1)
 
-    is_valid, stats = validate_training_file(TRAINING_FILE)
-    if not is_valid:
-        print(f"\nERROR: Training file has {stats['malformed_entries']} malformed entries. Fix before uploading.")
-        sys.exit(1)
+        is_valid, stats = validate_training_file(TRAINING_FILE)
+        if not is_valid:
+            print(f"\nERROR: Training file has {stats['malformed_entries']} malformed entries. Fix before uploading.")
+            sys.exit(1)
 
-    print(f"\n  Validation passed: {stats['valid_entries']} valid entries ✓")
+        print(f"\n  Validation passed: {stats['valid_entries']} valid entries [OK]")
 
-    # ── 2. Upload training file ──
-    print(f"\n[upload] Uploading {TRAINING_FILE} to OpenAI Files API ...")
-    with open(TRAINING_FILE, "rb") as f:
-        upload_result = client.files.create(file=f, purpose="fine-tune")
+        # ── 2. Upload training file ──
+        print(f"\n[upload] Uploading {TRAINING_FILE} to OpenAI Files API ...")
+        with open(TRAINING_FILE, "rb") as f:
+            upload_result = client.files.create(file=f, purpose="fine-tune")
 
-    file_id = upload_result.id
-    print(f"  File uploaded: {file_id}")
+        file_id = upload_result.id
+        print(f"  File uploaded: {file_id}")
 
-    # ── 3. Create fine-tuning job ──
-    print(f"\n[finetune] Creating SFT job on {BASE_MODEL} (n_epochs={N_EPOCHS}) ...")
-    job = client.fine_tuning.jobs.create(
-        training_file=file_id,
-        model=BASE_MODEL,
-        hyperparameters={"n_epochs": N_EPOCHS},
-    )
-    job_id = job.id
-    print(f"  Job created: {job_id}")
-    print(f"  Status: {job.status}")
-    print(f"  Model: {job.model}")
+        # ── 3. Create fine-tuning job ──
+        print(f"\n[finetune] Creating SFT job on {BASE_MODEL} (n_epochs={N_EPOCHS}) ...")
+        job = client.fine_tuning.jobs.create(
+            training_file=file_id,
+            model=BASE_MODEL,
+            hyperparameters={"n_epochs": N_EPOCHS},
+        )
+        job_id = job.id
+        print(f"  Job created: {job_id}")
+        print(f"  Status: {job.status}")
+        print(f"  Model: {job.model}")
 
     # ── 4. Poll until complete ──
     print(f"\n[poll] Polling every {POLL_INTERVAL_SECS}s until job completes ...")
@@ -275,14 +284,14 @@ def main():
 
     while True:
         time.sleep(POLL_INTERVAL_SECS)
-        job = client.fine_tuning.jobs.retrieve(job_id)
         ts = datetime.now().strftime("%H:%M:%S")
+        try:
+            job = client.fine_tuning.jobs.retrieve(job_id)
+        except Exception as conn_err:
+            print(f"  [{ts}] connection error ({conn_err}); will retry next poll")
+            continue
+
         status = job.status
-
-        metrics_str = ""
-        if hasattr(job, "training_file") and job.result_files:
-            pass  # metrics in result files
-
         print(f"  [{ts}] status={status}  trained_tokens={getattr(job, 'trained_tokens', 'N/A')}")
 
         # Print events for live metrics
@@ -315,7 +324,7 @@ def main():
     # ── 7. Smoke test ──
     passed = smoke_test_model(client, new_model_id)
     if passed:
-        print(f"\n[smoke_test] PASSED ✓ — model is producing valid structured output")
+        print(f"\n[smoke_test] PASSED [OK] — model is producing valid structured output")
     else:
         print(f"\n[smoke_test] WARN — model output missing some fields; inspect response above")
 
