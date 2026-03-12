@@ -1,0 +1,105 @@
+{
+  "pair_id": "pair_abtest_1773329702_bce7f1_0_2",
+  "source": "ab_test_quality_score",
+  "product_prompt": "Nespresso Vertuo Pop coffee machine",
+  "score_difference": 18.8,
+  "preferred": {
+    "variant_id": "v2_7b09",
+    "composite_score": 72.2,
+    "grade": "B",
+    "creative_brief": {
+      "tone": "Sophisticated, Innovative, Accessible",
+      "visual_style": "Minimalistic yet visually rich, featuring clean lines and ambient lighting to emphasize the product\u2019s sleek design. Use of close-up shots to highlight the machine's features and coffee quality.",
+      "conceptual_technique": "Experiential and Storytelling Approach",
+      "emotion": "Joy, Curiosity, Appreciation",
+      "typography_style": "Sans-serif fonts like Helvetica or Avenir for a modern and clean look, reflecting the machine's contemporary design and user-friendly nature.",
+      "color_scheme": "Earthy tones with metallic accents to convey sophistication and modernity. Use of dark browns, blacks, and brushed aluminum to align with the premium coffee experience.",
+      "headline": "Pop. For coffee lovers.",
+      "call_to_action": "Shop Now",
+      "ad_style": "Experiential and Storytelling Approach",
+      "target_market": {
+        "demographics": {
+          "age": "25-45",
+          "gender": "all genders",
+          "income": "middle to upper-middle class",
+          "education": "college educated"
+        },
+        "psychographics": {
+          "lifestyle": "urban, modern, tech-savvy",
+          "values": "convenience, quality, design",
+          "interests": "gourmet food and beverage, technology, home aesthetics"
+        }
+      },
+      "key_benefits": [
+        "One-touch brewing technology",
+        "Wide variety of coffee styles and sizes",
+        "Sleek and compact design"
+      ],
+      "product_highlight": "Versatile brewing capabilities for multiple coffee styles and sizes at the touch of a button."
+    },
+    "quality_breakdown": {
+      "readability": 66.5,
+      "placement": 66.0,
+      "composition": 70.2,
+      "harmony": 100.0,
+      "copy": 78.0
+    }
+  },
+  "non_preferred": {
+    "variant_id": "v1_773b",
+    "composite_score": 53.4,
+    "grade": "C-",
+    "creative_brief": {
+      "tone": "Sophisticated, modern, and innovative with a touch of approachability",
+      "visual_style": "Clean, minimalist aesthetics with high-contrast imagery highlighting the machine's sleek design and coffee preparation. Use of lifestyle photography featuring the machine in upscale kitchen environments.",
+      "conceptual_technique": "Lifestyle-driven storytelling with a focus on experiential marketing, leveraging digital platforms and social media to showcase the premium coffee experience",
+      "emotion": "Delight, curiosity",
+      "typography_style": "Sans-serif fonts such as Helvetica or Arial for a clean, modern look that enhances readability and reflects the brand's sophisticated yet approachable nature",
+      "color_scheme": "Warm and inviting tones like deep browns and golds to evoke the richness of coffee, complemented by modern metallic accents to convey a premium feel",
+      "headline": "Reinvent Your Coffee Ritual",
+      "call_to_action": "Shop Now",
+      "ad_style": "Lifestyle-driven storytelling with a focus on experiential marketing, leveraging digital platforms and social media to showcase the premium coffee experience",
+      "target_market": {
+        "demographics": {
+          "age": "25-45",
+          "gender": "All genders",
+          "income_level": "Upper-middle to high income",
+          "location": "Urban and suburban areas",
+          "education": "College-educated"
+        },
+        "psychographics": {
+          "lifestyle": "Health-conscious, environmentally aware, tech-savvy",
+          "values": "Quality, convenience, sustainability",
+          "interests": "Gourmet food and beverages, home automation, trendy tech"
+        }
+      },
+      "key_benefits": [
+        "Innovative brewing technology that delivers a rich and full-bodied coffee experience",
+        "Wide variety of coffee blends and flavors to suit diverse tastes",
+        "User-friendly design with one-touch operation for convenience",
+        "Compact and stylish design that fits modern kitchen aesthetics",
+        "Sustainable practices including recyclable capsules"
+      ],
+      "product_highlight": "The innovative Centrifusion\u2122 technology that ensures optimal extraction and flavor profile in every cup"
+    },
+    "quality_breakdown": {
+      "readability": 38.5,
+      "placement": 27.9,
+      "composition": 69.0,
+      "harmony": 100.0,
+      "copy": 74.0
+    }
+  },
+  "created_at": "2026-03-12T21:09:21.834511",
+  "metadata": {
+    "test_id": "abtest_1773329702_bce7f1",
+    "num_variants": 3,
+    "scoring_weights": {
+      "readability": 0.3,
+      "placement": 0.25,
+      "composition": 0.2,
+      "harmony": 0.1,
+      "copy": 0.15
+    }
+  }
+}

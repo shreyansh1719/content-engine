@@ -1,0 +1,103 @@
+{
+  "pair_id": "pair_abtest_1773327279_3d322d_0_1",
+  "source": "ab_test_quality_score",
+  "product_prompt": "Rolex Submariner luxury dive watch",
+  "score_difference": 8.3,
+  "preferred": {
+    "variant_id": "v2_bcb1",
+    "composite_score": 78.0,
+    "grade": "B+",
+    "creative_brief": {
+      "tone": "Sophisticated, authoritative, timeless, and aspirational",
+      "visual_style": "Clean and elegant with a focus on the watch's craftsmanship. Use of high-contrast, sharp imagery that highlights the watch's details and luxurious nature. Incorporate settings that evoke adventure and sophistication, such as underwater scenes and formal events.",
+      "conceptual_technique": "Aspirational storytelling with a focus on heritage and adventure, featuring high-quality imagery and emotive narratives",
+      "emotion": "Aspiration, admiration, trust",
+      "typography_style": "Elegant serif fonts like Baskerville or Garamond for classic sophistication, paired with a clean sans-serif like Helvetica for modernity. This combination reflects the brand's balance of tradition and innovation.",
+      "color_scheme": "A classic palette of black, silver, and deep blue to evoke luxury, depth, and sophistication. Incorporate gold accents for a touch of opulence.",
+      "headline": "Legendary Craftsmanship Meets Timeless Adventure",
+      "call_to_action": "Shop Now \u2192",
+      "ad_style": "Aspirational storytelling with a focus on heritage and adventure, featuring high-quality imagery and emotive narratives",
+      "target_market": {
+        "demographics": {
+          "age": "30-55",
+          "gender": "Male predominance, but inclusive of females",
+          "income": "High net-worth individuals",
+          "occupation": "Executives, entrepreneurs, professionals"
+        },
+        "psychographics": {
+          "lifestyle": "Affluent, appreciates fine craftsmanship, values exclusivity",
+          "values": "Status, legacy, precision, adventure"
+        }
+      },
+      "key_benefits": [
+        "Unmatched durability and precision for diving and everyday use",
+        "Iconic design with a rich heritage and brand legacy",
+        "Symbol of success and achievement",
+        "Advanced materials and innovation in watchmaking",
+        "Robust water resistance and functionality"
+      ],
+      "product_highlight": "The Submariner's iconic status as a symbol of adventure and achievement, coupled with its superior engineering and water resistance capabilities."
+    },
+    "quality_breakdown": {
+      "readability": 95.1,
+      "placement": 57.0,
+      "composition": 66.3,
+      "harmony": 100.0,
+      "copy": 80.0
+    }
+  },
+  "non_preferred": {
+    "variant_id": "v3_13e2",
+    "composite_score": 69.7,
+    "grade": "B-",
+    "creative_brief": {
+      "tone": "Sophisticated, Timeless, Aspirational",
+      "visual_style": "Use of high-contrast imagery featuring deep blues and blacks that evoke the ocean depths, with a focus on close-up shots of the watch in action, highlighting its robustness and luxury appeal",
+      "conceptual_technique": "Storytelling through cinematic and high-quality visuals that emphasize heritage, craftsmanship, and the adventurous spirit of the Submariner watch",
+      "emotion": "Confidence, Prestige, Adventure",
+      "typography_style": "Classic serif fonts with a modern twist, such as Garamond or Didot, to reflect the brand's legacy and timeless elegance",
+      "color_scheme": "A palette dominated by navy blues, deep blacks, and silver tones to convey elegance, depth, and reliability",
+      "headline": "Your Style, Deeper",
+      "call_to_action": "Shop Now",
+      "ad_style": "Storytelling through cinematic and high-quality visuals that emphasize heritage, craftsmanship, and the adventurous spirit of the Submariner watch",
+      "target_market": {
+        "demographics": {
+          "age": "35-65",
+          "gender": "predominantly male",
+          "income": "high-net-worth individuals",
+          "education": "college-educated"
+        },
+        "psychographics": {
+          "lifestyle": "luxury lifestyle, appreciates craftsmanship and heritage",
+          "values": "status, precision, exclusivity",
+          "interests": "diving, yachting, and other high-end leisure activities"
+        }
+      },
+      "key_benefits": [
+        "Unmatched durability with a history of reliability in extreme conditions",
+        "Iconic design that has remained stylishly relevant over decades",
+        "Exceptional precision and performance certified by the highest standards"
+      ],
+      "product_highlight": "The Submariner's 300-meter water resistance and its role as a pioneering dive watch in history"
+    },
+    "quality_breakdown": {
+      "readability": 50.1,
+      "placement": 79.7,
+      "composition": 63.6,
+      "harmony": 100.0,
+      "copy": 80.0
+    }
+  },
+  "created_at": "2026-03-12T20:29:06.829856",
+  "metadata": {
+    "test_id": "abtest_1773327279_3d322d",
+    "num_variants": 3,
+    "scoring_weights": {
+      "readability": 0.3,
+      "placement": 0.25,
+      "composition": 0.2,
+      "harmony": 0.1,
+      "copy": 0.15
+    }
+  }
+}

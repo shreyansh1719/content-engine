@@ -1,0 +1,106 @@
+{
+  "pair_id": "pair_abtest_1773326981_0eead9_0_1",
+  "source": "ab_test_quality_score",
+  "product_prompt": "Nike Air Jordan 1 streetwear sneakers",
+  "score_difference": 6.8,
+  "preferred": {
+    "variant_id": "v1_4cc8",
+    "composite_score": 82.2,
+    "grade": "A-",
+    "creative_brief": {
+      "tone": "Bold, Energetic, Authentic, and Inspirational",
+      "visual_style": "Dynamic and urban-focused imagery that captures the sneaker in real-life settings, emphasizing movement and street culture. Use of high-contrast, action-oriented photography to convey energy and authenticity.",
+      "conceptual_technique": "Experiential and Storytelling-focused campaigns leveraging digital platforms, influencer collaborations, and community-driven events to create immersive brand experiences.",
+      "emotion": "Empowerment, Creativity, Community",
+      "typography_style": "Sans-serif fonts like Helvetica or Futura for a modern and clean aesthetic, ensuring readability and a contemporary feel that aligns with the brand's innovative and forward-thinking image.",
+      "color_scheme": "A blend of classic and bold colors like black, white, and red, balanced with seasonal colorways that offer trend-driven variations. This strategy capitalizes on the emotional impact and cultural resonance of the Air Jordan heritage.",
+      "headline": "Bold Moves. Authentic Roots.",
+      "call_to_action": "Shop Now",
+      "ad_style": "Experiential and Storytelling-focused campaigns leveraging digital platforms, influencer collaborations, and community-driven events to create immersive brand experiences.",
+      "target_market": {
+        "demographics": {
+          "age": "16-35",
+          "gender": "Primarily Male, but increasingly unisex",
+          "income": "Middle to upper-middle class",
+          "location": "Urban and suburban areas globally"
+        },
+        "psychographics": {
+          "lifestyle": "Trendsetters, style-conscious, culturally aware",
+          "values": "Authenticity, individuality, and self-expression",
+          "interests": "Sports, music, street culture, and fashion"
+        }
+      },
+      "key_benefits": [
+        "Iconic Design and Cultural Heritage",
+        "High-Quality Materials and Craftsmanship",
+        "Versatile Style for Various Occasions",
+        "Strong Brand Legacy and Community",
+        "Limited Editions and Collectability"
+      ],
+      "product_highlight": "The Air Jordan 1's iconic silhouette and its cultural significance as a symbol of style and rebellion."
+    },
+    "quality_breakdown": {
+      "readability": 85.4,
+      "placement": 83.2,
+      "composition": 64.6,
+      "harmony": 100.0,
+      "copy": 86.0
+    }
+  },
+  "non_preferred": {
+    "variant_id": "v2_ad04",
+    "composite_score": 75.4,
+    "grade": "B+",
+    "creative_brief": {
+      "tone": "Authentic, Bold, Trendsetting, Energetic",
+      "visual_style": "Focus on high-contrast, dynamic imagery that captures the essence of urban life. Use close-ups and action shots that emphasize movement and style. Incorporate elements of street art or graffiti to resonate with the streetwear aesthetic.",
+      "conceptual_technique": "Integrated campaigns utilizing digital storytelling, influencer partnerships, and experiential marketing that leverage social media platforms like Instagram and TikTok to engage and excite a young, fashionable audience.",
+      "emotion": "Coolness, Individuality, Energy",
+      "typography_style": "Bold, sans-serif fonts such as Helvetica or Futura, which convey modernity and clarity. Use varying weights to highlight key messages and maintain readability, ensuring the typography complements the dynamic visuals without overpowering them.",
+      "color_scheme": "Bold and contrasting colors such as red and black, or neon accents to evoke energy and attention. Use traditional colorways (like the Chicago red, white, and black) to tap into nostalgia while offering new, trendy palettes for modern appeal.",
+      "headline": "Authentic Jordan Brand Sneakers",
+      "call_to_action": "Shop Now",
+      "ad_style": "Integrated campaigns utilizing digital storytelling, influencer partnerships, and experiential marketing that leverage social media platforms like Instagram and TikTok to engage and excite a young, fashionable audience.",
+      "target_market": {
+        "demographics": {
+          "age": "18-35",
+          "gender": "Predominantly male, but with a growing female segment",
+          "income": "Middle to upper-middle class",
+          "location": "Urban, metropolitan areas"
+        },
+        "psychographics": {
+          "lifestyle": "Fashion-forward, culturally aware, value self-expression",
+          "interests": "Basketball, hip-hop culture, street fashion, social media",
+          "values": "Individuality, trendsetting, community involvement"
+        }
+      },
+      "key_benefits": [
+        "Iconic design recognized globally",
+        "Superior comfort and performance",
+        "Limited editions create exclusivity",
+        "Strong cultural and historic relevance",
+        "High resale value driven by demand"
+      ],
+      "product_highlight": "The iconic Air Jordan 1 silhouette, which embodies a crossover appeal from sports performance to fashion must-have, symbolizing both heritage and innovation."
+    },
+    "quality_breakdown": {
+      "readability": 64.5,
+      "placement": 72.2,
+      "composition": 84.4,
+      "harmony": 100.0,
+      "copy": 74.0
+    }
+  },
+  "created_at": "2026-03-12T20:22:33.512295",
+  "metadata": {
+    "test_id": "abtest_1773326981_0eead9",
+    "num_variants": 2,
+    "scoring_weights": {
+      "readability": 0.3,
+      "placement": 0.25,
+      "composition": 0.2,
+      "harmony": 0.1,
+      "copy": 0.15
+    }
+  }
+}

@@ -1,0 +1,196 @@
+{
+  "run_at": "2026-03-12T21:09:21.840300",
+  "dry_run": false,
+  "total_products": 10,
+  "succeeded": 10,
+  "failed": 0,
+  "total_pairs_collected": 17,
+  "avg_score_gap": 10.4,
+  "summaries": [
+    {
+      "product": "Rolex Submariner luxury dive watch",
+      "brand": "Rolex",
+      "industry": "luxury",
+      "num_variants": 3,
+      "scores": [
+        78.0,
+        69.7,
+        67.2
+      ],
+      "winner_score": 78.0,
+      "winner_headline": "Legendary Craftsmanship Meets Timeless Adventure",
+      "avg_score": 71.6,
+      "pairs_collected": 2,
+      "gaps": [
+        8.299999999999997,
+        10.799999999999997
+      ]
+    },
+    {
+      "product": "Nike Air Jordan 1 streetwear sneakers",
+      "brand": "Nike",
+      "industry": "sportswear",
+      "num_variants": 3,
+      "scores": [
+        69.4,
+        62.8,
+        54.9
+      ],
+      "winner_score": 69.4,
+      "winner_headline": "Stay True. Stay Bold.",
+      "avg_score": 62.4,
+      "pairs_collected": 3,
+      "gaps": [
+        6.6000000000000085,
+        14.500000000000007,
+        7.899999999999999
+      ]
+    },
+    {
+      "product": "Apple AirPods Pro 3 wireless earbuds",
+      "brand": "Apple",
+      "industry": "technology",
+      "num_variants": 3,
+      "scores": [
+        66.1,
+        63.9,
+        59.1
+      ],
+      "winner_score": 66.1,
+      "winner_headline": "Immersive Sound Experience",
+      "avg_score": 63.0,
+      "pairs_collected": 1,
+      "gaps": [
+        6.999999999999993
+      ]
+    },
+    {
+      "product": "Oatly oat milk dairy alternative",
+      "brand": "Oatly",
+      "industry": "food_beverage",
+      "num_variants": 3,
+      "scores": [
+        77.6,
+        69.2,
+        64.8
+      ],
+      "winner_score": 77.6,
+      "winner_headline": "Milk, but made from oats.",
+      "avg_score": 70.5,
+      "pairs_collected": 2,
+      "gaps": [
+        8.399999999999991,
+        12.799999999999997
+      ]
+    },
+    {
+      "product": "Tesla Model S Plaid electric sedan",
+      "brand": "Tesla",
+      "industry": "automotive",
+      "num_variants": 3,
+      "scores": [
+        80.9,
+        80.8,
+        80.4
+      ],
+      "winner_score": 80.9,
+      "winner_headline": "Beyond Ludicrous",
+      "avg_score": 80.7,
+      "pairs_collected": 0,
+      "gaps": []
+    },
+    {
+      "product": "Chanel No. 5 eau de parfum",
+      "brand": "Chanel",
+      "industry": "fragrance",
+      "num_variants": 3,
+      "scores": [
+        78.8,
+        75.4,
+        73.8
+      ],
+      "winner_score": 78.8,
+      "winner_headline": "The Legendary Fragrance Awaits",
+      "avg_score": 76.0,
+      "pairs_collected": 1,
+      "gaps": [
+        5.0
+      ]
+    },
+    {
+      "product": "Sony PlayStation 5 Pro console",
+      "brand": "Sony",
+      "industry": "gaming",
+      "num_variants": 3,
+      "scores": [
+        71.2,
+        69.8,
+        67.6
+      ],
+      "winner_score": 71.2,
+      "winner_headline": "Play Has No Limits",
+      "avg_score": 69.5,
+      "pairs_collected": 0,
+      "gaps": []
+    },
+    {
+      "product": "Dyson Airwrap multi-styler",
+      "brand": "Dyson",
+      "industry": "beauty_tech",
+      "num_variants": 3,
+      "scores": [
+        62.4,
+        61.7,
+        55.0
+      ],
+      "winner_score": 62.4,
+      "winner_headline": "Style without Extreme Heat",
+      "avg_score": 59.7,
+      "pairs_collected": 2,
+      "gaps": [
+        7.399999999999999,
+        6.700000000000003
+      ]
+    },
+    {
+      "product": "Levi's 501 original fit jeans",
+      "brand": "Levi's",
+      "industry": "fashion",
+      "num_variants": 3,
+      "scores": [
+        72.9,
+        63.3,
+        55.6
+      ],
+      "winner_score": 72.9,
+      "winner_headline": "Everyday moments, made better.",
+      "avg_score": 63.9,
+      "pairs_collected": 3,
+      "gaps": [
+        9.600000000000009,
+        17.300000000000004,
+        7.699999999999996
+      ]
+    },
+    {
+      "product": "Nespresso Vertuo Pop coffee machine",
+      "brand": "Nespresso",
+      "industry": "appliances",
+      "num_variants": 3,
+      "scores": [
+        72.2,
+        70.8,
+        53.4
+      ],
+      "winner_score": 72.2,
+      "winner_headline": "Pop. For coffee lovers.",
+      "avg_score": 65.5,
+      "pairs_collected": 2,
+      "gaps": [
+        18.800000000000004,
+        17.4
+      ]
+    }
+  ],
+  "failures": []
+}

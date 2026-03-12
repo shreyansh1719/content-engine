@@ -1,0 +1,114 @@
+{
+  "pair_id": "pair_abtest_1773327546_25a3f9_0_1",
+  "source": "ab_test_quality_score",
+  "product_prompt": "Nike Air Jordan 1 streetwear sneakers",
+  "score_difference": 6.6,
+  "preferred": {
+    "variant_id": "v3_48da",
+    "composite_score": 69.4,
+    "grade": "B-",
+    "creative_brief": {
+      "tone": "Bold, Authentic, Energetic",
+      "visual_style": "Urban and Edgy Photography with Dynamic Angles, featuring diverse models in authentic street settings",
+      "conceptual_technique": "Influencer Collaborations and Social Media Campaigns leveraging User-Generated Content",
+      "emotion": "Empowerment and Individuality",
+      "typography_style": "Sans-serif fonts with a modern twist like 'Helvetica Neue' for clarity and impact, reflecting the brand's modern yet classic essence",
+      "color_scheme": "Bold and Contrasting Colors such as Red, Black, and White to evoke energy and passion",
+      "headline": "Stay True. Stay Bold.",
+      "call_to_action": "Shop Now",
+      "ad_style": "Influencer Collaborations and Social Media Campaigns leveraging User-Generated Content",
+      "target_market": {
+        "demographics": {
+          "age": "16-35",
+          "gender": "Predominantly Male, but expanding into Female",
+          "income": "Middle to Upper-Middle Class",
+          "location": "Urban and Suburban Areas"
+        },
+        "psychographics": {
+          "interests": [
+            "Sneaker Culture",
+            "Street Fashion",
+            "Basketball",
+            "Music"
+          ],
+          "lifestyle": "Trendsetters, Influencers, Active Lifestyle",
+          "values": [
+            "Self-Expression",
+            "Authenticity",
+            "Community"
+          ]
+        }
+      },
+      "key_benefits": [
+        "Iconic Design with Timeless Appeal",
+        "High-Quality Craftsmanship and Materials",
+        "Cultural Significance and Heritage"
+      ],
+      "product_highlight": "The historical and cultural legacy of the Air Jordan 1 as a symbol of rebellion and self-expression"
+    },
+    "quality_breakdown": {
+      "readability": 85.2,
+      "placement": 45.8,
+      "composition": 53.3,
+      "harmony": 100.0,
+      "copy": 78.0
+    }
+  },
+  "non_preferred": {
+    "variant_id": "v2_74e7",
+    "composite_score": 62.8,
+    "grade": "C+",
+    "creative_brief": {
+      "tone": "Bold, Energetic, Innovative, Authentic",
+      "visual_style": "Dynamic and urban-focused imagery that captures the sneaker's role in street culture. Use of high-contrast photography, highlighting the shoe in real-world, youthful settings.",
+      "conceptual_technique": "Influencer partnerships and digital storytelling that emphasizes cultural impact and personal expression through social media channels and immersive digital experiences.",
+      "emotion": "Empowerment, Identity, Creativity",
+      "typography_style": "Sans-serif fonts like Helvetica or Futura for a clean, modern look that conveys both clarity and sophistication, aligning with the sneaker's iconic status.",
+      "color_scheme": "Bold primary colors with classic black and white to symbolize timelessness and appeal across different subcultures within streetwear.",
+      "headline": "Fearless Expression",
+      "call_to_action": "Explore More",
+      "ad_style": "Influencer partnerships and digital storytelling that emphasizes cultural impact and personal expression through social media channels and immersive digital experiences.",
+      "target_market": {
+        "demographics": {
+          "age": "16-35",
+          "gender": "Primarily male but increasingly gender-neutral",
+          "income": "Middle to upper middle class",
+          "location": "Urban and suburban areas",
+          "education": "High school to college-educated"
+        },
+        "psychographics": {
+          "lifestyle": "Fashion-forward, culturally aware, values self-expression",
+          "values": "Individuality, authenticity, community belonging",
+          "interests": "Sports, music, street culture, social media"
+        }
+      },
+      "key_benefits": [
+        "Iconic design with cultural relevance",
+        "High-quality materials and craftsmanship",
+        "Versatile styling for various occasions",
+        "Strong brand heritage and recognition",
+        "Enhanced comfort and performance features"
+      ],
+      "product_highlight": "The Air Jordan 1's unique blend of heritage and modern streetwear appeal."
+    },
+    "quality_breakdown": {
+      "readability": 58.7,
+      "placement": 37.2,
+      "composition": 77.6,
+      "harmony": 100.0,
+      "copy": 69.0
+    }
+  },
+  "created_at": "2026-03-12T20:34:49.353111",
+  "metadata": {
+    "test_id": "abtest_1773327546_25a3f9",
+    "num_variants": 3,
+    "scoring_weights": {
+      "readability": 0.3,
+      "placement": 0.25,
+      "composition": 0.2,
+      "harmony": 0.1,
+      "copy": 0.15
+    }
+  }
+}

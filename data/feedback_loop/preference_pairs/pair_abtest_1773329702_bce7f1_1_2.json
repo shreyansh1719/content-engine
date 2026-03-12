@@ -1,0 +1,98 @@
+{
+  "pair_id": "pair_abtest_1773329702_bce7f1_1_2",
+  "source": "ab_test_quality_score",
+  "product_prompt": "Nespresso Vertuo Pop coffee machine",
+  "score_difference": 17.4,
+  "preferred": {
+    "variant_id": "v3_bb1e",
+    "composite_score": 70.8,
+    "grade": "B",
+    "creative_brief": {
+      "tone": "Sophisticated, modern, innovative, and inviting",
+      "visual_style": "Minimalistic yet elegant design that complements the Nespresso brand's overall aesthetic. Use clean lines and sophisticated imagery to emphasize the machine's modernity and premium nature. Showcase the machine in aspirational settings, reinforcing its status as a lifestyle accessory.",
+      "conceptual_technique": "Lifestyle-focused storytelling that highlights the seamless integration of the machine into modern, stylish home environments. Emphasize aspirational narratives that connect the product's design and technology to everyday luxury experiences.",
+      "emotion": "Aspiration and modern luxury",
+      "typography_style": "Sans-serif fonts like Helvetica or Univers to convey modernity and clarity. The simplicity of these fonts aligns with the premium, clean design ethos of the Nespresso brand, enhancing readability and elegance.",
+      "color_scheme": "A palette of sleek metallics and deep, rich tones such as charcoal, deep blue, or burgundy, suggesting sophistication and premium quality. Accent colors in warm neutrals to highlight warmth and approachability.",
+      "headline": "The New Vertuo Pop",
+      "call_to_action": "Shop Now",
+      "ad_style": "Lifestyle-focused storytelling that highlights the seamless integration of the machine into modern, stylish home environments. Emphasize aspirational narratives that connect the product's design and technology to everyday luxury experiences.",
+      "target_market": {
+        "demographics": "Affluent professionals aged 25-45, predominantly urban dwellers with disposable income",
+        "psychographics": "Coffee enthusiasts who value convenience, quality, and design aesthetics; environmentally conscious and tech-savvy individuals who appreciate premium experiences at home"
+      },
+      "key_benefits": [
+        "Innovative Centrifusion technology for optimal flavor extraction",
+        "Wide variety of coffee and espresso options in one machine",
+        "Sleek and compact design suitable for modern kitchens",
+        "User-friendly interface with one-touch brewing",
+        "Eco-friendly features, including recyclable capsules"
+      ],
+      "product_highlight": "Highlight the innovative Centrifusion technology that distinguishes the Vertuo Pop as a leader in brewing quality and versatility, offering a superior coffee experience at home."
+    },
+    "quality_breakdown": {
+      "readability": 60.0,
+      "placement": 66.1,
+      "composition": 76.5,
+      "harmony": 100.0,
+      "copy": 73.0
+    }
+  },
+  "non_preferred": {
+    "variant_id": "v1_773b",
+    "composite_score": 53.4,
+    "grade": "C-",
+    "creative_brief": {
+      "tone": "Sophisticated, modern, and innovative with a touch of approachability",
+      "visual_style": "Clean, minimalist aesthetics with high-contrast imagery highlighting the machine's sleek design and coffee preparation. Use of lifestyle photography featuring the machine in upscale kitchen environments.",
+      "conceptual_technique": "Lifestyle-driven storytelling with a focus on experiential marketing, leveraging digital platforms and social media to showcase the premium coffee experience",
+      "emotion": "Delight, curiosity",
+      "typography_style": "Sans-serif fonts such as Helvetica or Arial for a clean, modern look that enhances readability and reflects the brand's sophisticated yet approachable nature",
+      "color_scheme": "Warm and inviting tones like deep browns and golds to evoke the richness of coffee, complemented by modern metallic accents to convey a premium feel",
+      "headline": "Reinvent Your Coffee Ritual",
+      "call_to_action": "Shop Now",
+      "ad_style": "Lifestyle-driven storytelling with a focus on experiential marketing, leveraging digital platforms and social media to showcase the premium coffee experience",
+      "target_market": {
+        "demographics": {
+          "age": "25-45",
+          "gender": "All genders",
+          "income_level": "Upper-middle to high income",
+          "location": "Urban and suburban areas",
+          "education": "College-educated"
+        },
+        "psychographics": {
+          "lifestyle": "Health-conscious, environmentally aware, tech-savvy",
+          "values": "Quality, convenience, sustainability",
+          "interests": "Gourmet food and beverages, home automation, trendy tech"
+        }
+      },
+      "key_benefits": [
+        "Innovative brewing technology that delivers a rich and full-bodied coffee experience",
+        "Wide variety of coffee blends and flavors to suit diverse tastes",
+        "User-friendly design with one-touch operation for convenience",
+        "Compact and stylish design that fits modern kitchen aesthetics",
+        "Sustainable practices including recyclable capsules"
+      ],
+      "product_highlight": "The innovative Centrifusion\u2122 technology that ensures optimal extraction and flavor profile in every cup"
+    },
+    "quality_breakdown": {
+      "readability": 38.5,
+      "placement": 27.9,
+      "composition": 69.0,
+      "harmony": 100.0,
+      "copy": 74.0
+    }
+  },
+  "created_at": "2026-03-12T21:09:21.836569",
+  "metadata": {
+    "test_id": "abtest_1773329702_bce7f1",
+    "num_variants": 3,
+    "scoring_weights": {
+      "readability": 0.3,
+      "placement": 0.25,
+      "composition": 0.2,
+      "harmony": 0.1,
+      "copy": 0.15
+    }
+  }
+}

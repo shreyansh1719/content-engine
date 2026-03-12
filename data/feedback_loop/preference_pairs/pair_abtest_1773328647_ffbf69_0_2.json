@@ -1,0 +1,89 @@
+{
+  "pair_id": "pair_abtest_1773328647_ffbf69_0_2",
+  "source": "ab_test_quality_score",
+  "product_prompt": "Chanel No. 5 eau de parfum",
+  "score_difference": 5.0,
+  "preferred": {
+    "variant_id": "v2_e8c1",
+    "composite_score": 78.8,
+    "grade": "B+",
+    "creative_brief": {
+      "tone": "sophisticated, timeless, elegant, exclusive",
+      "visual_style": "Minimalist and elegant design, featuring high-contrast black and white imagery with a focus on the iconic bottle shape. Campaigns should exude luxury and sophistication, using classic, elegant settings that reflect the brand's heritage.",
+      "conceptual_technique": "Aspirational storytelling that emphasizes the legacy and timeless elegance of the fragrance, utilizing high-end fashion photography and film. Leverage celebrity endorsements and iconic figures to reinforce the brand's prestigious image.",
+      "emotion": "aspirational, elegant, timeless, luxurious",
+      "typography_style": "Use of serif fonts such as Didot or Baskerville, which convey tradition and elegance, aligning with the brand's heritage and premium positioning. These fonts offer a sense of refinement and sophistication.",
+      "color_scheme": "A classic black and white palette with touches of gold to symbolize luxury and exclusivity. This aligns with the timeless essence of the brand while conveying a sense of opulence.",
+      "headline": "The Legendary Fragrance Awaits",
+      "call_to_action": "Shop Now",
+      "ad_style": "Aspirational storytelling that emphasizes the legacy and timeless elegance of the fragrance, utilizing high-end fashion photography and film. Leverage celebrity endorsements and iconic figures to reinforce the brand's prestigious image.",
+      "target_market": "Women aged 25-50, with a high disposable income, urban dwellers, likely to be affluent professionals or socialites who value heritage, quality, and status symbols. Psychographically, they seek products that enhance their personal brand and align with their aspirational lifestyle.",
+      "key_benefits": [
+        "Timeless and iconic fragrance that embodies elegance and sophistication",
+        "Premium quality ingredients ensuring a long-lasting and unique scent",
+        "Heritage and prestige associated with the CHANEL brand"
+      ],
+      "product_highlight": "The iconic status and legacy of Chanel No. 5, being the first and most enduring fragrance by CHANEL, known for its unique and unmatched olfactory signature."
+    },
+    "quality_breakdown": {
+      "readability": 90.1,
+      "placement": 65.9,
+      "composition": 68.2,
+      "harmony": 100.0,
+      "copy": 78.0
+    }
+  },
+  "non_preferred": {
+    "variant_id": "v1_af28",
+    "composite_score": 73.8,
+    "grade": "B",
+    "creative_brief": {
+      "tone": "Sophisticated, timeless, elegant, and refined",
+      "visual_style": "Art direction should focus on classic and elegant imagery, with a minimalist yet luxurious aesthetic. Use high-contrast black and white photography with occasional gold accents to convey opulence and timelessness.",
+      "conceptual_technique": "Utilize aspirational imagery and storytelling that emphasizes the legacy and timeless appeal of Chanel No. 5, with a focus on high-quality, cinematic visuals in print and digital media. Leverage celebrity endorsements and iconic figures to reinforce brand prestige.",
+      "emotion": "Luxury, exclusivity, aspiration",
+      "typography_style": "Use serif fonts like Didot or Garamond for a classic and sophisticated feel. These fonts convey a sense of tradition and elegance, aligning with the heritage and luxury status of Chanel No. 5.",
+      "color_scheme": "Focus on black, white, and gold to emphasize luxury and timeless elegance. These colors evoke a sense of exclusivity and sophistication that aligns with the Chanel brand.",
+      "headline": "The Only Perfume That Matters",
+      "call_to_action": "Shop Now",
+      "ad_style": "Utilize aspirational imagery and storytelling that emphasizes the legacy and timeless appeal of Chanel No. 5, with a focus on high-quality, cinematic visuals in print and digital media. Leverage celebrity endorsements and iconic figures to reinforce brand prestige.",
+      "target_market": {
+        "demographics": {
+          "age_range": "30-55",
+          "gender": "Predominantly female",
+          "income_level": "High income",
+          "geographic_location": "Global, with a focus on urban and affluent areas"
+        },
+        "psychographics": {
+          "lifestyle": "Appreciates art and culture, values heritage and tradition, seeks status and exclusivity",
+          "values": "Quality, legacy, sophistication"
+        }
+      },
+      "key_benefits": [
+        "Timeless and iconic fragrance with a rich heritage",
+        "Complex, balanced scent with floral and aldehydic notes",
+        "Associates wearer with elegance and exclusivity"
+      ],
+      "product_highlight": "The fragrance's iconic status and enduring legacy as the ultimate symbol of luxury and sophistication in the perfume industry."
+    },
+    "quality_breakdown": {
+      "readability": 63.2,
+      "placement": 67.3,
+      "composition": 74.8,
+      "harmony": 100.0,
+      "copy": 87.0
+    }
+  },
+  "created_at": "2026-03-12T20:51:43.835374",
+  "metadata": {
+    "test_id": "abtest_1773328647_ffbf69",
+    "num_variants": 3,
+    "scoring_weights": {
+      "readability": 0.3,
+      "placement": 0.25,
+      "composition": 0.2,
+      "harmony": 0.1,
+      "copy": 0.15
+    }
+  }
+}

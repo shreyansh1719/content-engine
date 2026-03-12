@@ -1,0 +1,102 @@
+{
+  "pair_id": "pair_abtest_1773329434_5fa2b3_0_2",
+  "source": "ab_test_quality_score",
+  "product_prompt": "Levi's 501 original fit jeans",
+  "score_difference": 17.3,
+  "preferred": {
+    "variant_id": "v2_e426",
+    "composite_score": 72.9,
+    "grade": "B",
+    "creative_brief": {
+      "tone": "Authentic, Timeless, Heritage-focused, Approachable",
+      "visual_style": "Imagery should be authentic and candid, showcasing real people in everyday settings. Use a mix of urban and natural environments to highlight versatility.",
+      "conceptual_technique": "Storytelling that emphasizes heritage and personal connection with the product, leveraging testimonials and real-life scenarios",
+      "emotion": "Relatable, Trustworthy",
+      "typography_style": "Sans-serif fonts with a modern twist, such as Helvetica or Arial, to convey clarity and authenticity while maintaining a contemporary feel",
+      "color_scheme": "Classic denim blues, neutrals, and earth tones to align with the timeless and versatile nature of the product",
+      "headline": "Everyday moments, made better.",
+      "call_to_action": "Shop Now",
+      "ad_style": "Storytelling that emphasizes heritage and personal connection with the product, leveraging testimonials and real-life scenarios",
+      "target_market": {
+        "demographics": {
+          "age_range": "18-34",
+          "gender": "Unisex",
+          "income_level": "Middle to Upper-middle class",
+          "geography": "Global, with emphasis on North America, Europe, and Asia"
+        },
+        "psychographics": {
+          "lifestyle": "Casual, Fashion-conscious, Values quality and heritage",
+          "values": "Authenticity, Self-expression, Sustainability"
+        }
+      },
+      "key_benefits": [
+        "Iconic and timeless design",
+        "Versatile fit suitable for various body types",
+        "High-quality, durable materials",
+        "Rich brand heritage and cultural significance",
+        "Commitment to sustainability and ethical production"
+      ],
+      "product_highlight": "The enduring and versatile fit that has remained unchanged for decades"
+    },
+    "quality_breakdown": {
+      "readability": 77.7,
+      "placement": 60.8,
+      "composition": 69.4,
+      "harmony": 100.0,
+      "copy": 70.0
+    }
+  },
+  "non_preferred": {
+    "variant_id": "v3_59f5",
+    "composite_score": 55.6,
+    "grade": "C",
+    "creative_brief": {
+      "tone": "Authentic, Timeless, and Inclusive",
+      "visual_style": "Classic and minimalist visuals that focus on the jeans' fit and versatility, with a mix of lifestyle and product-focused imagery highlighting diverse individuals in authentic settings.",
+      "conceptual_technique": "Storytelling-driven campaigns that emphasize heritage and individual expression, utilizing both digital and traditional media channels",
+      "emotion": "Confidence, Individuality, Heritage",
+      "typography_style": "Use of a clean and modern sans-serif font such as Helvetica or Arial to maintain readability and a contemporary aesthetic, reflecting the brand's balance of heritage and modernity.",
+      "color_scheme": "A palette of classic denim blues, earthy tones, and neutral shades to evoke a sense of timelessness and reliability.",
+      "headline": "Quality Never Fades Away",
+      "call_to_action": "Shop Now",
+      "ad_style": "Storytelling-driven campaigns that emphasize heritage and individual expression, utilizing both digital and traditional media channels",
+      "target_market": {
+        "demographics": {
+          "age_range": "18-45",
+          "gender": "All",
+          "income_level": "Middle to Upper-Middle Class",
+          "geographic_location": "Urban and Suburban Areas"
+        },
+        "psychographics": {
+          "lifestyle": "Fashion-conscious, Value comfort and versatility, Embrace individuality",
+          "values": "Quality, Heritage, Sustainability"
+        }
+      },
+      "key_benefits": [
+        "Timeless design that transcends fashion trends",
+        "High-quality, durable materials for long-lasting wear",
+        "Versatile fit suitable for various body types"
+      ],
+      "product_highlight": "The iconic button-fly design, emphasizing its role in the product's authenticity and heritage appeal."
+    },
+    "quality_breakdown": {
+      "readability": 35.0,
+      "placement": 39.1,
+      "composition": 68.7,
+      "harmony": 100.0,
+      "copy": 77.0
+    }
+  },
+  "created_at": "2026-03-12T21:05:02.669310",
+  "metadata": {
+    "test_id": "abtest_1773329434_5fa2b3",
+    "num_variants": 3,
+    "scoring_weights": {
+      "readability": 0.3,
+      "placement": 0.25,
+      "composition": 0.2,
+      "harmony": 0.1,
+      "copy": 0.15
+    }
+  }
+}

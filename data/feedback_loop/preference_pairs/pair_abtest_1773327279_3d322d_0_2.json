@@ -1,0 +1,103 @@
+{
+  "pair_id": "pair_abtest_1773327279_3d322d_0_2",
+  "source": "ab_test_quality_score",
+  "product_prompt": "Rolex Submariner luxury dive watch",
+  "score_difference": 10.8,
+  "preferred": {
+    "variant_id": "v2_bcb1",
+    "composite_score": 78.0,
+    "grade": "B+",
+    "creative_brief": {
+      "tone": "Sophisticated, authoritative, timeless, and aspirational",
+      "visual_style": "Clean and elegant with a focus on the watch's craftsmanship. Use of high-contrast, sharp imagery that highlights the watch's details and luxurious nature. Incorporate settings that evoke adventure and sophistication, such as underwater scenes and formal events.",
+      "conceptual_technique": "Aspirational storytelling with a focus on heritage and adventure, featuring high-quality imagery and emotive narratives",
+      "emotion": "Aspiration, admiration, trust",
+      "typography_style": "Elegant serif fonts like Baskerville or Garamond for classic sophistication, paired with a clean sans-serif like Helvetica for modernity. This combination reflects the brand's balance of tradition and innovation.",
+      "color_scheme": "A classic palette of black, silver, and deep blue to evoke luxury, depth, and sophistication. Incorporate gold accents for a touch of opulence.",
+      "headline": "Legendary Craftsmanship Meets Timeless Adventure",
+      "call_to_action": "Shop Now \u2192",
+      "ad_style": "Aspirational storytelling with a focus on heritage and adventure, featuring high-quality imagery and emotive narratives",
+      "target_market": {
+        "demographics": {
+          "age": "30-55",
+          "gender": "Male predominance, but inclusive of females",
+          "income": "High net-worth individuals",
+          "occupation": "Executives, entrepreneurs, professionals"
+        },
+        "psychographics": {
+          "lifestyle": "Affluent, appreciates fine craftsmanship, values exclusivity",
+          "values": "Status, legacy, precision, adventure"
+        }
+      },
+      "key_benefits": [
+        "Unmatched durability and precision for diving and everyday use",
+        "Iconic design with a rich heritage and brand legacy",
+        "Symbol of success and achievement",
+        "Advanced materials and innovation in watchmaking",
+        "Robust water resistance and functionality"
+      ],
+      "product_highlight": "The Submariner's iconic status as a symbol of adventure and achievement, coupled with its superior engineering and water resistance capabilities."
+    },
+    "quality_breakdown": {
+      "readability": 95.1,
+      "placement": 57.0,
+      "composition": 66.3,
+      "harmony": 100.0,
+      "copy": 80.0
+    }
+  },
+  "non_preferred": {
+    "variant_id": "v1_7371",
+    "composite_score": 67.2,
+    "grade": "B-",
+    "creative_brief": {
+      "tone": "Sophisticated, Timeless, Confident, Elite",
+      "visual_style": "Elegant and minimalistic design with high-contrast photography. Use of underwater and luxury lifestyle imagery to convey the watch's versatility and prestige.",
+      "conceptual_technique": "Aspirational storytelling through high-quality video content featuring the watch in adventurous and luxurious settings, highlighting its dual appeal for both diving and formal events.",
+      "emotion": "Aspiration, Prestige, Adventure, Luxury",
+      "typography_style": "Use of a classic serif font like Garamond for body text to evoke a sense of tradition and elegance, paired with a modern sans-serif like Helvetica for headlines to ensure clarity and contemporary appeal.",
+      "color_scheme": "Classic black and white with gold accents to symbolize luxury and exclusivity. Incorporate deep blues or greens to reflect the diving heritage.",
+      "headline": "ROLEX Submariner",
+      "call_to_action": "Shop Now",
+      "ad_style": "Aspirational storytelling through high-quality video content featuring the watch in adventurous and luxurious settings, highlighting its dual appeal for both diving and formal events.",
+      "target_market": {
+        "demographics": {
+          "age": "30-60",
+          "gender": "Predominantly Male",
+          "income": "High net worth individuals",
+          "location": "Global metropolitan areas"
+        },
+        "psychographics": {
+          "lifestyle": "Affluent, Adventurous, Status-driven",
+          "values": "Quality, Prestige, Heritage",
+          "interests": "Yachting, Diving, High-end travel"
+        }
+      },
+      "key_benefits": [
+        "Unmatched craftsmanship and durability",
+        "Iconic design with a rich heritage",
+        "Proven precision and reliability in underwater environments"
+      ],
+      "product_highlight": "The watch's iconic Oystersteel case and 300-meter water resistance, showcasing its dual mastery of both elegance and functionality."
+    },
+    "quality_breakdown": {
+      "readability": 57.9,
+      "placement": 63.6,
+      "composition": 62.7,
+      "harmony": 100.0,
+      "copy": 76.0
+    }
+  },
+  "created_at": "2026-03-12T20:29:06.875464",
+  "metadata": {
+    "test_id": "abtest_1773327279_3d322d",
+    "num_variants": 3,
+    "scoring_weights": {
+      "readability": 0.3,
+      "placement": 0.25,
+      "composition": 0.2,
+      "harmony": 0.1,
+      "copy": 0.15
+    }
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "pair_id": "pair_abtest_1773329183_05d6b7_0_2",
+  "source": "ab_test_quality_score",
+  "product_prompt": "Dyson Airwrap multi-styler",
+  "score_difference": 7.4,
+  "preferred": {
+    "variant_id": "v2_ccc5",
+    "composite_score": 62.4,
+    "grade": "C+",
+    "creative_brief": {
+      "tone": "innovative, sophisticated, aspirational, and educational",
+      "visual_style": "High-end, minimalist aesthetic with a focus on clean lines and modern elegance. Imagery should highlight the product in use, with an emphasis on before-and-after visuals to showcase effectiveness. Use of lifestyle photography to appeal to aspirational living.",
+      "conceptual_technique": "Digital-first, leveraging social media influencers and engaging video content to demonstrate product capabilities and benefits through tutorials and real-life transformations.",
+      "emotion": "empowered",
+      "typography_style": "Sans-serif fonts like Helvetica or Futura, which are modern and clean, reinforcing the brand's innovative and premium positioning. These fonts offer clarity and readability, important for educational content.",
+      "color_scheme": "Neutral tones with accents of metallics such as silver or rose gold to convey luxury and innovation. This palette aligns with feelings of sophistication and advanced technology.",
+      "headline": "Style without Extreme Heat",
+      "call_to_action": "Shop Now",
+      "ad_style": "Digital-first, leveraging social media influencers and engaging video content to demonstrate product capabilities and benefits through tutorials and real-life transformations.",
+      "target_market": {
+        "demographics": {
+          "age_range": "25-45",
+          "gender": "predominantly female",
+          "income_level": "middle to upper-middle class",
+          "location": "urban and suburban areas"
+        },
+        "psychographics": {
+          "lifestyle": "tech-savvy, fashion-conscious, prioritizes self-care",
+          "values": "quality, sustainability, efficiency",
+          "behavior": "frequent online shoppers, early adopters of new technology"
+        }
+      },
+      "key_benefits": [
+        "Versatile styling with minimal heat damage",
+        "Innovative technology that adapts to hair type",
+        "Effortless, salon-quality results at home",
+        "Time-saving and easy to use",
+        "Sleek, ergonomic design"
+      ],
+      "product_highlight": "The Airwrap's ability to style hair with minimal heat damage, emphasizing its intelligent heat control technology."
+    },
+    "quality_breakdown": {
+      "readability": 49.1,
+      "placement": 43.6,
+      "composition": 76.0,
+      "harmony": 100.0,
+      "copy": 77.0
+    }
+  },
+  "non_preferred": {
+    "variant_id": "v3_202d",
+    "composite_score": 55.0,
+    "grade": "C-",
+    "creative_brief": {
+      "tone": "Innovative, sophisticated, aspirational, and technologically advanced",
+      "visual_style": "Clean, modern aesthetics with an emphasis on sleek lines and a monochromatic palette to enhance the perception of luxury and innovation",
+      "conceptual_technique": "Aspirational storytelling with a focus on high-quality visuals and testimonials from influential stylists or beauty influencers",
+      "emotion": "Aspiration and admiration",
+      "typography_style": "Sans-serif fonts such as Helvetica or Futura for a clean, modern look that reflects technological advancement and simplicity",
+      "color_scheme": "Sophisticated metallics such as silver and chrome, accented with deep, rich hues like royal blue or burgundy to convey elegance and cutting-edge technology",
+      "headline": "The Complete Airwrap Styler",
+      "call_to_action": "Shop Now",
+      "ad_style": "Aspirational storytelling with a focus on high-quality visuals and testimonials from influential stylists or beauty influencers",
+      "target_market": {
+        "demographics": {
+          "age": "25-45",
+          "gender": "Primarily female",
+          "income": "Upper-middle to high income",
+          "location": "Urban and suburban areas"
+        },
+        "psychographics": {
+          "lifestyle": "Fashion-forward, tech-savvy, values quality and efficiency",
+          "interests": "Beauty, technology, personal grooming",
+          "values": "Innovation, sustainability, performance"
+        }
+      },
+      "key_benefits": [
+        "Versatile styling with minimal heat damage",
+        "Advanced technology for superior performance",
+        "Sleek, user-friendly design"
+      ],
+      "product_highlight": "Innovative Coanda effect technology for styling without extreme heat"
+    },
+    "quality_breakdown": {
+      "readability": 51.0,
+      "placement": 22.1,
+      "composition": 63.8,
+      "harmony": 100.0,
+      "copy": 76.0
+    }
+  },
+  "created_at": "2026-03-12T21:00:34.366969",
+  "metadata": {
+    "test_id": "abtest_1773329183_05d6b7",
+    "num_variants": 3,
+    "scoring_weights": {
+      "readability": 0.3,
+      "placement": 0.25,
+      "composition": 0.2,
+      "harmony": 0.1,
+      "copy": 0.15
+    }
+  }
+}

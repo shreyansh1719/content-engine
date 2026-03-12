@@ -1,0 +1,100 @@
+{
+  "pair_id": "pair_abtest_1773327889_78ec16_0_2",
+  "source": "ab_test_quality_score",
+  "product_prompt": "Apple AirPods Pro 3 wireless earbuds",
+  "score_difference": 7.0,
+  "preferred": {
+    "variant_id": "v2_8cd6",
+    "composite_score": 66.1,
+    "grade": "B-",
+    "creative_brief": {
+      "tone": "sleek, innovative, aspirational, and minimalist",
+      "visual_style": "Clean, modern aesthetics with a focus on product in use. Imagery should showcase the earbuds in various lifestyle contexts, emphasizing their sleek design and the aspirational lifestyle they complement. Use high-definition visuals and minimalistic settings.",
+      "conceptual_technique": "Digital-first strategy focusing on immersive video content highlighting product benefits, influencer partnerships showcasing lifestyle integration, and targeted social media ads emphasizing premium quality and seamless user experience.",
+      "emotion": "empowerment, sophistication, modernity",
+      "typography_style": "Sans-serif fonts such as SF Pro Display or Helvetica Neue for readability and modernity, aligning with Apple's brand identity and ensuring clarity across digital and print mediums.",
+      "color_scheme": "Predominantly white and space gray with accents of soft blue and silver, reflecting a modern and clean aesthetic while conveying sophistication and technological advancement.",
+      "headline": "Immersive Sound Experience",
+      "call_to_action": "Shop Now",
+      "ad_style": "Digital-first strategy focusing on immersive video content highlighting product benefits, influencer partnerships showcasing lifestyle integration, and targeted social media ads emphasizing premium quality and seamless user experience.",
+      "target_market": {
+        "demographics": {
+          "age": "18-45",
+          "gender": "all",
+          "income": "middle to high income",
+          "location": "urban and suburban areas"
+        },
+        "psychographics": {
+          "lifestyle": "tech-savvy, on-the-go, fashion-conscious, value high-quality experiences",
+          "values": "innovation, status, quality, and seamless integration with technology"
+        }
+      },
+      "key_benefits": [
+        "Active noise cancellation for immersive sound",
+        "Adaptive transparency to reduce loud environmental noise",
+        "Seamless integration with Apple ecosystem"
+      ],
+      "product_highlight": "Active noise cancellation feature, which provides an unparalleled immersive sound experience, differentiating it from competitors and enhancing the user's daily auditory environment."
+    },
+    "quality_breakdown": {
+      "readability": 70.9,
+      "placement": 39.5,
+      "composition": 69.2,
+      "harmony": 100.0,
+      "copy": 74.0
+    }
+  },
+  "non_preferred": {
+    "variant_id": "v3_42bb",
+    "composite_score": 59.1,
+    "grade": "C",
+    "creative_brief": {
+      "tone": "Innovative, Sophisticated, Minimalist, User-Centric",
+      "visual_style": "Clean, elegant visuals with high contrast and focus on the product in use, highlighting the sleek design and advanced features. Use lifestyle imagery that resonates with tech-savvy professionals and active individuals.",
+      "conceptual_technique": "Emotional storytelling that showcases real-life scenarios of users enjoying enhanced experiences with AirPods Pro 3, focusing on immersive sound and noise cancellation.",
+      "emotion": "Empowerment, focus, modern lifestyle",
+      "typography_style": "San Francisco font, reflecting Apple's brand identity. It\u2019s clean, modern, and highly legible, emphasizing Apple's commitment to clarity and simplicity.",
+      "color_scheme": "Predominantly white and silver tones to align with Apple's signature aesthetic, complemented by subtle accents of black and gray to convey sophistication and modernity.",
+      "headline": "Adaptive Transparency Mode",
+      "call_to_action": "Shop Now",
+      "ad_style": "Emotional storytelling that showcases real-life scenarios of users enjoying enhanced experiences with AirPods Pro 3, focusing on immersive sound and noise cancellation.",
+      "target_market": {
+        "demographics": {
+          "age": "18-45",
+          "income": "Middle to Upper-Income",
+          "location": "Global - Urban and Suburban Areas"
+        },
+        "psychographics": {
+          "lifestyle": "Tech-savvy, On-the-go, Health-conscious",
+          "values": "Quality, Innovation, Status",
+          "interests": "Music, Fitness, Travel, Technology"
+        }
+      },
+      "key_benefits": [
+        "Exceptional noise cancellation",
+        "Superior sound quality with spatial audio",
+        "Seamless integration with Apple ecosystem"
+      ],
+      "product_highlight": "Advanced noise cancellation technology for an immersive audio experience."
+    },
+    "quality_breakdown": {
+      "readability": 59.3,
+      "placement": 19.0,
+      "composition": 77.2,
+      "harmony": 100.0,
+      "copy": 74.0
+    }
+  },
+  "created_at": "2026-03-12T20:38:48.148503",
+  "metadata": {
+    "test_id": "abtest_1773327889_78ec16",
+    "num_variants": 3,
+    "scoring_weights": {
+      "readability": 0.3,
+      "placement": 0.25,
+      "composition": 0.2,
+      "harmony": 0.1,
+      "copy": 0.15
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "feedback_id": "fb_20260312_134523_407073",
+  "rating": 2,
+  "feedback_text": "Text overlaps product",
+  "is_positive": false,
+  "is_negative": true,
+  "creative_brief": {
+    "tone": "Bold, Energetic, Authentic, Iconic",
+    "visual_style": "High-contrast imagery with urban backgrounds. Action shots and lifestyle scenarios.",
+    "conceptual_technique": "Digital-first approach with influencer partnerships and community-driven campaigns.",
+    "emotion": "Empowerment, Identity, Resilience",
+    "typography_style": "Use bold sans-serif fonts like Helvetica or Futura to convey modernity and strength. These fonts align with the energy and forward-thinking nature of the brand.",
+    "color_scheme": "Incorporate classic and bold colors like red, black, and white, reflecting the sneaker's heritage. Introduce limited edition colorways to drive exclusivity.",
+    "headline": "It's a Movement",
+    "call_to_action": "Shop Now",
+    "ad_style": "Use a digital-first approach focusing on social media platforms with influencer partnerships and community-driven campaigns. Highlight the sneaker's cultural relevance and personal stories from athletes or artists.",
+    "target_market": {
+      "demographics": {
+        "age": "16-35",
+        "gender": "All genders",
+        "income": "Middle to Upper-middle class",
+        "location": "Urban and Suburban areas globally"
+      },
+      "psychographics": {
+        "lifestyle": "Trend-conscious, Influenced by pop culture and sports",
+        "values": "Individuality, Community, Self-expression",
+        "interests": "Basketball, Streetwear fashion, Music, Sneaker culture"
+      }
+    },
+    "key_benefits": [
+      "Iconic design with a rich heritage and cultural significance",
+      "High-quality materials and craftsmanship ensuring durability and comfort",
+      "Versatility in styling from sports to casual streetwear"
+    ],
+    "product_highlight": "Emphasize the sneaker's iconic status in sneaker culture and its role in bridging the gap between sports and fashion."
+  },
+  "product": "Air Jordan 1 streetwear sneakers",
+  "brand": "NIKE",
+  "industry": "Fashion",
+  "quality_score": 0,
+  "created_at": "2026-03-12T13:45:23.407093"
+}

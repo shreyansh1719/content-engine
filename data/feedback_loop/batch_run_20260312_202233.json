@@ -1,0 +1,44 @@
+{
+  "run_at": "2026-03-12T20:22:33.515213",
+  "dry_run": true,
+  "total_products": 2,
+  "succeeded": 2,
+  "failed": 0,
+  "total_pairs_collected": 1,
+  "avg_score_gap": 6.8,
+  "summaries": [
+    {
+      "product": "Rolex Submariner luxury dive watch",
+      "brand": "Rolex",
+      "industry": "luxury",
+      "num_variants": 2,
+      "scores": [
+        79.1,
+        76.0
+      ],
+      "winner_score": 79.1,
+      "winner_headline": "Iconic Design Meets Unmatched Precision",
+      "avg_score": 77.6,
+      "pairs_collected": 0,
+      "gaps": []
+    },
+    {
+      "product": "Nike Air Jordan 1 streetwear sneakers",
+      "brand": "Nike",
+      "industry": "sportswear",
+      "num_variants": 2,
+      "scores": [
+        82.2,
+        75.4
+      ],
+      "winner_score": 82.2,
+      "winner_headline": "Bold Moves. Authentic Roots.",
+      "avg_score": 78.8,
+      "pairs_collected": 1,
+      "gaps": [
+        6.799999999999997
+      ]
+    }
+  ],
+  "failures": []
+}

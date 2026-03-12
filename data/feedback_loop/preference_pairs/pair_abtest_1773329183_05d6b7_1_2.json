@@ -1,0 +1,102 @@
+{
+  "pair_id": "pair_abtest_1773329183_05d6b7_1_2",
+  "source": "ab_test_quality_score",
+  "product_prompt": "Dyson Airwrap multi-styler",
+  "score_difference": 6.7,
+  "preferred": {
+    "variant_id": "v1_6b3a",
+    "composite_score": 61.7,
+    "grade": "C+",
+    "creative_brief": {
+      "tone": "Innovative, sophisticated, aspirational, and informative",
+      "visual_style": "Clean and modern aesthetic that emphasizes sleek, minimalistic design elements. Use high-resolution imagery that highlights the product's innovative features and sophisticated finish.",
+      "conceptual_technique": "Aspirational storytelling with a focus on innovation and lifestyle enhancement. Use influencer partnerships and high-quality video content to demonstrate product benefits and real-world application.",
+      "emotion": "Empowerment, confidence, creativity",
+      "typography_style": "Sans-serif typeface like Helvetica Neue for a clean, modern look that aligns with the brand's innovative image. Use varying weights to create hierarchy and emphasis where needed.",
+      "color_scheme": "A refined palette featuring metallic accents like silver or chrome paired with deep, neutral tones such as charcoal and black to convey a sense of elegance and technological advancement.",
+      "headline": "Airwrap Multi-Styler",
+      "call_to_action": "Shop Now",
+      "ad_style": "Aspirational storytelling with a focus on innovation and lifestyle enhancement. Use influencer partnerships and high-quality video content to demonstrate product benefits and real-world application.",
+      "target_market": {
+        "demographics": {
+          "age": "25-45",
+          "gender": "Primarily female",
+          "income": "Upper-middle to high income",
+          "location": "Urban and suburban areas"
+        },
+        "psychographics": {
+          "lifestyle": "Style-conscious, technology-savvy, eco-conscious",
+          "values": "Quality, innovation, and efficiency",
+          "interests": "Beauty, fashion, and personal grooming"
+        }
+      },
+      "key_benefits": [
+        "Versatile styling with minimal heat damage",
+        "Cutting-edge technology for superior performance",
+        "Time-saving and easy to use for salon-quality results at home"
+      ],
+      "product_highlight": "The Coanda effect technology that enables styling without extreme heat, providing users with healthier hair solutions."
+    },
+    "quality_breakdown": {
+      "readability": 54.4,
+      "placement": 43.7,
+      "composition": 66.6,
+      "harmony": 100.0,
+      "copy": 74.0
+    }
+  },
+  "non_preferred": {
+    "variant_id": "v3_202d",
+    "composite_score": 55.0,
+    "grade": "C-",
+    "creative_brief": {
+      "tone": "Innovative, sophisticated, aspirational, and technologically advanced",
+      "visual_style": "Clean, modern aesthetics with an emphasis on sleek lines and a monochromatic palette to enhance the perception of luxury and innovation",
+      "conceptual_technique": "Aspirational storytelling with a focus on high-quality visuals and testimonials from influential stylists or beauty influencers",
+      "emotion": "Aspiration and admiration",
+      "typography_style": "Sans-serif fonts such as Helvetica or Futura for a clean, modern look that reflects technological advancement and simplicity",
+      "color_scheme": "Sophisticated metallics such as silver and chrome, accented with deep, rich hues like royal blue or burgundy to convey elegance and cutting-edge technology",
+      "headline": "The Complete Airwrap Styler",
+      "call_to_action": "Shop Now",
+      "ad_style": "Aspirational storytelling with a focus on high-quality visuals and testimonials from influential stylists or beauty influencers",
+      "target_market": {
+        "demographics": {
+          "age": "25-45",
+          "gender": "Primarily female",
+          "income": "Upper-middle to high income",
+          "location": "Urban and suburban areas"
+        },
+        "psychographics": {
+          "lifestyle": "Fashion-forward, tech-savvy, values quality and efficiency",
+          "interests": "Beauty, technology, personal grooming",
+          "values": "Innovation, sustainability, performance"
+        }
+      },
+      "key_benefits": [
+        "Versatile styling with minimal heat damage",
+        "Advanced technology for superior performance",
+        "Sleek, user-friendly design"
+      ],
+      "product_highlight": "Innovative Coanda effect technology for styling without extreme heat"
+    },
+    "quality_breakdown": {
+      "readability": 51.0,
+      "placement": 22.1,
+      "composition": 63.8,
+      "harmony": 100.0,
+      "copy": 76.0
+    }
+  },
+  "created_at": "2026-03-12T21:00:34.368982",
+  "metadata": {
+    "test_id": "abtest_1773329183_05d6b7",
+    "num_variants": 3,
+    "scoring_weights": {
+      "readability": 0.3,
+      "placement": 0.25,
+      "composition": 0.2,
+      "harmony": 0.1,
+      "copy": 0.15
+    }
+  }
+}

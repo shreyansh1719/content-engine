@@ -1,0 +1,103 @@
+{
+  "pair_id": "pair_abtest_1773328128_931bef_0_1",
+  "source": "ab_test_quality_score",
+  "product_prompt": "Oatly oat milk dairy alternative",
+  "score_difference": 8.4,
+  "preferred": {
+    "variant_id": "v2_17a1",
+    "composite_score": 77.6,
+    "grade": "B+",
+    "creative_brief": {
+      "tone": "Playful, Authentic, Approachable, and Bold",
+      "visual_style": "Minimalistic design with a modern edge, utilizing vibrant and earthy illustrations that reflect the natural ingredients and sustainability message",
+      "conceptual_technique": "Integrated digital campaigns leveraging social media platforms like Instagram and TikTok, influencer partnerships, and experiential marketing events",
+      "emotion": "Hopeful, Inclusive",
+      "typography_style": "Sans-serif fonts with a clean and bold look to ensure readability and convey a modern, straightforward brand ethos",
+      "color_scheme": "Earth tones like oat beige, leafy green, and sky blue to evoke a sense of nature and wholesomeness",
+      "headline": "Milk, but made from oats.",
+      "call_to_action": "Join the movement",
+      "ad_style": "Integrated digital campaigns leveraging social media platforms like Instagram and TikTok, influencer partnerships, and experiential marketing events",
+      "target_market": {
+        "demographics": {
+          "age": "18-35",
+          "gender": "All genders",
+          "income": "Middle to upper-middle class",
+          "education": "College-educated",
+          "location": "Urban and suburban areas"
+        },
+        "psychographics": {
+          "lifestyle": "Health-conscious, environmentally aware, trend-followers",
+          "values": "Sustainability, wellness, ethical consumption",
+          "interests": "Veganism, fitness, innovative food trends"
+        }
+      },
+      "key_benefits": [
+        "Sustainable and environmentally friendly production process",
+        "Rich, creamy texture similar to dairy milk",
+        "High nutritional value with added vitamins and minerals"
+      ],
+      "product_highlight": "Commitment to sustainability and eco-friendly practices in production"
+    },
+    "quality_breakdown": {
+      "readability": 85.8,
+      "placement": 70.5,
+      "composition": 68.7,
+      "harmony": 100.0,
+      "copy": 70.0
+    }
+  },
+  "non_preferred": {
+    "variant_id": "v1_5560",
+    "composite_score": 69.2,
+    "grade": "B-",
+    "creative_brief": {
+      "tone": "Playful, approachable, and socially conscious",
+      "visual_style": "Minimalistic design with bold, quirky graphics; emphasize natural elements and sustainability with imagery of oats and greenery",
+      "conceptual_technique": "Integrated digital campaigns with strong social media presence; influencer partnerships and user-generated content to drive engagement",
+      "emotion": "Trust and optimism",
+      "typography_style": "Sans-serif fonts with a clean and modern feel, such as 'Helvetica Neue' to convey clarity and approachability; consider a custom hand-drawn type for a unique brand signature",
+      "color_scheme": "Earthy tones with pops of vibrant blue to symbolize both freshness and sustainability",
+      "headline": "Seriously Good Oat Milk.",
+      "call_to_action": "Shop Now",
+      "ad_style": "Integrated digital campaigns with strong social media presence; influencer partnerships and user-generated content to drive engagement",
+      "target_market": {
+        "demographics": {
+          "age": "18-35",
+          "gender": "All genders",
+          "income": "Middle to upper-middle class",
+          "geographic": "Urban and suburban areas in health-conscious regions"
+        },
+        "psychographics": {
+          "lifestyle": "Health-conscious, environmentally-aware, trendsetters",
+          "values": "Sustainability, health, and innovation",
+          "buying_behavior": "Preference for eco-friendly and ethically produced products"
+        }
+      },
+      "key_benefits": [
+        "Sustainably sourced ingredients",
+        "Rich and creamy taste similar to traditional dairy",
+        "High in dietary fiber and nutrients"
+      ],
+      "product_highlight": "Environmental and health benefits of choosing oat milk over traditional dairy"
+    },
+    "quality_breakdown": {
+      "readability": 61.6,
+      "placement": 52.5,
+      "composition": 76.3,
+      "harmony": 100.0,
+      "copy": 82.0
+    }
+  },
+  "created_at": "2026-03-12T20:43:21.457505",
+  "metadata": {
+    "test_id": "abtest_1773328128_931bef",
+    "num_variants": 3,
+    "scoring_weights": {
+      "readability": 0.3,
+      "placement": 0.25,
+      "composition": 0.2,
+      "harmony": 0.1,
+      "copy": 0.15
+    }
+  }
+}

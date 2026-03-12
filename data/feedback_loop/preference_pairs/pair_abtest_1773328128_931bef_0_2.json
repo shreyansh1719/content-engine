@@ -1,0 +1,91 @@
+{
+  "pair_id": "pair_abtest_1773328128_931bef_0_2",
+  "source": "ab_test_quality_score",
+  "product_prompt": "Oatly oat milk dairy alternative",
+  "score_difference": 12.8,
+  "preferred": {
+    "variant_id": "v2_17a1",
+    "composite_score": 77.6,
+    "grade": "B+",
+    "creative_brief": {
+      "tone": "Playful, Authentic, Approachable, and Bold",
+      "visual_style": "Minimalistic design with a modern edge, utilizing vibrant and earthy illustrations that reflect the natural ingredients and sustainability message",
+      "conceptual_technique": "Integrated digital campaigns leveraging social media platforms like Instagram and TikTok, influencer partnerships, and experiential marketing events",
+      "emotion": "Hopeful, Inclusive",
+      "typography_style": "Sans-serif fonts with a clean and bold look to ensure readability and convey a modern, straightforward brand ethos",
+      "color_scheme": "Earth tones like oat beige, leafy green, and sky blue to evoke a sense of nature and wholesomeness",
+      "headline": "Milk, but made from oats.",
+      "call_to_action": "Join the movement",
+      "ad_style": "Integrated digital campaigns leveraging social media platforms like Instagram and TikTok, influencer partnerships, and experiential marketing events",
+      "target_market": {
+        "demographics": {
+          "age": "18-35",
+          "gender": "All genders",
+          "income": "Middle to upper-middle class",
+          "education": "College-educated",
+          "location": "Urban and suburban areas"
+        },
+        "psychographics": {
+          "lifestyle": "Health-conscious, environmentally aware, trend-followers",
+          "values": "Sustainability, wellness, ethical consumption",
+          "interests": "Veganism, fitness, innovative food trends"
+        }
+      },
+      "key_benefits": [
+        "Sustainable and environmentally friendly production process",
+        "Rich, creamy texture similar to dairy milk",
+        "High nutritional value with added vitamins and minerals"
+      ],
+      "product_highlight": "Commitment to sustainability and eco-friendly practices in production"
+    },
+    "quality_breakdown": {
+      "readability": 85.8,
+      "placement": 70.5,
+      "composition": 68.7,
+      "harmony": 100.0,
+      "copy": 70.0
+    }
+  },
+  "non_preferred": {
+    "variant_id": "v3_0449",
+    "composite_score": 64.8,
+    "grade": "C+",
+    "creative_brief": {
+      "tone": "Quirky, Authentic, Relatable, and Informative",
+      "visual_style": "Modern and minimalist with playful elements, featuring lifestyle imagery.",
+      "conceptual_technique": "Engagement-driven content marketing via social media, influencer partnerships, and user-generated content.",
+      "emotion": "Hopeful and Empowering",
+      "typography_style": "Sans-serif fonts like Helvetica or Futura for a clean, contemporary look that enhances readability and approachability. Use bold weights for emphasis on key messages and to maintain a sense of modernity.",
+      "color_scheme": "Earthy and natural tones such as oat beige, soft greens, and muted blues to emphasize organic roots and sustainability, complemented by contrasting bold colors for call-to-action elements.",
+      "headline": "Sustainable and Delicious!",
+      "call_to_action": "Join the movement",
+      "ad_style": "Engagement-driven content marketing through social media platforms, leveraging influencer partnerships and user-generated content to build community and brand evangelism.",
+      "target_market": "Health-conscious millennials and Gen Z consumers, aged 18-34, who prioritize sustainable and ethical food choices, often urban dwellers with disposable income, and environmentally conscious individuals seeking dairy-free options.",
+      "key_benefits": [
+        "Sustainable and environmentally friendly production",
+        "High nutritional profile with added vitamins and minerals",
+        "Versatility in usage across various culinary applications"
+      ],
+      "product_highlight": "Highlight the brand's commitment to sustainability and environmental impact reduction, positioning OATLY as not just a dairy alternative, but a lifestyle choice that contributes to a healthier planet."
+    },
+    "quality_breakdown": {
+      "readability": 56.0,
+      "placement": 60.8,
+      "composition": 67.5,
+      "harmony": 100.0,
+      "copy": 62.0
+    }
+  },
+  "created_at": "2026-03-12T20:43:21.460326",
+  "metadata": {
+    "test_id": "abtest_1773328128_931bef",
+    "num_variants": 3,
+    "scoring_weights": {
+      "readability": 0.3,
+      "placement": 0.25,
+      "composition": 0.2,
+      "harmony": 0.1,
+      "copy": 0.15
+    }
+  }
+}
